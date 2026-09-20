@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-record"
+version = "0.0.1"
+description = "A minimal schema for a written down research conclusion, and a validator for it."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "navneet", email = "navn07588@gmail.com" }]
+dependencies = ["pydantic>=2.7"]
+
+[project.optional-dependencies]
+pipeline = ["requests>=2.31", "pyyaml>=6", "anthropic>=1"]
+dev = ["pytest>=8", "requests>=2.31", "pyyaml>=6", "anthropic>=1"]
+
+# The `rr` console script arrives with research_record/cli.py in Phase 3.
+
+[tool.setuptools]
+packages = ["research_record"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["network: hits the live SEC endpoint"]

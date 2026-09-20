@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.DS_Store
+
+# Cached filings are re-fetchable and large.
+data/raw/
+
+# Secrets and regenerable caches.
+.env
+data/batches/token_cache.json
+data/candidates/
+data/drafts/

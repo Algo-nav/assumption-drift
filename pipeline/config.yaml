@@ -1,0 +1,112 @@
+edgar:
+  user_agent: "Navneet navn07588@gmail.com"
+  max_rps: 8
+  filing_types: ["8-K", "10-K", "10-Q"]
+  date_from: "2019-01-01"
+  date_to: "2026-09-20"
+companies:   # Navneet fills the full 30; three to prove the pipeline end to end
+  - {name: "NVIDIA Corporation", ticker: "NVDA", cik: "0001045810"}
+  - {name: "Target Corporation", ticker: "TGT", cik: "0000027419"}
+  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524"}
+llm:
+  model: "claude-haiku-4-5"
+  budget_usd: 10   # one budget across 03_structure and 04_outcomes, not one each
+  # Haiku 4.5 list prices in USD per million tokens, and the Message Batches discount.
+  price_input_per_mtok: 1.00
+  price_output_per_mtok: 5.00
+  batch_discount: 0.5
+hf:
+  user: "{HF_USER}"
+  dataset: "assumption-drift"
+
+# Phase 1, 02_candidates.py. A sentence is a candidate when it has at least one
+# forward term AND at least one number with a unit. Recall matters more than
+# precision here: the Haiku pass in Phase 2 throws away what is not guidance.
+candidates:
+  # Case-insensitive regular expressions, matched on word boundaries.
+  forward_terms:
+    - 'expect(?:s|ed|ing)?'
+    - 'guidance'
+    - 'outlook'
+    - 'anticipat(?:e|es|ed|ing)'
+    - 'forecast(?:s|ed|ing)?'
+    # Lower case only: Target Corporation's own name would otherwise match every
+    # sentence it appears in.
+    - '(?-i:targets?|targeted|targeting)'
+    - 'full[- ]year'
+    - 'fiscal (?:year )?20\d\d'
+  # A bare number does not count. It needs a currency sign, a percent sign, or
+  # one of these unit words straight after it.
+  number_units:
+    - 'percent'
+    - 'per cent'
+    - 'basis points?'
+    - 'bps'
+    - 'pts'
+    - 'points?'
+    - 'cents?'
+    - 'thousand'
+    - 'million'
+    - 'billion'
+    - 'trillion'
+    - 'units'
+    - 'stores'
+    - 'locations'
+  # Segments longer than this are table blobs or legal boilerplate. Dropped and counted.
+  max_sentence_chars: 1200
+
+  # Section-aware capture, 8-K exhibits only. Guidance often sits in a table or
+  # bullet list under a heading, with the label and the number on separate lines,
+  # so no single sentence carries both a forward term and a number. Every number
+  # line within `section_lines` lines under a matching heading is a candidate too.
+  # A heading is a short line (at most `heading_max_words` words) that matches the
+  # pattern and does not end like a sentence.
+  section_heading: '\b(?:Financial Outlook|Guidance|Outlook)\b'
+  section_lines: 15
+  heading_max_words: 8
+
+  # Context stored with every candidate: the nearest preceding lead-in line (a line
+  # ending in a colon, searched back `lead_in_lookback_lines` lines, at most
+  # `lead_in_max_chars` long), and `context_sentences` sentences either side.
+  # Each stored context string is cut to `context_max_chars`.
+  lead_in_lookback_lines: 15
+  lead_in_max_chars: 400
+  context_sentences: 2
+  context_max_chars: 300
+
+# Phase 2, 04_outcomes.py. Regex narrows the search, Haiku reads what is left.
+# Only 8-K exhibits are searched, for outcomes and for acknowledgements.
+outcomes:
+  search_days: 550      # look this far past stated_at for the release reporting the period
+  ack_days: 400         # and this far past the outcome for an acknowledgement
+  head_chars: 2500      # when a headline names no year, look for it in this much of the release
+  max_docs: 3           # earliest matching releases to read
+  max_lines: 25         # lines sent to the model per draft, best-ranked first
+  section_lookback_lines: 25
+  units_lookback_lines: 40
+  plausible_ratio: 5    # a reported value over 5x, or under 1/5, of the guidance is a unit or row mix-up
+  # First pattern that matches the metric name decides which words a line must contain.
+  metric_terms:
+    - {when: 'revenue|net sales|total sales', match: 'revenue|net sales|total sales'}
+    - {when: 'gross margin', match: 'gross margin'}
+    - {when: 'operating margin|operating income margin', match: 'operating (?:income )?margin|operating income rate'}
+    - {when: 'operating expense|opex', match: 'operating expenses'}
+    - {when: 'eps|earnings per share|per share', match: 'earnings per share|eps|per diluted share|diluted earnings'}
+    - {when: 'tax rate', match: 'tax rate'}
+    - {when: 'operating cash flow', match: 'operating cash flow|cash flow from operations|cash provided by operat'}
+    - {when: 'free cash flow', match: 'free cash flow'}
+    - {when: 'other income', match: 'other income'}
+    - {when: 'crpo|remaining performance', match: 'crpo|remaining performance obligation'}
+    - {when: 'capital expenditure|capex', match: 'capital expenditures|capex|capital spending'}
+    - {when: 'comparable sales', match: 'comparable sales'}
+  acknowledgement_phrases:
+    - 'below'
+    - 'short of'
+    - 'fell short'
+    - 'shortfall'
+    - 'did not meet'
+    - 'lower than our'
+    - 'lower than expected'
+    - 'less than expected'
+    - 'missed'
+    - 'revised'
