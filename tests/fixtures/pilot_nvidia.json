@@ -1,0 +1,1592 @@
+{
+ "note": "The 30-row NVIDIA pilot (first 30 8-K requests, 2019 filings), frozen before the block/metrics fixes. candidates are the exact rows that were sent, raw is the model's answer per custom_id, drafts are what 03 derived.",
+ "candidates": [
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 116,
+   "char_end": 209,
+   "sentence": "Fourth quarter revenue expected to be $2.20 billion versus previous guidance of $2.70 billion",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": null,
+   "context_before": [
+    "PRESS RELEASE",
+    "NVIDIA Updates Financial Guidance for Fourth Quarter of Fiscal Year 2019"
+   ],
+   "context_after": [
+    "Gaming and Datacenter revenue below company’s expectations",
+    "Management to discuss reported financial results on Feb. 14 earnings call"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 18582,
+   "char_end": 18586,
+   "sentence": "0.2%",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Q1 FY2020 Outlook",
+   "lead_in": null,
+   "context_before": [
+    "58.8%",
+    "Impact of stock-based compensation expense"
+   ],
+   "context_after": [
+    "Non-GAAP gross margin",
+    "59.0%"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000077",
+   "filing_type": "8-K",
+   "filed_at": "2019-05-16",
+   "char_start": 2710,
+   "char_end": 2836,
+   "sentence": "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+    "Revenue is expected to be $2.55 billion, plus or minus 2 percent."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively.",
+    "GAAP and non-GAAP other income and expense are both expected to be income of approximately $27 million."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 4097,
+   "char_end": 4211,
+   "sentence": "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "Revenue is expected to be $2.20 billion, plus or minus 2 percent.",
+    "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million.",
+    "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 3048,
+   "char_end": 3060,
+   "sentence": "$915 million",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "$915 million",
+    "$755 million"
+   ],
+   "context_after": [
+    "$755 million",
+    "GAAP and non-GAAP other income and expense"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2744,
+   "char_end": 2775,
+   "sentence": "$2.70 billion, plus or minus 2%",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Updated Q4 Fiscal 2019 Guidance",
+    "Revenue"
+   ],
+   "context_after": [
+    "$2.20 billion, plus or minus 2%",
+    "Gross margin - GAAP"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2880,
+   "char_end": 2907,
+   "sentence": "62.5%, plus or minus 50 bps",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Gross margin - non-GAAP",
+    "62.3%, plus or minus 50 bps"
+   ],
+   "context_after": [
+    "55.0%, plus or minus 100 bps",
+    "56.0%, plus or minus 100 bps"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 933,
+   "char_end": 1026,
+   "sentence": "For fiscal 2019, revenue was $11.72 billion, up 21 percent from $9.71 billion a year earlier.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "GAAP earnings per diluted share for the quarter were $0.92, down 48 percent from $1.78 a year ago and down 53 percent from $1.97 in the previous quarter.",
+    "Non-GAAP earnings per diluted share were $0.80, down 53 percent from $1.72 a year earlier and down 57 percent from $1.84 in the previous quarter."
+   ],
+   "context_after": [
+    "GAAP earnings per diluted share were $6.63, up 38 percent from $4.82 a year earlier.",
+    "Non-GAAP earnings per diluted share were $6.64, up 35 percent from $4.92 a year earlier."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000077",
+   "filing_type": "8-K",
+   "filed_at": "2019-05-16",
+   "char_start": 2642,
+   "char_end": 2707,
+   "sentence": "Revenue is expected to be $2.55 billion, plus or minus 2 percent.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "Down 57%",
+    "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:"
+   ],
+   "context_after": [
+    "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points.",
+    "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 209,
+   "char_end": 282,
+   "sentence": "Record full-year revenue of $11.72 billion, up 21 percent from a year ago",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "NVIDIA Announces Financial Results for Fourth Quarter and Fiscal 2019",
+    "Quarterly revenue of $2.21 billion, down 24 percent from a year ago"
+   ],
+   "context_after": [
+    "Record full-year revenue from Gaming, Datacenter, Professional Visualization and Automotive",
+    "SANTA CLARA, Calif.-Feb. 14, 2019-NVIDIA (NASDAQ: NVDA) today reported revenue for the fourth quarter ended Jan. 27, 2019, of $2.21 billion, down 24 percent from $2.91 billion a year earlier, and down 31 percent from $3.18 billion in the previous quarter."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2322,
+   "char_end": 2540,
+   "sentence": "NVIDIA expects its GAAP and non-GAAP gross margin to be impacted by approximately $120 million in charges for excess DRAM and other components associated with the updated revenue guidance and current market conditions.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": null,
+   "context_before": [
+    "The markets we are creating - gaming, design, HPC, AI and autonomous vehicles - are important, growing and will be very large.",
+    "We have excellent strategic positions in all of them,” he said."
+   ],
+   "context_after": [
+    "The company will provide Q4 fiscal 2019 financial results and Q1 fiscal 2020 guidance on its earnings call scheduled for Feb. 14.",
+    "Previous Q4 Fiscal 2019 Guidance"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000077",
+   "filing_type": "8-K",
+   "filed_at": "2019-05-16",
+   "char_start": 1543,
+   "char_end": 1641,
+   "sentence": "In the first quarter of fiscal 2020, the company returned $97 million in quarterly cash dividends.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "Capital Return",
+    "As previously communicated, NVIDIA intends to return $3.00 billion to shareholders by the end of fiscal 2020, including $700 million in share repurchases made during the fourth quarter of fiscal 2019."
+   ],
+   "context_after": [
+    "NVIDIA will pay its next quarterly cash dividend of $0.16 per share on June 21, 2019, to all shareholders of record on May 31, 2019.",
+    "Q1 Fiscal 2020 Summary"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 3022,
+   "char_end": 3034,
+   "sentence": "$915 million",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Operating expenses - GAAP",
+    "Operating expenses - non-GAAP"
+   ],
+   "context_after": [
+    "$755 million",
+    "$915 million"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 4320,
+   "char_end": 4438,
+   "sentence": "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively.",
+    "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million."
+   ],
+   "context_after": [
+    "GAAP discrete items include excess tax benefits or deficiencies related to stock-based compensation, which are expected to generate variability on a quarter by quarter basis.",
+    "For fiscal 2020, revenue is expected to be flat to down slightly."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000077",
+   "filing_type": "8-K",
+   "filed_at": "2019-05-16",
+   "char_start": 2839,
+   "char_end": 2953,
+   "sentence": "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "Revenue is expected to be $2.55 billion, plus or minus 2 percent.",
+    "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP other income and expense are both expected to be income of approximately $27 million.",
+    "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 18609,
+   "char_end": 18614,
+   "sentence": "59.0%",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Q1 FY2020 Outlook",
+   "lead_in": null,
+   "context_before": [
+    "0.2%",
+    "Non-GAAP gross margin"
+   ],
+   "context_after": [
+    "Q1 FY2020 Outlook",
+    "(In millions)"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 4214,
+   "char_end": 4317,
+   "sentence": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points.",
+    "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items.",
+    "GAAP discrete items include excess tax benefits or deficiencies related to stock-based compensation, which are expected to generate variability on a quarter by quarter basis."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 1963,
+   "char_end": 2138,
+   "sentence": "Of the $3.00 billion NVIDIA intends to return to shareholders by the end of fiscal 2020, $700 million in share repurchases were completed in the fourth quarter of fiscal 2019.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "Capital Return",
+    "In fiscal 2019, NVIDIA returned $1.95 billion to shareholders through a combination of $1.58 billion in share repurchases and $371 million in quarterly cash dividends."
+   ],
+   "context_after": [
+    "The company intends to return the remaining $2.30 billion by the end of fiscal 2020, through a combination of share repurchases and cash dividends.",
+    "NVIDIA will pay its next quarterly cash dividend of $0.16 per share on March 22, 2019, to all shareholders of record on March 1, 2019."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 3061,
+   "char_end": 3073,
+   "sentence": "$755 million",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "$755 million",
+    "$915 million"
+   ],
+   "context_after": [
+    "GAAP and non-GAAP other income and expense",
+    "$21 million"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000077",
+   "filing_type": "8-K",
+   "filed_at": "2019-05-16",
+   "char_start": 1342,
+   "char_end": 1542,
+   "sentence": "As previously communicated, NVIDIA intends to return $3.00 billion to shareholders by the end of fiscal 2020, including $700 million in share repurchases made during the fourth quarter of fiscal 2019.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "We’re excited about our pending acquisition of Mellanox, which will help us drive data center architecture for high performance computing and AI from the cloud to the edge,” he said.",
+    "Capital Return"
+   ],
+   "context_after": [
+    "In the first quarter of fiscal 2020, the company returned $97 million in quarterly cash dividends.",
+    "NVIDIA will pay its next quarterly cash dividend of $0.16 per share on June 21, 2019, to all shareholders of record on May 31, 2019."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 2139,
+   "char_end": 2286,
+   "sentence": "The company intends to return the remaining $2.30 billion by the end of fiscal 2020, through a combination of share repurchases and cash dividends.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "In fiscal 2019, NVIDIA returned $1.95 billion to shareholders through a combination of $1.58 billion in share repurchases and $371 million in quarterly cash dividends.",
+    "Of the $3.00 billion NVIDIA intends to return to shareholders by the end of fiscal 2020, $700 million in share repurchases were completed in the fourth quarter of fiscal 2019."
+   ],
+   "context_after": [
+    "NVIDIA will pay its next quarterly cash dividend of $0.16 per share on March 22, 2019, to all shareholders of record on March 1, 2019.",
+    "Q4 Fiscal 2019 Summary"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 3968,
+   "char_end": 4094,
+   "sentence": "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+    "Revenue is expected to be $2.20 billion, plus or minus 2 percent."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively.",
+    "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 18533,
+   "char_end": 18538,
+   "sentence": "58.8%",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Q1 FY2020 Outlook",
+   "lead_in": null,
+   "context_before": [
+    "Q1 FY2020 Outlook",
+    "GAAP gross margin"
+   ],
+   "context_after": [
+    "Impact of stock-based compensation expense",
+    "0.2%"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2937,
+   "char_end": 2965,
+   "sentence": "56.0%, plus or minus 100 bps",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "62.5%, plus or minus 50 bps",
+    "55.0%, plus or minus 100 bps"
+   ],
+   "context_after": [
+    "Operating expenses - GAAP",
+    "Operating expenses - non-GAAP"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2908,
+   "char_end": 2936,
+   "sentence": "55.0%, plus or minus 100 bps",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "62.3%, plus or minus 50 bps",
+    "62.5%, plus or minus 50 bps"
+   ],
+   "context_after": [
+    "56.0%, plus or minus 100 bps",
+    "Operating expenses - GAAP"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2852,
+   "char_end": 2879,
+   "sentence": "62.3%, plus or minus 50 bps",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Gross margin - GAAP",
+    "Gross margin - non-GAAP"
+   ],
+   "context_after": [
+    "62.5%, plus or minus 50 bps",
+    "55.0%, plus or minus 100 bps"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 3035,
+   "char_end": 3047,
+   "sentence": "$755 million",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Operating expenses - non-GAAP",
+    "$915 million"
+   ],
+   "context_after": [
+    "$915 million",
+    "$755 million"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 1795,
+   "char_end": 1962,
+   "sentence": "In fiscal 2019, NVIDIA returned $1.95 billion to shareholders through a combination of $1.58 billion in share repurchases and $371 million in quarterly cash dividends.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "context_before": [
+    "We fully expect to return to sustained growth,” he said.",
+    "Capital Return"
+   ],
+   "context_after": [
+    "Of the $3.00 billion NVIDIA intends to return to shareholders by the end of fiscal 2020, $700 million in share repurchases were completed in the fourth quarter of fiscal 2019.",
+    "The company intends to return the remaining $2.30 billion by the end of fiscal 2020, through a combination of share repurchases and cash dividends."
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000004",
+   "filing_type": "8-K",
+   "filed_at": "2019-01-28",
+   "char_start": 2776,
+   "char_end": 2807,
+   "sentence": "$2.20 billion, plus or minus 2%",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Revenue",
+    "$2.70 billion, plus or minus 2%"
+   ],
+   "context_after": [
+    "Gross margin - GAAP",
+    "Gross margin - non-GAAP"
+   ]
+  },
+  {
+   "cik": "0001045810",
+   "accession": "0001045810-19-000007",
+   "filing_type": "8-K",
+   "filed_at": "2019-02-14",
+   "char_start": 3900,
+   "char_end": 3965,
+   "sentence": "Revenue is expected to be $2.20 billion, plus or minus 2 percent.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "Up 35%",
+    "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:"
+   ],
+   "context_after": [
+    "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points.",
+    "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively."
+   ]
+  }
+ ],
+ "raw": {
+  "c-0001045810-000104581019000004-116": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q4 FY2019\",\"value_low\":2.20,\"value_high\":2.20,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-18582": "{\"items\":[]}",
+  "c-0001045810-000104581019000077-2710": "{\"items\":[{\"metric\":\"gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q2 FY2020\",\"value_low\":59.2,\"value_high\":59.2,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"},{\"metric\":\"non-gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q2 FY2020\",\"value_low\":59.5,\"value_high\":59.5,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000007-4097": "{\"items\":[{\"metric\":\"gaap operating expenses\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2020\",\"value_low\":930.0,\"value_high\":930.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"},{\"metric\":\"non-gaap operating expenses\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2020\",\"value_low\":755.0,\"value_high\":755.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000004-3048": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2019\",\"value_low\":915.0,\"value_high\":915.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000004-2744": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q4 FY2019\",\"value_low\":2.70,\"value_high\":2.70,\"plus_minus\":2.0,\"plus_minus_kind\":\"percent\"}]}",
+  "c-0001045810-000104581019000004-2880": "{\"items\":[{\"metric\":\"gross margin - non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2019\",\"value_low\":62.5,\"value_high\":62.5,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000007-933": "{\"items\":[]}",
+  "c-0001045810-000104581019000077-2642": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q2 FY2020\",\"value_low\":2.55,\"value_high\":2.55,\"plus_minus\":2.0,\"plus_minus_kind\":\"percent\"}]}",
+  "c-0001045810-000104581019000007-209": "{\"items\":[]}",
+  "c-0001045810-000104581019000004-2322": "{\"items\":[]}",
+  "c-0001045810-000104581019000077-1543": "{\"items\":[]}",
+  "c-0001045810-000104581019000004-3022": "{\"items\":[{\"metric\":\"gaap operating expenses\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2019\",\"value_low\":915.0,\"value_high\":915.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-4320": "{\"items\":[{\"metric\":\"gaap tax rate\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2020\",\"value_low\":10.0,\"value_high\":10.0,\"plus_minus\":1.0,\"plus_minus_kind\":\"absolute\"},{\"metric\":\"non-gaap tax rate\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2020\",\"value_low\":10.0,\"value_high\":10.0,\"plus_minus\":1.0,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000077-2839": "{\"items\":[{\"metric\":\"gaap operating expenses\",\"unit\":\"USD millions\",\"target_period\":\"Q2 FY2020\",\"value_low\":985.0,\"value_high\":985.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"},{\"metric\":\"non-gaap operating expenses\",\"unit\":\"USD millions\",\"target_period\":\"Q2 FY2020\",\"value_low\":765.0,\"value_high\":765.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-18609": "{\"items\":[{\"metric\":\"non-gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2020\",\"value_low\":59.0,\"value_high\":59.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-4214": "{\"items\":[{\"metric\":\"gaap other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2020\",\"value_low\":20.0,\"value_high\":20.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"},{\"metric\":\"non-gaap other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2020\",\"value_low\":20.0,\"value_high\":20.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-1963": "{\"items\":[{\"metric\":\"share repurchases and dividends\",\"unit\":\"USD billions\",\"target_period\":\"FY2020\",\"value_low\":3.0,\"value_high\":3.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000004-3061": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2019\",\"value_low\":755.0,\"value_high\":915.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000077-1342": "{\"items\":[{\"metric\":\"capital return\",\"unit\":\"USD billions\",\"target_period\":\"FY2020\",\"value_low\":3.0,\"value_high\":3.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-2139": "{\"items\":[]}",
+  "c-0001045810-000104581019000007-3968": "{\"items\":[{\"metric\":\"gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2020\",\"value_low\":58.8,\"value_high\":58.8,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"},{\"metric\":\"non-gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2020\",\"value_low\":59.0,\"value_high\":59.0,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000007-18533": "{\"items\":[{\"metric\":\"gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2020\",\"value_low\":58.8,\"value_high\":58.8,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000004-2937": "{\"items\":[{\"metric\":\"gross margin - non-gaap\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2019\",\"value_low\":56.0,\"value_high\":56.0,\"plus_minus\":1.0,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000004-2908": "{\"items\":[{\"metric\":\"gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2019\",\"value_low\":55.0,\"value_high\":55.0,\"plus_minus\":1.0,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000004-2852": "{\"items\":[{\"metric\":\"gaap gross margin\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2019\",\"value_low\":62.3,\"value_high\":62.3,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"}]}",
+  "c-0001045810-000104581019000004-3035": "{\"items\":[{\"metric\":\"operating expenses - non-gaap\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2019\",\"value_low\":755.0,\"value_high\":915.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000007-1795": "{\"items\":[{\"metric\":\"capital return to shareholders\",\"unit\":\"USD billions\",\"target_period\":\"FY2020\",\"value_low\":3.0,\"value_high\":3.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0001045810-000104581019000004-2776": "{\"items\":[{\"metric\":\"gross profit\",\"unit\":\"USD billions\",\"target_period\":\"Q4 FY2019\",\"value_low\":2.20,\"value_high\":2.20,\"plus_minus\":2.0,\"plus_minus_kind\":\"percent\"}]}",
+  "c-0001045810-000104581019000007-3900": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q1 FY2020\",\"value_low\":2.20,\"value_high\":2.20,\"plus_minus\":2.0,\"plus_minus_kind\":\"percent\"}]}"
+ },
+ "drafts": [
+  {
+   "draft_id": "01D28W2W0033ECHF7S9NBB62GA",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-116",
+   "capture_method": "sentence",
+   "char_start": 116,
+   "heading": null,
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "Fourth quarter revenue expected to be $2.20 billion versus previous guidance of $2.70 billion",
+    "metric": "revenue",
+    "target_low": 2.2,
+    "target_high": 2.2,
+    "unit": "USD billions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "Fourth quarter revenue expected to be $2.20 billion versus previous guidance of $2.70 billion"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00KGS09364YV0JT6ET",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-2744",
+   "capture_method": "section",
+   "char_start": 2744,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "$2.70 billion, plus or minus 2%",
+    "metric": "revenue",
+    "target_low": 2.646,
+    "target_high": 2.754,
+    "unit": "USD billions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "$2.70 billion, plus or minus 2%"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00QQJEPXQ7KT74Z0HH",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-2776",
+   "capture_method": "section",
+   "char_start": 2776,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "$2.20 billion, plus or minus 2%",
+    "metric": "gross profit",
+    "target_low": 2.156,
+    "target_high": 2.244,
+    "unit": "USD billions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "$2.20 billion, plus or minus 2%"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W006KECE7DXQ0EBVWV9",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-2852",
+   "capture_method": "section",
+   "char_start": 2852,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "62.3%, plus or minus 50 bps",
+    "metric": "gaap gross margin",
+    "target_low": 61.8,
+    "target_high": 62.8,
+    "unit": "percent",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "62.3%, plus or minus 50 bps"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00511HY8SNEVRK99Q4",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-2880",
+   "capture_method": "section",
+   "char_start": 2880,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "62.5%, plus or minus 50 bps",
+    "metric": "gross margin - non-gaap",
+    "target_low": 62.0,
+    "target_high": 63.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "62.5%, plus or minus 50 bps"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00M76GH21KW7VQ06R0",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-2908",
+   "capture_method": "section",
+   "char_start": 2908,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "55.0%, plus or minus 100 bps",
+    "metric": "gaap gross margin",
+    "target_low": 54.0,
+    "target_high": 56.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "55.0%, plus or minus 100 bps"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00XG4SZ1TZW7JW0E3T",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-2937",
+   "capture_method": "section",
+   "char_start": 2937,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "56.0%, plus or minus 100 bps",
+    "metric": "gross margin - non-gaap",
+    "target_low": 55.0,
+    "target_high": 57.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "56.0%, plus or minus 100 bps"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00R3MHBHG1CDH0C882",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-3022",
+   "capture_method": "section",
+   "char_start": 3022,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "$915 million",
+    "metric": "gaap operating expenses",
+    "target_low": 915.0,
+    "target_high": 915.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "$915 million"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00A0H10359MQ0EAKW6",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-3035",
+   "capture_method": "section",
+   "char_start": 3035,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "$755 million",
+    "metric": "operating expenses - non-gaap",
+    "target_low": 755.0,
+    "target_high": 915.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "$755 million"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00Y4BETQJTHFS4NJRB",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-3048",
+   "capture_method": "section",
+   "char_start": 3048,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "$915 million",
+    "metric": "revenue",
+    "target_low": 915.0,
+    "target_high": 915.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "$915 million"
+    }
+   }
+  },
+  {
+   "draft_id": "01D28W2W00TAYMR9JEHN6K233S",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000004-3061",
+   "capture_method": "section",
+   "char_start": 3061,
+   "heading": "Updated Q4 Fiscal 2019 Guidance",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "$755 million",
+    "metric": "revenue",
+    "target_low": 755.0,
+    "target_high": 915.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2019",
+    "stated_at": "2019-01-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000004/pressrelease.htm",
+     "accession_number": "0001045810-19-000004",
+     "filing_type": "8-K",
+     "filed_at": "2019-01-28",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "47f07e8322a8446b0341073047065fa943bcdab0dba20fd3228003779023e5be",
+     "excerpt": "$755 million"
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300NANVM2WZEYE0NYKV",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-1795",
+   "capture_method": "sentence",
+   "char_start": 1795,
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "item_index": 0,
+   "assumption": {
+    "text": "In fiscal 2019, NVIDIA returned $1.95 billion to shareholders through a combination of $1.58 billion in share repurchases and $371 million in quarterly cash dividends.",
+    "metric": "capital return to shareholders",
+    "target_low": 3.0,
+    "target_high": 3.0,
+    "unit": "USD billions",
+    "target_period": "FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "In fiscal 2019, NVIDIA returned $1.95 billion to shareholders through a combination of $1.58 billion in share repurchases and $371 million in quarterly cash dividends."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300WRKC74473F1F2MRZ",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-1963",
+   "capture_method": "sentence",
+   "char_start": 1963,
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "item_index": 0,
+   "assumption": {
+    "text": "Of the $3.00 billion NVIDIA intends to return to shareholders by the end of fiscal 2020, $700 million in share repurchases were completed in the fourth quarter of fiscal 2019.",
+    "metric": "share repurchases and dividends",
+    "target_low": 3.0,
+    "target_high": 3.0,
+    "unit": "USD billions",
+    "target_period": "FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "Of the $3.00 billion NVIDIA intends to return to shareholders by the end of fiscal 2020, $700 million in share repurchases were completed in the fourth quarter of fiscal 2019."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV3001T7GDKK38JB0YDYX",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-3900",
+   "capture_method": "sentence",
+   "char_start": 3900,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "Revenue is expected to be $2.20 billion, plus or minus 2 percent.",
+    "metric": "revenue",
+    "target_low": 2.156,
+    "target_high": 2.244,
+    "unit": "USD billions",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "Revenue is expected to be $2.20 billion, plus or minus 2 percent."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300PYJCS9W6FEDS9K4Y",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-3968",
+   "capture_method": "sentence",
+   "char_start": 3968,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points.",
+    "metric": "gaap gross margin",
+    "target_low": 58.3,
+    "target_high": 59.3,
+    "unit": "percent",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300N9FZKXSGX53Z764S",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-3968",
+   "capture_method": "sentence",
+   "char_start": 3968,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 1,
+   "assumption": {
+    "text": "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points.",
+    "metric": "non-gaap gross margin",
+    "target_low": 58.5,
+    "target_high": 59.5,
+    "unit": "percent",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP gross margins are expected to be 58.8 percent and 59.0 percent, respectively, plus or minus 50 basis points."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300446HFVP26Z8Q5GQM",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-4097",
+   "capture_method": "sentence",
+   "char_start": 4097,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively.",
+    "metric": "gaap operating expenses",
+    "target_low": 930.0,
+    "target_high": 930.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300VY8SE02CEZDGFQ4B",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-4097",
+   "capture_method": "sentence",
+   "char_start": 4097,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 1,
+   "assumption": {
+    "text": "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively.",
+    "metric": "non-gaap operating expenses",
+    "target_low": 755.0,
+    "target_high": 755.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP operating expenses are expected to be approximately $930 million and $755 million, respectively."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300V0WQT0EH9C5QHKMX",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-4214",
+   "capture_method": "sentence",
+   "char_start": 4214,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million.",
+    "metric": "gaap other income and expense",
+    "target_low": 20.0,
+    "target_high": 20.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV3006BD1HXNKC497VH91",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-4214",
+   "capture_method": "sentence",
+   "char_start": 4214,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 1,
+   "assumption": {
+    "text": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million.",
+    "metric": "non-gaap other income and expense",
+    "target_low": 20.0,
+    "target_high": 20.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $20 million."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV30047E8JVGB1VSR096R",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-4320",
+   "capture_method": "sentence",
+   "char_start": 4320,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items.",
+    "metric": "gaap tax rate",
+    "target_low": 9.0,
+    "target_high": 11.0,
+    "unit": "percent",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300A1F68K2WHARN5QNQ",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-4320",
+   "capture_method": "sentence",
+   "char_start": 4320,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2020 is as follows:",
+   "item_index": 1,
+   "assumption": {
+    "text": "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items.",
+    "metric": "non-gaap tax rate",
+    "target_low": 9.0,
+    "target_high": 11.0,
+    "unit": "percent",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items."
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV300KFGC5VY6YJFC4AE3",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-18533",
+   "capture_method": "section",
+   "char_start": 18533,
+   "heading": "Q1 FY2020 Outlook",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "58.8%",
+    "metric": "gaap gross margin",
+    "target_low": 58.8,
+    "target_high": 58.8,
+    "unit": "percent",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "58.8%"
+    }
+   }
+  },
+  {
+   "draft_id": "01D3MMV3007HNCTNRJ1CH71KYJ",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000007-18609",
+   "capture_method": "section",
+   "char_start": 18609,
+   "heading": "Q1 FY2020 Outlook",
+   "lead_in": null,
+   "item_index": 0,
+   "assumption": {
+    "text": "59.0%",
+    "metric": "non-gaap gross margin",
+    "target_low": 59.0,
+    "target_high": 59.0,
+    "unit": "percent",
+    "target_period": "Q1 FY2020",
+    "stated_at": "2019-02-14",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+     "accession_number": "0001045810-19-000007",
+     "filing_type": "8-K",
+     "filed_at": "2019-02-14",
+     "fetched_at": "2026-09-20T06:42:08Z",
+     "content_sha256": "27a64a57272dc291bfcdf25430df9d165a7e3cc1078354dc0ef7bb2b26b98228",
+     "excerpt": "59.0%"
+    }
+   }
+  },
+  {
+   "draft_id": "01DAYZ0G00ZY6VAE5N1G0HJH3F",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000077-1342",
+   "capture_method": "sentence",
+   "char_start": 1342,
+   "heading": null,
+   "lead_in": "FOR IMMEDIATE RELEASE:",
+   "item_index": 0,
+   "assumption": {
+    "text": "As previously communicated, NVIDIA intends to return $3.00 billion to shareholders by the end of fiscal 2020, including $700 million in share repurchases made during the fourth quarter of fiscal 2019.",
+    "metric": "capital return",
+    "target_low": 3.0,
+    "target_high": 3.0,
+    "unit": "USD billions",
+    "target_period": "FY2020",
+    "stated_at": "2019-05-16",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+     "accession_number": "0001045810-19-000077",
+     "filing_type": "8-K",
+     "filed_at": "2019-05-16",
+     "fetched_at": "2026-09-20T06:42:11Z",
+     "content_sha256": "4df8264c5fb3e29e472d4db8ecabdeafb4deca7ee871cec52b66ed1ce7bc377d",
+     "excerpt": "As previously communicated, NVIDIA intends to return $3.00 billion to shareholders by the end of fiscal 2020, including $700 million in share repurchases made during the fourth quarter of fiscal 2019."
+    }
+   }
+  },
+  {
+   "draft_id": "01DAYZ0G009NCSCG7BKNDSWAF2",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000077-2642",
+   "capture_method": "sentence",
+   "char_start": 2642,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "Revenue is expected to be $2.55 billion, plus or minus 2 percent.",
+    "metric": "revenue",
+    "target_low": 2.499,
+    "target_high": 2.601,
+    "unit": "USD billions",
+    "target_period": "Q2 FY2020",
+    "stated_at": "2019-05-16",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+     "accession_number": "0001045810-19-000077",
+     "filing_type": "8-K",
+     "filed_at": "2019-05-16",
+     "fetched_at": "2026-09-20T06:42:11Z",
+     "content_sha256": "4df8264c5fb3e29e472d4db8ecabdeafb4deca7ee871cec52b66ed1ce7bc377d",
+     "excerpt": "Revenue is expected to be $2.55 billion, plus or minus 2 percent."
+    }
+   }
+  },
+  {
+   "draft_id": "01DAYZ0G00SGFZABFQREN7MZCW",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000077-2710",
+   "capture_method": "sentence",
+   "char_start": 2710,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points.",
+    "metric": "gaap gross margin",
+    "target_low": 58.7,
+    "target_high": 59.7,
+    "unit": "percent",
+    "target_period": "Q2 FY2020",
+    "stated_at": "2019-05-16",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+     "accession_number": "0001045810-19-000077",
+     "filing_type": "8-K",
+     "filed_at": "2019-05-16",
+     "fetched_at": "2026-09-20T06:42:11Z",
+     "content_sha256": "4df8264c5fb3e29e472d4db8ecabdeafb4deca7ee871cec52b66ed1ce7bc377d",
+     "excerpt": "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points."
+    }
+   }
+  },
+  {
+   "draft_id": "01DAYZ0G00GD3A9T8BG7K93X8Q",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000077-2710",
+   "capture_method": "sentence",
+   "char_start": 2710,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "item_index": 1,
+   "assumption": {
+    "text": "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points.",
+    "metric": "non-gaap gross margin",
+    "target_low": 59.0,
+    "target_high": 60.0,
+    "unit": "percent",
+    "target_period": "Q2 FY2020",
+    "stated_at": "2019-05-16",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+     "accession_number": "0001045810-19-000077",
+     "filing_type": "8-K",
+     "filed_at": "2019-05-16",
+     "fetched_at": "2026-09-20T06:42:11Z",
+     "content_sha256": "4df8264c5fb3e29e472d4db8ecabdeafb4deca7ee871cec52b66ed1ce7bc377d",
+     "excerpt": "GAAP and non-GAAP gross margins are expected to be 59.2 percent and 59.5 percent, respectively, plus or minus 50 basis points."
+    }
+   }
+  },
+  {
+   "draft_id": "01DAYZ0G008WH4JJ7WHW9TDP6B",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000077-2839",
+   "capture_method": "sentence",
+   "char_start": 2839,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "item_index": 0,
+   "assumption": {
+    "text": "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively.",
+    "metric": "gaap operating expenses",
+    "target_low": 985.0,
+    "target_high": 985.0,
+    "unit": "USD millions",
+    "target_period": "Q2 FY2020",
+    "stated_at": "2019-05-16",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+     "accession_number": "0001045810-19-000077",
+     "filing_type": "8-K",
+     "filed_at": "2019-05-16",
+     "fetched_at": "2026-09-20T06:42:11Z",
+     "content_sha256": "4df8264c5fb3e29e472d4db8ecabdeafb4deca7ee871cec52b66ed1ce7bc377d",
+     "excerpt": "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively."
+    }
+   }
+  },
+  {
+   "draft_id": "01DAYZ0G00SWP3H5ZETGW02CT8",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000077-2839",
+   "capture_method": "sentence",
+   "char_start": 2839,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the second quarter of fiscal 2020 is as follows:",
+   "item_index": 1,
+   "assumption": {
+    "text": "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively.",
+    "metric": "non-gaap operating expenses",
+    "target_low": 765.0,
+    "target_high": 765.0,
+    "unit": "USD millions",
+    "target_period": "Q2 FY2020",
+    "stated_at": "2019-05-16",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+     "accession_number": "0001045810-19-000077",
+     "filing_type": "8-K",
+     "filed_at": "2019-05-16",
+     "fetched_at": "2026-09-20T06:42:11Z",
+     "content_sha256": "4df8264c5fb3e29e472d4db8ecabdeafb4deca7ee871cec52b66ed1ce7bc377d",
+     "excerpt": "GAAP and non-GAAP operating expenses are expected to be approximately $985 million and $765 million, respectively."
+    }
+   }
+  }
+ ],
+ "block_2019": {
+  "cik": "0001045810",
+  "accession": "0001045810-19-000004",
+  "filing_type": "8-K",
+  "filed_at": "2019-01-28",
+  "char_start": 2736,
+  "char_end": 3235,
+  "sentence": "Revenue\n$2.70 billion, plus or minus 2%\n$2.20 billion, plus or minus 2%\nGross margin - GAAP\nGross margin - non-GAAP\n62.3%, plus or minus 50 bps\n62.5%, plus or minus 50 bps\n55.0%, plus or minus 100 bps\n56.0%, plus or minus 100 bps\nOperating expenses - GAAP\nOperating expenses - non-GAAP\n$915 million\n$755 million\n$915 million\n$755 million\nGAAP and non-GAAP other income and expense\n$21 million\n$25 million\nGAAP and non-GAAP tax rate, excluding discrete items\n8%, plus or minus 1%\n6%, plus or minus 1%",
+  "text_version": 1,
+  "capture_method": "section",
+  "heading": "Updated Q4 Fiscal 2019 Guidance",
+  "lead_in": null,
+  "context_before": [
+   "The company will provide Q4 fiscal 2019 financial results and Q1 fiscal 2020 guidance on its earnings call scheduled for Feb. 14.",
+   "Previous Q4 Fiscal 2019 Guidance"
+  ],
+  "context_after": [
+   "This update is an estimate, based on information available to management as of the date of this release, and is subject to further changes upon completion of the company’s standard quarter and year-end closing procedures.",
+   "This update does not present all necessary information for an understanding of NVIDIA’s financial condition as of Jan. 27, 2019, or its results of operations for the quarter and fiscal year ended Jan. 27, 2019."
+  ],
+  "block_lines": 21,
+  "block_end": "gap"
+ }
+}

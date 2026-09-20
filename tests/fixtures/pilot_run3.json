@@ -1,0 +1,3902 @@
+{
+ "note": "The 30-request pilot after the seven fixes of the second pilot review (same requests as pilot_run2.json, msgbatch_01BEJRLZJayhLZqAFV9C3yAF plus its canary). candidates are the exact rows sent, including table_header as it was then; raw is the model's answer per custom_id; drafts and rejects are what 03 wrote; lines_above are the 14 lines above each section block in the cached filing; wrong is an audit of the drafts against the filings (9 rows); caveats are correct rows that carry a known limitation.",
+ "candidates": [
+  {
+   "ticker": "NVDA",
+   "custom_id": "c-0001045810-000104581019000140-2777",
+   "cik": "0001045810",
+   "accession": "0001045810-19-000140",
+   "filing_type": "8-K",
+   "filed_at": "2019-08-15",
+   "char_start": 2777,
+   "char_end": 2880,
+   "sentence": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $25 million.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2020 is as follows:",
+   "context_before": [
+    "GAAP and non-GAAP gross margins are expected to be 62.0 percent and 62.5 percent, respectively, plus or minus 50 basis points.",
+    "GAAP and non-GAAP operating expenses are expected to be approximately $980 million and $765 million, respectively."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP tax rates are both expected to be 10 percent, plus or minus 1 percent, excluding any discrete items.",
+    "GAAP discrete items include excess tax benefits or deficiencies related to stock-based compensation, which are expected to generate variability on a quarter by quarter basis."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "cik": "0001045810",
+   "accession": "0001045810-20-000145",
+   "filing_type": "8-K",
+   "filed_at": "2020-08-19",
+   "char_start": 20492,
+   "char_end": 20805,
+   "sentence": "($ in millions)\nGAAP gross margin 62.5 %\nImpact of stock-based compensation expense, acquisition-related costs, and other costs 3.0 %\nNon-GAAP gross margin 65.5 %\nGAAP operating expenses $ 1,535\nStock-based compensation expense, acquisition-related costs, and other costs (445)\nNon-GAAP operating expenses $ 1,090",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Q3 FY2021 Outlook",
+   "lead_in": "(A) Stock-based compensation consists of the following:",
+   "context_before": [
+    "NVIDIA CORPORATION",
+    "RECONCILIATION OF GAAP TO NON-GAAP OUTLOOK"
+   ],
+   "context_after": [],
+   "block_lines": 7,
+   "block_end": "eof",
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "c-0001045810-000104581021000128-3565",
+   "cik": "0001045810",
+   "accession": "0001045810-21-000128",
+   "filing_type": "8-K",
+   "filed_at": "2021-08-18",
+   "char_start": 3565,
+   "char_end": 3691,
+   "sentence": "GAAP and non-GAAP gross margins are expected to be 65.2 percent and 67.0 percent, respectively, plus or minus 50 basis points.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2022 is as follows:",
+   "context_before": [
+    "NVIDIA’s outlook for the third quarter of fiscal 2022 is as follows:",
+    "Revenue is expected to be $6.80 billion, plus or minus 2 percent."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP operating expenses are expected to be approximately $1.96 billion and $1.37 billion, respectively.",
+    "GAAP and non-GAAP other income and expense are both expected to be an expense of approximately $60 million, excluding gains and losses on equity securities."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "cik": "0001045810",
+   "accession": "0001045810-22-000136",
+   "filing_type": "8-K",
+   "filed_at": "2022-08-24",
+   "char_start": 2785,
+   "char_end": 3744,
+   "sentence": "NVIDIA’s outlook for the third quarter of fiscal 2023 is as follows:\n•Revenue is expected to be $5.90 billion, plus or minus 2%. Gaming and Professional Visualization revenue are expected to decline sequentially, as OEMs and channel partners reduce inventory levels to align with current levels of demand and prepare for NVIDIA’s new product generation. The company expects that decline to be partially offset by sequential growth in Data Center and Automotive.\n•GAAP and non-GAAP gross margins are expected to be 62.4% and 65.0%, respectively, plus or minus 50 basis points.\n•GAAP and non-GAAP operating expenses are expected to be approximately $2.59 billion and $1.82 billion, respectively.\n•GAAP and non-GAAP other income and expense are expected to be an expense of approximately $10 million, excluding gains and losses from non-affiliated investments.\n•GAAP and non-GAAP tax rates are expected to be 9.5%, plus or minus 1%, excluding any discrete items.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Outlook",
+   "lead_in": null,
+   "context_before": [
+    "Net income $1,292 $3,443 $2,623 Down 62% Down 51%",
+    "Diluted earnings per share $0.51 $1.36 $1.04 Down 63% Down 51%"
+   ],
+   "context_after": [
+    "Highlights",
+    "NVIDIA achieved progress since its previous earnings announcement in these areas:"
+   ],
+   "block_lines": 6,
+   "block_end": "end-heading",
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "c-0001045810-000104581023000014-4880",
+   "cik": "0001045810",
+   "accession": "0001045810-23-000014",
+   "filing_type": "8-K",
+   "filed_at": "2023-02-22",
+   "char_start": 4880,
+   "char_end": 5041,
+   "sentence": "GAAP and non-GAAP other income and expense are expected to be an income of approximately $50 million, excluding gains and losses from non-affiliated investments.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2024 is as follows:",
+   "context_before": [
+    "GAAP and non-GAAP gross margins are expected to be 64.1% and 66.5%, respectively, plus or minus 50 basis points.",
+    "GAAP and non-GAAP operating expenses are expected to be approximately $2.53 billion and $1.78 billion, respectively."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP tax rates are expected to be 13.0%, plus or minus 1%, excluding any discrete items.",
+    "Highlights"
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "cik": "0001045810",
+   "accession": "0001045810-23-000225",
+   "filing_type": "8-K",
+   "filed_at": "2023-11-21",
+   "char_start": 2480,
+   "char_end": 3109,
+   "sentence": "NVIDIA’s outlook for the fourth quarter of fiscal 2024 is as follows:\n•Revenue is expected to be $20.00 billion, plus or minus 2%.\n•GAAP and non-GAAP gross margins are expected to be 74.5% and 75.5%, respectively, plus or minus 50 basis points.\n•GAAP and non-GAAP operating expenses are expected to be approximately $3.17 billion and $2.20 billion, respectively.\n•GAAP and non-GAAP other income and expense are expected to be an income of approximately $200 million, excluding gains and losses from non-affiliated investments.\n•GAAP and non-GAAP tax rates are expected to be 15.0%, plus or minus 1%, excluding any discrete items.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Outlook",
+   "lead_in": null,
+   "context_before": [
+    "Net income $10,020 $6,740 $1,456 Up 49% Up 588%",
+    "Diluted earnings per share $4.02 $2.70 $0.58 Up 49% Up 593%"
+   ],
+   "context_after": [
+    "Highlights",
+    "NVIDIA achieved progress since its previous earnings announcement in these areas:"
+   ],
+   "block_lines": 6,
+   "block_end": "end-heading",
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "c-0001045810-000104581024000262-3542",
+   "cik": "0001045810",
+   "accession": "0001045810-24-000262",
+   "filing_type": "8-K",
+   "filed_at": "2024-08-28",
+   "char_start": 3542,
+   "char_end": 3740,
+   "sentence": "GAAP and non-GAAP other income and expense are expected to be an income of approximately $350 million, excluding gains and losses from non-affiliated investments and publicly-held equity securities.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": "Outlook",
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2025 is as follows:",
+   "context_before": [
+    "GAAP and non-GAAP operating expenses are expected to be approximately $4.3 billion and $3.0 billion, respectively.",
+    "Full-year operating expenses are expected to grow in the mid- to upper-40% range."
+   ],
+   "context_after": [
+    "GAAP and non-GAAP tax rates are expected to be 17%, plus or minus 1%, excluding any discrete items.",
+    "Highlights"
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "cik": "0001045810",
+   "accession": "0001045810-24-000315",
+   "filing_type": "8-K",
+   "filed_at": "2024-11-20",
+   "char_start": 21071,
+   "char_end": 21386,
+   "sentence": "($ in millions)\nGAAP gross margin 73.0 %\nImpact of stock-based compensation expense, acquisition-related costs, and other costs 0.5 %\nNon-GAAP gross margin 73.5 %\nGAAP operating expenses $ 4,750\nStock-based compensation expense, acquisition-related costs, and other costs (1,350)\nNon-GAAP operating expenses $ 3,400",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "context_before": [
+    "RECONCILIATION OF GAAP TO NON-GAAP OUTLOOK",
+    "Q4 FY2025"
+   ],
+   "context_after": [],
+   "block_lines": 7,
+   "block_end": "eof",
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "c-0001045810-000104581026000019-886",
+   "cik": "0001045810",
+   "accession": "0001045810-26-000019",
+   "filing_type": "8-K",
+   "filed_at": "2026-02-25",
+   "char_start": 886,
+   "char_end": 983,
+   "sentence": "For fiscal 2026, GAAP and non-GAAP earnings per diluted share were $4.90 and $4.77, respectively.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": null,
+   "context_before": [
+    "For fiscal 2026, GAAP and non-GAAP gross margins were 71.1% and 71.3%, respectively.",
+    "For the quarter, GAAP and non-GAAP earnings per diluted share were $1.76 and $1.62, respectively."
+   ],
+   "context_after": [
+    "“Computing demand is growing exponentially — the agentic AI inflection point has arrived.",
+    "Grace Blackwell with NVLink is the king of inference today — delivering an order-of-magnitude lower cost per token — and Vera Rubin will extend that leadership even further,” said Jensen Huang, founder and CEO of NVIDIA."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "NVDA",
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "cik": "0001045810",
+   "accession": "0001045810-26-000019",
+   "filing_type": "8-K",
+   "filed_at": "2026-02-25",
+   "char_start": 25477,
+   "char_end": 26037,
+   "sentence": "($ in millions)\nGAAP gross margin 74.9 %\nImpact of acquisition-related costs and other costs 0.1 %\nNon-GAAP gross margin* 75.0 %\nGAAP operating expenses $ 7,700\nAcquisition-related costs and other costs (200)\nNon-GAAP operating expenses* $ 7,500\n*Beginning in the first quarter of fiscal 2027, NVIDIA will include stock-based compensation expense in its non-GAAP financial measures. Stock-based compensation expense for the first quarter of fiscal 2027 is expected to have a 0.1% impact on non-GAAP gross margin and $1.9 billion in non-GAAP operating expenses.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Q1 FY2027 Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "context_before": [
+    "NVIDIA CORPORATION",
+    "RECONCILIATION OF GAAP TO NON-GAAP OUTLOOK"
+   ],
+   "context_after": [],
+   "block_lines": 8,
+   "block_end": "eof",
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "c-0000027419-000002741919000018-3052",
+   "cik": "0000027419",
+   "accession": "0000027419-19-000018",
+   "filing_type": "8-K",
+   "filed_at": "2019-08-21",
+   "char_start": 3052,
+   "char_end": 3248,
+   "sentence": "For both the third quarter and second half of 2019, Target expects comparable sales growth in line with the 3.4 percent comparable sales growth the company delivered in the second quarter of 2019.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": "Third Quarter and Full-Year 2019 Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "context_before": [
+    "Because of our outstanding performance in the first half of the year and our confidence moving forward, we are increasing our guidance for full-year earnings per share.”",
+    "Third Quarter and Full-Year 2019 Guidance"
+   ],
+   "context_after": [
+    "For the third quarter, the Company expects both GAAP EPS from continuing operations and Adjusted EPS of $1.04 to $1.24.",
+    "For full-year 2019, Target now expects GAAP EPS from continuing operations and Adjusted EPS of $5.90 to $6.20 compared with the prior range of $5.75 to $6.05."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "c-0000027419-000002741921000007-5682",
+   "cik": "0000027419",
+   "accession": "0000027419-21-000007",
+   "filing_type": "8-K",
+   "filed_at": "2021-03-02",
+   "char_start": 5682,
+   "char_end": 5884,
+   "sentence": "Full-year SG&A expense rate was 19.9 percent in 2020, compared with 20.8 percent in 2019, reflecting significant leverage on fixed costs that offset investments in team member pay, benefits, and safety.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": null,
+   "context_before": [
+    "Full-year gross margin rate was 28.4 percent, compared with 28.9 percent in 2019.",
+    "This rate decline reflects unfavorable category sales mix and higher supply chain and fulfillment costs from channel mix, partially offset by markdown favorability."
+   ],
+   "context_after": [
+    "Interest Expense and Taxes",
+    "The Company’s fourth quarter 2020 net interest expense was $106 million, compared with $118 million last year."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "b-0000027419-000002741921000013-2980",
+   "cik": "0000027419",
+   "accession": "0000027419-21-000013",
+   "filing_type": "8-K",
+   "filed_at": "2021-05-19",
+   "char_start": 2980,
+   "char_end": 3534,
+   "sentence": "For the second quarter of 2021, the Company expects mid-to-high single digit growth in comparable sales. The Company expects its second-quarter operating margin rate will be well above the second quarter 2019 rate of 7.2 percent, but likely not as high as last year’s unprecedented 10.0 percent.\nThe Company expects positive single-digit comparable sales growth in the last two quarters of the year, and expects its full-year operating margin rate will be well above the 2020 rate of 7.0 percent, with the potential to reach 8 percent or somewhat higher.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Fiscal 2021 Guidance",
+   "lead_in": "•For additional media materials, please visit:",
+   "context_before": [
+    "Importantly, market-share gains of more than $1 billion in the first quarter, on top of $1 billion in share gains a year ago, demonstrate Target’s continued relevance with our guests, even as they have many more shopping options compared with a year ago,” said Brian Cornell, chairman and chief execu...",
+    "“Given the trust we’ve built with our guests quarter after quarter and our commitment to adjusting along with them to the ongoing shifts in the macro environment, we're confident in continued comp growth in the second quarter and through the remainder of the year, as well as a healthy full-year oper..."
+   ],
+   "context_after": [
+    "Operating Results",
+    "Comparable sales grew 22.9 percent in the first quarter, reflecting comparable store sales growth of 18.0 percent and comparable digital sales growth of 50 percent."
+   ],
+   "block_lines": 2,
+   "block_end": "end-heading",
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "c-0000027419-000002741923000010-5348",
+   "cik": "0000027419",
+   "accession": "0000027419-23-000010",
+   "filing_type": "8-K",
+   "filed_at": "2023-02-28",
+   "char_start": 5348,
+   "char_end": 5532,
+   "sentence": "Full-year sales increased 2.8 percent to $107.6 billion from $104.6 billion last year, reflecting a 2.2 percent increase in comparable sales combined with sales from non-mature stores.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": null,
+   "context_before": [
+    "Total revenue of $31.4 billion grew 1.3 percent in the fourth quarter compared with last year, driven by sales growth of 1.2 percent and an 8.4 percent increase in other revenue.",
+    "Operating income was $1.2 billion in fourth quarter 2022, down 44.7 percent from $2.1 billion in 2021."
+   ],
+   "context_after": [
+    "Full-year total revenue of $109.1 billion grew 2.9 percent compared with 2021, reflecting sales growth of 2.8 percent and a 9.8 percent increase in other revenue.",
+    "Fourth quarter operating income margin rate was 3.7 percent in 2022 compared with 6.8 percent in 2021."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "b-0000027419-000002741923000023-17138",
+   "cik": "0000027419",
+   "accession": "0000027419-23-000023",
+   "filing_type": "8-K",
+   "filed_at": "2023-05-17",
+   "char_start": 17138,
+   "char_end": 17205,
+   "sentence": "$1.30 - $1.70 $7.75 - $8.75\nEstimated adjustments\nOther (a)\n$ — $ —",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "GAAP diluted earnings per share guidance",
+   "lead_in": null,
+   "context_before": [
+    "Per Share",
+    "Per Share"
+   ],
+   "context_after": [
+    "Adjusted diluted earnings per share guidance",
+    "$1.30 - $1.70 $7.75 - $8.75"
+   ],
+   "block_lines": 4,
+   "block_end": "heading",
+   "table_header": "Q2 2023 Full Year 2023"
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "c-0000027419-000002741924000126-2918",
+   "cik": "0000027419",
+   "accession": "0000027419-24-000126",
+   "filing_type": "8-K",
+   "filed_at": "2024-05-22",
+   "char_start": 2918,
+   "char_end": 3057,
+   "sentence": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "context_before": [
+    "Looking ahead, our team will deliver for our guests through lower prices, a seasonally relevant assortment, ease and convenience, as we keep investing in our strategy and efficiency initiatives to get back to growth and deliver on our longer-term financial goals.”",
+    "Guidance"
+   ],
+   "context_after": [
+    "For the full year, the Company continues to expect a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $8.60 to $9.60.",
+    "Operating Results"
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "b-0000027419-000002741924000126-15105",
+   "cik": "0000027419",
+   "accession": "0000027419-24-000126",
+   "filing_type": "8-K",
+   "filed_at": "2024-05-22",
+   "char_start": 15105,
+   "char_end": 15172,
+   "sentence": "$1.95 - $2.35 $8.60 - $9.60\nEstimated adjustments\nOther (a)\n$ — $ —",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "GAAP diluted earnings per share guidance",
+   "lead_in": null,
+   "context_before": [
+    "(per share) (unaudited)",
+    "Q2 2024 Full Year 2024"
+   ],
+   "context_after": [
+    "Adjusted diluted earnings per share guidance",
+    "$1.95 - $2.35 $8.60 - $9.60"
+   ],
+   "block_lines": 4,
+   "block_end": "heading",
+   "table_header": "Q2 2024 Full Year 2024"
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "b-0000027419-000002741925000096-3216",
+   "cik": "0000027419",
+   "accession": "0000027419-25-000096",
+   "filing_type": "8-K",
+   "filed_at": "2025-05-21",
+   "char_start": 3216,
+   "char_end": 3467,
+   "sentence": "For fiscal 2025, the Company now expects a low-single digit decline in sales, and GAAP EPS of $8.00 to $10.00. Adjusted EPS, which excludes the gains from the litigation settlements in the first quarter, is expected to be approximately $7.00 to $9.00.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "context_before": [
+    "These steps forward are intended to build more speed and agility into how we operate, and position key capabilities to drive long-term profitable growth.",
+    "With these changes and the financial strength to continue investing in our business, I’m confident we can emerge an even stronger company over time.\""
+   ],
+   "context_after": [
+    "Operating Results",
+    "Comparable sales decreased 3.8 percent in the first quarter, reflecting a comparable store sales decline of 5.7 percent and comparable digital sales growth of 4.7 percent."
+   ],
+   "block_lines": 1,
+   "block_end": "end-heading",
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "c-0000027419-000002741926000012-4374",
+   "cik": "0000027419",
+   "accession": "0000027419-26-000012",
+   "filing_type": "8-K",
+   "filed_at": "2026-03-03",
+   "char_start": 4374,
+   "char_end": 4597,
+   "sentence": "Full-year net sales decreased 1.7 percent to $104.8 billion from $106.6 billion last year, reflecting a 2.6 percent decrease in comparable sales partially offset by sales from new stores and growth in non-merchandise sales.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "The Company has the following expectations for 2026:",
+   "context_before": [
+    "more -",
+    "Target Corporation Reports Fourth Quarter and Full-Year 2025 Earnings — Page 3 of 14"
+   ],
+   "context_after": [
+    "Fourth quarter operating income margin rate, which includes the impact of non-recurring items, was 4.5 percent in 2025 compared with 4.7 percent in 2024.",
+    "Excluding those non-recurring items, Adjusted operating income margin rate was 4.8 percent in 2025."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "TGT",
+   "custom_id": "b-0000027419-000002741926000012-26074",
+   "cik": "0000027419",
+   "accession": "0000027419-26-000012",
+   "filing_type": "8-K",
+   "filed_at": "2026-03-03",
+   "char_start": 26074,
+   "char_end": 26507,
+   "sentence": "$1.30+(a)\n$7.50 - $8.50\n(a)The company expects Q1 2026 GAAP and Adjusted EPS will be flat to up slightly from last year’s Adjusted EPS of $1.30. A reconciliation of Q1 2025 Adjusted EPS to Q1 2025 GAAP EPS is included in the Company's Q1 2025 financial press release, financial presentations and SEC filings, which are posted on the Company's investor relations website.\n(b)The guidance does not currently reflect any discrete items.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Adjusted diluted earnings per share guidance",
+   "lead_in": null,
+   "context_before": [
+    "Other (b)",
+    "$ — $ —"
+   ],
+   "context_after": [],
+   "block_lines": 4,
+   "block_end": "eof",
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "c-0001108524-000110852419000067-6480",
+   "cik": "0001108524",
+   "accession": "0001108524-19-000067",
+   "filing_type": "8-K",
+   "filed_at": "2019-11-20",
+   "char_start": 6480,
+   "char_end": 6568,
+   "sentence": "FY24: Long range target for FY24 high end of range $34B to $35B as of November 20, 2019.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": null,
+   "context_before": [
+    "Sustained Growth at Scale Raising FY20 to $16.99 to $17.00 billion1 FY25 FY24 FY23 Updated FY22 $ FY21 17.0B 26% FY20 Guide1 CAGR $13.3B FY19 $10.5B FY18 $8.4B FY17 $6.7B $ FY16 $ 5.4B $ 4.1B FY15 3.1B FY14 $ $2.3B FY13 1.7B FY12 FY11 Yuka Sato Neos Corporation Trailblazer 1FY20: High end of FY20 re...",
+    "FY21: High end of FY21 revenue guide of $20.8B to $20.9B as of November 20, 2019."
+   ],
+   "context_after": [
+    "Guidance excludes future M&A.",
+    "Sustained Growth at Scale Establishing FY21 guidance of $20.8 to $20.9 billion1 FY25 FY24 NEW FY23 $ FY22 20.9B 26% FY21 Guide1 CAGR $17.0B1 FY20 $13.3B FY19 $10.5B FY18 $8.4B FY17 $6.7B $ FY16 $ 5.4B Cynthia Hill $ 4.1B FY15 3.1B FY14 Trailhead $ $2.3B FY13 for Students 1.7B FY12 FY11 Trailblazer 1..."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "cik": "0001108524",
+   "accession": "0001193125-20-307200",
+   "filing_type": "8-K",
+   "filed_at": "2020-12-01",
+   "char_start": 5095,
+   "char_end": 5551,
+   "sentence": "Revenue\n$5.665 - $5.675\nBillion\n$21.10 - $21.11\nBillion\n$5.680 - $5.715\nBillion\n$25.45 - $25.55\nBillion(1)\nY/Y Growth\n~17%\n~23%\n~17%\n~21%\nGAAP operating margin\nN/A\n~2.0%\nN/A\nN/A\nNon-GAAP operating margin\nN/A\n~17.6%\nN/A\nN/A\nGAAP earnings per share\n$0.05 - $0.06\n$4.14 - $4.15\nN/A\nN/A\nNon-GAAP earnings per share\n$0.73 - $0.74\n$4.62 - $4.63\nN/A\nN/A\nOperating Cash Flow Growth (Y/Y)\nN/A\n~12% - 13%\nN/A\nN/A\nCurrent Remaining Performance Obligation Growth (Y/Y)",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Guidance",
+   "lead_in": null,
+   "context_before": [
+    "Q1 FY22 Guidance",
+    "Full Year FY22"
+   ],
+   "context_after": [
+    "~16%",
+    "N/A"
+   ],
+   "block_lines": 40,
+   "block_end": "max",
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "c-0001108524-000110852421000027-34976",
+   "cik": "0001108524",
+   "accession": "0001108524-21-000027",
+   "filing_type": "8-K",
+   "filed_at": "2021-05-27",
+   "char_start": 34976,
+   "char_end": 35064,
+   "sentence": "For fiscal 2022, the company uses a projected non-GAAP tax rate of 21.5%, which reflects",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "Specifically, management is excluding the following items from its non-GAAP operating margin and non-GAAP earnings per share, as applicable, for the periods presented in the Q1 FY22 financial statements and for its non-GAAP estimates for Q2 and FY22:",
+   "context_before": [
+    "The projected rate also considers factors including the company’s expected tax structure, its tax positions in various jurisdictions and key legislation in major jurisdictions where the company operates.",
+    "For fiscal 2021, the company used a projected non-GAAP tax rate of 22.0%."
+   ],
+   "context_after": [
+    "currently available information, as well as other factors and assumptions.",
+    "The non-GAAP tax rate could be subject to change for a variety of reasons, including the rapidly evolving global tax environment, significant changes in the company’s geographic earnings mix due to acquisition activity, or other changes to the company’s strategy or business operations."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "cik": "0001108524",
+   "accession": "0001108524-22-000019",
+   "filing_type": "8-K",
+   "filed_at": "2022-05-31",
+   "char_start": 6433,
+   "char_end": 8918,
+   "sentence": "GAAP operating margin(1)\n~3.8%\nPlus\nAmortization of purchased intangibles(2)\n6.1%\nStock-based compensation expense(2)\n10.5%\nNon-GAAP operating margin(1)\n~20.4%\n(1) GAAP operating margin is the proportion of GAAP income from operations as a percentage of GAAP revenue. Non-GAAP operating margin is the proportion of non-GAAP income from operations as a percentage of GAAP revenue.\n(2) The percentages shown above have been calculated based on the midpoint of the low and high ends of the revenue guidance for full year FY23.\nThe following is a per share reconciliation of GAAP diluted earnings (loss) per share to non-GAAP diluted earnings per share guidance for the next quarter and the full year:\nFiscal 2023\nQ2 FY23\nGAAP earnings (loss) per share range(1)(2)\n($0.03) - ($0.02) $0.38 - $0.40\nPlus\nAmortization of purchased intangibles $ 0.49 $ 1.92\nStock-based compensation expense $ 0.84 $ 3.28\nLess\nIncome tax effects and adjustments(3)\n$ (0.29) $ (0.84)\nNon-GAAP diluted earnings per share(2)\n$1.01 - $1.02 $4.74 - $4.76\nShares used in computing basic GAAP net income per share (millions) 998 1,001\nShares used in computing diluted Non-GAAP net income per share (millions) 1,011 1,014\n(1) The Company's GAAP tax provision is expected to be approximately 57% for the three months ended July 30, 2022, and approximately 55% for the year ended January 31, 2023. The GAAP tax rates may fluctuate due to discrete tax items and related effects in conjunction with certain provisions in the Tax Cuts and Jobs Act, future acquisitions or other transactions.\n(2) The Company's projected GAAP and Non-GAAP diluted earnings (loss) per share assumes no change to the value of our strategic investment portfolio as it is not possible to forecast future gains and losses. While historically the company's strategic investment portfolio has had a positive impact on the company's financial results, that may not be true for future periods, particularly in periods of significant market fluctuations that affect the publicly traded companies within the company's strategic investment portfolio. The impact of future gains or losses from the company's strategic investment portfolio could be material.\n(3) The Company’s Non-GAAP tax provision uses a long-term projected tax rate of 22.0%, which reflects currently available information and could be subject to change.\nFor additional information regarding non-GAAP financial measures see the reconciliation of results and related explanations below.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "context_before": [
+    "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+    "Full Year FY23"
+   ],
+   "context_after": [
+    "Quarterly Conference Call",
+    "Salesforce plans to host a conference call at 2:00 p.m. (PT) / 5:00 p.m. (ET) to discuss its financial results with the investment community."
+   ],
+   "block_lines": 30,
+   "block_end": "title",
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "c-0001108524-000110852422000038-37076",
+   "cik": "0001108524",
+   "accession": "0001108524-22-000038",
+   "filing_type": "8-K",
+   "filed_at": "2022-08-24",
+   "char_start": 37076,
+   "char_end": 37237,
+   "sentence": "For fiscal 2023, the company uses a projected non-GAAP tax rate of 22%, which reflects currently available information, as well as other factors and assumptions.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "As described above, the company excludes or adjusts for the following in its non-GAAP results and guidance:",
+   "context_before": [
+    "the company’s expected tax structure, its tax positions in various jurisdictions and key legislation in major jurisdictions where the company operates.",
+    "For fiscal 2022, the company used a projected non-GAAP tax rate of 21.5%."
+   ],
+   "context_after": [
+    "The non-GAAP tax rate could be subject to change for a variety of reasons, including the rapidly evolving global tax environment, significant changes in the company’s geographic earnings mix due to acquisition activity, or other changes to the company’s strategy or business operations.",
+    "The company will re-evaluate its long-term rate as appropriate."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "cik": "0001108524",
+   "accession": "0001108524-24-000002",
+   "filing_type": "8-K",
+   "filed_at": "2024-02-28",
+   "char_start": 7818,
+   "char_end": 10697,
+   "sentence": "GAAP operating margin(1)\n~20.4%\nPlus\nAmortization of purchased intangibles(2)\n4.4%\nStock-based compensation expense(2)(3)\n7.7%\nRestructuring(2)(3)\n—%\nNon-GAAP operating margin(1)\n~32.5%\n(1) GAAP operating margin is the proportion of GAAP income from operations as a percentage of GAAP revenue. Non-GAAP operating margin is the proportion of non-GAAP income from operations as a percentage of GAAP revenue.\n(2) The percentages shown above have been calculated based on the midpoint of the low and high ends of the revenue guidance for full year FY25.\n(3) The percentages shown in the restructuring line have been calculated based on charges associated with the Company's restructuring activities. Stock-based compensation expense included in the full year FY25 guidance GAAP to non-GAAP reconciliation table excludes stock-based compensation expense related to the Company's restructuring activities, which is included in the restructuring line.\nThe following is a per share reconciliation of GAAP diluted EPS to non-GAAP diluted EPS guidance for the next quarter and the full year:\nFiscal 2025\nQ1\nFY25\nGAAP diluted earnings per share range(1)(2)\n$1.42 - $1.44 $6.07 - $6.15\nPlus\nAmortization of purchased intangibles $ 0.47 $ 1.64\nStock-based compensation expense $ 0.73 $ 2.92\nRestructuring(3)\n$ — $ 0.02\nLess\nIncome tax effects and adjustments(4)\n$ (0.25) $ (0.97)\nNon-GAAP diluted earnings per share(2)\n$2.37 - $2.39 $9.68 - $9.76\nShares used in computing basic net income per share (millions)(5)\n976 986\nShares used in computing diluted net income per share (millions)(5)\n994 1,002\n(1) The Company's GAAP tax provision is expected to be approximately 22.5% for the three months ended April 30, 2024, and approximately 22.5% for the year ended January 31, 2025. The GAAP tax rates may fluctuate due to discrete tax items and related effects in conjunction with certain provisions in the Tax Cuts and Jobs Act, future acquisitions or other transactions.\n(2) The Company's projected GAAP and non-GAAP diluted EPS assumes no change to the value of our strategic investment portfolio as it is not possible to forecast future gains and losses. The impact of future gains or losses from the Company’s strategic investment portfolio could be material.\n(3) The estimated impact to GAAP diluted EPS is in connection with the Company's restructuring activities.\n(4) The Company’s non-GAAP tax provision uses a long-term projected tax rate of 22.0%, which reflects currently available information and could be subject to change.\n(5) The Company's shares used in computing GAAP earnings per share guidance and non-GAAP earnings per share guidance excludes any impact to share count from potential FY25 repurchase activity under our share repurchase program.\nFor additional information regarding non-GAAP financial measures see the reconciliation of results and related explanations below.",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "context_before": [
+    "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+    "Full Year FY25"
+   ],
+   "context_after": [
+    "Management will provide further commentary around these guidance assumptions on its earnings call.",
+    "Product Releases and Enhancements"
+   ],
+   "block_lines": 40,
+   "block_end": "max",
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "c-0001108524-000110852424000002-43047",
+   "cik": "0001108524",
+   "accession": "0001108524-24-000002",
+   "filing_type": "8-K",
+   "filed_at": "2024-02-28",
+   "char_start": 43047,
+   "char_end": 43153,
+   "sentence": "For fiscal 2024 and 2023, the Company used a projected non-GAAP tax rate of 23.5% and 22.0%, respectively.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "As described above, the Company excludes or adjusts for the following in its non-GAAP results and guidance:",
+   "context_before": [
+    "When projecting this long-term rate, the Company evaluated a three-year financial projection that excludes the direct impact of the following non-cash items: stock-based expenses and the amortization of purchased intangibles.",
+    "The projected rate also considers factors including the Company’s expected tax structure, its tax positions in various jurisdictions and key legislation in major jurisdictions where the Company operates."
+   ],
+   "context_after": [
+    "For fiscal 2025, the Company uses a projected non-GAAP tax rate of 22.0%, which reflects currently available information, as well as other factors and assumptions.",
+    "The non-GAAP tax rate could be subject to change for a variety of reasons, including the rapidly evolving global tax environment, significant changes in the Company’s geographic earnings mix due to acquisition activity, or other changes to the Company’s strategy or business operations."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "b-0001108524-000110852425000027-3875",
+   "cik": "0001108524",
+   "accession": "0001108524-25-000027",
+   "filing_type": "8-K",
+   "filed_at": "2025-05-28",
+   "char_start": 3875,
+   "char_end": 5281,
+   "sentence": "GAAP\nNon-GAAP(1)\nRevenue\n$41.0 - $41.3 billion\nRevenue growth(2)\n8% - 9% Approximately 8% CC, $250M Y/Y FX\nSubscription & support revenue growth(4)\nApproximately 9.5% Approximately 9% CC\nOperating margin 21.6% 34.0%\nDiluted net income per share\n$7.15 - $7.21 $11.27 - $11.33\nOperating cash flow growth\nApproximately 10% - 11%\nFree cash flow growth Approximately 9% - 10%\n(1) Non-GAAP CC revenue growth, non-GAAP CC remaining performance obligation growth, non-GAAP CC subscription & support revenue growth, non-GAAP operating margin, non-GAAP diluted net income per share, and free cash flow growth are non-GAAP financial measures. See below for an explanation of non-GAAP financial measures. The Company's shares used in computing GAAP diluted net income per share guidance and non-GAAP diluted net income per share guidance excludes any impact to share count from potential Q2 - Q4 FY26 repurchase activity under our share repurchase program.\n(2) Revenue FX impact is calculated by taking the current period rates compared to the prior period average rates.\n(3) Current remaining performance obligation FX impact is calculated by taking the current period rates compared to the prior period ending rates.\n(4) Subscription & support revenue excludes professional services revenue.\nThe following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Full Year FY26 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "context_before": [
+    "Current remaining performance obligation growth(3)",
+    "Approximately 10% Approximately 9% CC, $300M Y/Y FX"
+   ],
+   "context_after": [
+    "Full Year FY26",
+    "Guidance"
+   ],
+   "block_lines": 19,
+   "block_end": "title",
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "c-0001108524-000110852426000056-43944",
+   "cik": "0001108524",
+   "accession": "0001108524-26-000056",
+   "filing_type": "8-K",
+   "filed_at": "2026-02-25",
+   "char_start": 43944,
+   "char_end": 44026,
+   "sentence": "For fiscal 2025 and 2026, the Company used a projected non-GAAP tax rate of 22.0%.",
+   "text_version": 1,
+   "capture_method": "sentence",
+   "heading": null,
+   "lead_in": "As described above, the Company excludes or adjusts for the following in its non-GAAP results and guidance:",
+   "context_before": [
+    "When projecting this long-term rate, the Company evaluated a three-year financial projection that excludes the direct impact of the following non-cash items: stock-based compensation expenses and the amortization of purchased intangibles.",
+    "The projected rate also considers factors including the Company’s expected tax structure, its tax positions in various jurisdictions and key legislation in major jurisdictions where the Company operates."
+   ],
+   "context_after": [
+    "For fiscal 2027, the Company uses a projected non-GAAP tax rate of 20.5%, which reflects currently available information, as well as other factors and assumptions.",
+    "The non-GAAP tax rate could be subject to change for a variety of reasons, including the rapidly evolving global tax environment, significant changes in the Company’s geographic earnings mix due to acquisition activity or other changes to the Company’s strategy or business operations."
+   ],
+   "block_lines": null,
+   "block_end": null,
+   "table_header": null
+  },
+  {
+   "ticker": "CRM",
+   "custom_id": "b-0001108524-000110852426000125-4702",
+   "cik": "0001108524",
+   "accession": "0001108524-26-000125",
+   "filing_type": "8-K",
+   "filed_at": "2026-05-27",
+   "char_start": 4702,
+   "char_end": 5017,
+   "sentence": "GAAP\nNon-GAAP(1)\nRevenue\n$11.27 - $11.35 billion\nN/A\nRevenue growth(2)\n10% - 11%\n10% CC, $50M Y/Y FX\nIncludes slightly above 4pts Informatica contribution\nDiluted net income per share\n$1.74 - $1.76 $3.25 - $3.27\nCurrent remaining performance obligation growth(3)\nApproximately 14%\nApproximately 13% CC, $200M Y/Y FX",
+   "text_version": 1,
+   "capture_method": "section",
+   "heading": "Q2 FY27 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2027 and full-year fiscal 2027:",
+   "context_before": [
+    "Salesforce's guidance includes GAAP and non-GAAP financial measures.",
+    "The following tables summarize Salesforce's guidance for the second quarter fiscal 2027 and full-year fiscal 2027:"
+   ],
+   "context_after": [
+    "Full Year FY27 Guidance",
+    "GAAP"
+   ],
+   "block_lines": 14,
+   "block_end": "heading",
+   "table_header": null
+  }
+ ],
+ "raw": {
+  "c-0001045810-000104581019000140-2777": "{\"items\":[{\"metric\":\"other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q3 FY2020\",\"value_low\":25.0,\"value_high\":25.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001045810-000104581020000145-20492": "{\"items\":[{\"metric\":\"gross margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2021\",\"value_low\":62.5,\"value_high\":62.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":2,\"line_last\":2},{\"metric\":\"gross margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2021\",\"value_low\":65.5,\"value_high\":65.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"operating expenses GAAP\",\"unit\":\"USD millions\",\"target_period\":\"Q3 FY2021\",\"value_low\":1535,\"value_high\":1535,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":5,\"line_last\":5},{\"metric\":\"operating expenses non-GAAP\",\"unit\":\"USD millions\",\"target_period\":\"Q3 FY2021\",\"value_low\":1090,\"value_high\":1090,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":7,\"line_last\":7}]}",
+  "c-0001045810-000104581021000128-3565": "{\"items\":[{\"metric\":\"gross margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2022\",\"value_low\":65.2,\"value_high\":65.2,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"},{\"metric\":\"gross margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2022\",\"value_low\":67.0,\"value_high\":67.0,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\"}]}",
+  "b-0001045810-000104581022000136-2785": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q3 FY2023\",\"value_low\":5.90,\"value_high\":5.90,\"plus_minus\":2.0,\"plus_minus_kind\":\"percent\",\"line_first\":2,\"line_last\":2},{\"metric\":\"gross margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2023\",\"value_low\":62.4,\"value_high\":62.4,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\",\"line_first\":3,\"line_last\":3},{\"metric\":\"gross margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2023\",\"value_low\":65.0,\"value_high\":65.0,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\",\"line_first\":3,\"line_last\":3},{\"metric\":\"operating expenses GAAP\",\"unit\":\"USD billions\",\"target_period\":\"Q3 FY2023\",\"value_low\":2.59,\"value_high\":2.59,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"operating expenses non-GAAP\",\"unit\":\"USD billions\",\"target_period\":\"Q3 FY2023\",\"value_low\":1.82,\"value_high\":1.82,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q3 FY2023\",\"value_low\":-10.0,\"value_high\":-10.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":5,\"line_last\":5},{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2023\",\"value_low\":9.5,\"value_high\":9.5,\"plus_minus\":1.0,\"plus_minus_kind\":\"absolute\",\"line_first\":6,\"line_last\":6}]}",
+  "c-0001045810-000104581023000014-4880": "{\"items\":[{\"metric\":\"other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2024\",\"value_low\":50.0,\"value_high\":50.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001045810-000104581023000225-2480": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q4 FY2024\",\"value_low\":20.0,\"value_high\":20.0,\"plus_minus\":2.0,\"plus_minus_kind\":\"percent\",\"line_first\":2,\"line_last\":2},{\"metric\":\"gross margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2024\",\"value_low\":74.5,\"value_high\":74.5,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\",\"line_first\":3,\"line_last\":3},{\"metric\":\"gross margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2024\",\"value_low\":75.5,\"value_high\":75.5,\"plus_minus\":0.5,\"plus_minus_kind\":\"absolute\",\"line_first\":3,\"line_last\":3},{\"metric\":\"operating expenses GAAP\",\"unit\":\"USD billions\",\"target_period\":\"Q4 FY2024\",\"value_low\":3.17,\"value_high\":3.17,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"operating expenses non-GAAP\",\"unit\":\"USD billions\",\"target_period\":\"Q4 FY2024\",\"value_low\":2.2,\"value_high\":2.2,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2024\",\"value_low\":200.0,\"value_high\":200.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":5,\"line_last\":5},{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2024\",\"value_low\":15.0,\"value_high\":15.0,\"plus_minus\":1.0,\"plus_minus_kind\":\"absolute\",\"line_first\":6,\"line_last\":6}]}",
+  "c-0001045810-000104581024000262-3542": "{\"items\":[{\"metric\":\"other income and expense\",\"unit\":\"USD millions\",\"target_period\":\"Q3 FY2025\",\"value_low\":350.0,\"value_high\":350.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001045810-000104581024000315-21071": "{\"items\":[{\"metric\":\"gross margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2025\",\"value_low\":73.0,\"value_high\":73.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":2,\"line_last\":2},{\"metric\":\"gross margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q4 FY2025\",\"value_low\":73.5,\"value_high\":73.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"operating expenses GAAP\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2025\",\"value_low\":4750,\"value_high\":4750,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":5,\"line_last\":5},{\"metric\":\"operating expenses non-GAAP\",\"unit\":\"USD millions\",\"target_period\":\"Q4 FY2025\",\"value_low\":3400,\"value_high\":3400,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":7,\"line_last\":7}]}",
+  "c-0001045810-000104581026000019-886": "{\"items\":[]}",
+  "b-0001045810-000104581026000019-25477": "{\"items\":[{\"metric\":\"gross margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2027\",\"value_low\":74.9,\"value_high\":74.9,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":2,\"line_last\":2},{\"metric\":\"gross margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2027\",\"value_low\":75.0,\"value_high\":75.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":4,\"line_last\":4},{\"metric\":\"operating expenses GAAP\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2027\",\"value_low\":7700,\"value_high\":7700,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":5,\"line_last\":5},{\"metric\":\"operating expenses non-GAAP\",\"unit\":\"USD millions\",\"target_period\":\"Q1 FY2027\",\"value_low\":7500,\"value_high\":7500,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":7,\"line_last\":7}]}",
+  "c-0000027419-000002741919000018-3052": "{\"items\":[{\"metric\":\"comparable sales\",\"unit\":\"percent\",\"target_period\":\"Q3 FY2019\",\"value_low\":3.4,\"value_high\":3.4,\"plus_minus\":null,\"plus_minus_kind\":\"none\"},{\"metric\":\"comparable sales\",\"unit\":\"percent\",\"target_period\":\"FY2019\",\"value_low\":3.4,\"value_high\":3.4,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "c-0000027419-000002741921000007-5682": "{\"items\":[]}",
+  "b-0000027419-000002741921000013-2980": "{\"items\":[{\"metric\":\"operating margin GAAP\",\"unit\":\"percent\",\"target_period\":\"Q2 FY2021\",\"value_low\":null,\"value_high\":null,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1},{\"metric\":\"operating margin GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2021\",\"value_low\":7.0,\"value_high\":8.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":2,\"line_last\":2}]}",
+  "c-0000027419-000002741923000010-5348": "{\"items\":[]}",
+  "b-0000027419-000002741923000023-17138": "{\"items\":[{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2023\",\"value_low\":1.30,\"value_high\":1.70,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2023\",\"value_low\":7.75,\"value_high\":8.75,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1}]}",
+  "c-0000027419-000002741924000126-2918": "{\"items\":[{\"metric\":\"comparable sales\",\"unit\":\"percent\",\"target_period\":\"Q2 FY2024\",\"value_low\":0.0,\"value_high\":2.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2024\",\"value_low\":1.95,\"value_high\":2.35,\"plus_minus\":null,\"plus_minus_kind\":\"none\"},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2024\",\"value_low\":1.95,\"value_high\":2.35,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0000027419-000002741924000126-15105": "{\"items\":[{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2024\",\"value_low\":1.95,\"value_high\":2.35,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2024\",\"value_low\":8.60,\"value_high\":9.60,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1}]}",
+  "b-0000027419-000002741925000096-3216": "{\"items\":[{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2025\",\"value_low\":8.0,\"value_high\":10.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2025\",\"value_low\":7.0,\"value_high\":9.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1}]}",
+  "c-0000027419-000002741926000012-4374": "{\"items\":[]}",
+  "b-0000027419-000002741926000012-26074": "{\"items\":[{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q1 FY2026\",\"value_low\":1.3,\"value_high\":1.3,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":1},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2026\",\"value_low\":7.5,\"value_high\":8.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":2,\"line_last\":2}]}",
+  "c-0001108524-000110852419000067-6480": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"FY2024\",\"value_low\":34.0,\"value_high\":35.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001108524-000119312520307200-5095": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q1 FY2022\",\"value_low\":5.665,\"value_high\":5.675,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":3},{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"FY2022\",\"value_low\":21.10,\"value_high\":21.11,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":5},{\"metric\":\"operating margin GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2022\",\"value_low\":2.0,\"value_high\":2.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":15,\"line_last\":17},{\"metric\":\"operating margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2022\",\"value_low\":17.6,\"value_high\":17.6,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":20,\"line_last\":22},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q1 FY2022\",\"value_low\":0.05,\"value_high\":0.06,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":25,\"line_last\":26},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2022\",\"value_low\":4.14,\"value_high\":4.15,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":25,\"line_last\":27},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q1 FY2022\",\"value_low\":0.73,\"value_high\":0.74,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":30,\"line_last\":31},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2022\",\"value_low\":4.62,\"value_high\":4.63,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":30,\"line_last\":32}]}",
+  "c-0001108524-000110852421000027-34976": "{\"items\":[{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"FY2022\",\"value_low\":21.5,\"value_high\":21.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001108524-000110852422000019-6433": "{\"items\":[{\"metric\":\"operating margin GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2023\",\"value_low\":3.8,\"value_high\":3.8,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":2},{\"metric\":\"operating margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2023\",\"value_low\":20.4,\"value_high\":20.4,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":8,\"line_last\":9},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2023\",\"value_low\":-0.03,\"value_high\":-0.02,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":15,\"line_last\":16},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2023\",\"value_low\":0.38,\"value_high\":0.40,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":15,\"line_last\":16},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2023\",\"value_low\":1.01,\"value_high\":1.02,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":23,\"line_last\":24},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2023\",\"value_low\":4.74,\"value_high\":4.76,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":23,\"line_last\":24}]}",
+  "c-0001108524-000110852422000038-37076": "{\"items\":[{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"FY2023\",\"value_low\":22.0,\"value_high\":22.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001108524-000110852424000002-7818": "{\"items\":[{\"metric\":\"operating margin GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2025\",\"value_low\":20.4,\"value_high\":20.4,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":1,\"line_last\":2},{\"metric\":\"operating margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2025\",\"value_low\":32.5,\"value_high\":32.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":10,\"line_last\":11},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q1 FY2025\",\"value_low\":1.42,\"value_high\":1.44,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":19,\"line_last\":20},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2025\",\"value_low\":6.07,\"value_high\":6.15,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":19,\"line_last\":20},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q1 FY2025\",\"value_low\":2.37,\"value_high\":2.39,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":29,\"line_last\":30},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2025\",\"value_low\":9.68,\"value_high\":9.76,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":29,\"line_last\":30},{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"Q1 FY2025\",\"value_low\":22.5,\"value_high\":22.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":35,\"line_last\":35},{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"FY2025\",\"value_low\":22.5,\"value_high\":22.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":35,\"line_last\":35}]}",
+  "c-0001108524-000110852424000002-43047": "{\"items\":[{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"FY2025\",\"value_low\":22.0,\"value_high\":22.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001108524-000110852425000027-3875": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"FY2026\",\"value_low\":41.0,\"value_high\":41.3,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":3,\"line_last\":4},{\"metric\":\"operating margin GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2026\",\"value_low\":21.6,\"value_high\":21.6,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":9,\"line_last\":9},{\"metric\":\"operating margin non-GAAP\",\"unit\":\"percent\",\"target_period\":\"FY2026\",\"value_low\":34.0,\"value_high\":34.0,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":9,\"line_last\":9},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2026\",\"value_low\":7.15,\"value_high\":7.21,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":10,\"line_last\":11},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"FY2026\",\"value_low\":11.27,\"value_high\":11.33,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":10,\"line_last\":11}]}",
+  "c-0001108524-000110852426000056-43944": "{\"items\":[{\"metric\":\"tax rate\",\"unit\":\"percent\",\"target_period\":\"FY2027\",\"value_low\":20.5,\"value_high\":20.5,\"plus_minus\":null,\"plus_minus_kind\":\"none\"}]}",
+  "b-0001108524-000110852426000125-4702": "{\"items\":[{\"metric\":\"revenue\",\"unit\":\"USD billions\",\"target_period\":\"Q2 FY2027\",\"value_low\":11.27,\"value_high\":11.35,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":3,\"line_last\":4},{\"metric\":\"EPS GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2027\",\"value_low\":1.74,\"value_high\":1.76,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":10,\"line_last\":11},{\"metric\":\"EPS non-GAAP\",\"unit\":\"USD per share\",\"target_period\":\"Q2 FY2027\",\"value_low\":3.25,\"value_high\":3.27,\"plus_minus\":null,\"plus_minus_kind\":\"none\",\"line_first\":10,\"line_last\":11}]}"
+ },
+ "drafts": [
+  {
+   "draft_id": "01DJ995X00ATNS9C9TF2BX2YS1",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581019000140-2777",
+   "capture_method": "sentence",
+   "char_start": 2777,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2020 is as follows:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $25 million.",
+    "metric": "other income and expense",
+    "target_low": 25.0,
+    "target_high": 25.0,
+    "unit": "USD millions",
+    "target_period": "Q3 FY2020",
+    "stated_at": "2019-08-15",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000140/q2fy20pr.htm",
+     "accession_number": "0001045810-19-000140",
+     "filing_type": "8-K",
+     "filed_at": "2019-08-15",
+     "fetched_at": "2026-09-20T06:42:13Z",
+     "content_sha256": "53e2932f8ca0a92877d70f7e78b4d9dc817dcada7c0f8d0a67e21bd67b162b56",
+     "excerpt": "GAAP and non-GAAP other income and expense are both expected to be income of approximately $25 million."
+    }
+   }
+  },
+  {
+   "draft_id": "01EG207V000NJC3PHT173ZVQ62",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "capture_method": "section",
+   "char_start": 20492,
+   "heading": "Q3 FY2021 Outlook",
+   "lead_in": "(A) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP gross margin 62.5 %",
+    "metric": "gross margin GAAP",
+    "target_low": 62.5,
+    "target_high": 62.5,
+    "unit": "percent",
+    "target_period": "Q3 FY2021",
+    "stated_at": "2020-08-19",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000145/q2fy21pr.htm",
+     "accession_number": "0001045810-20-000145",
+     "filing_type": "8-K",
+     "filed_at": "2020-08-19",
+     "fetched_at": "2026-09-20T06:42:21Z",
+     "content_sha256": "0e0189366ee7303c58bae7e24720dc40cc66114f75bb1c1375d7537237909089",
+     "excerpt": "GAAP gross margin 62.5 %"
+    }
+   },
+   "evidence_lines": [
+    2,
+    2
+   ]
+  },
+  {
+   "draft_id": "01EG207V00XK6KZZ8EV8379MAV",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "capture_method": "section",
+   "char_start": 20492,
+   "heading": "Q3 FY2021 Outlook",
+   "lead_in": "(A) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP gross margin 65.5 %",
+    "metric": "gross margin non-GAAP",
+    "target_low": 65.5,
+    "target_high": 65.5,
+    "unit": "percent",
+    "target_period": "Q3 FY2021",
+    "stated_at": "2020-08-19",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000145/q2fy21pr.htm",
+     "accession_number": "0001045810-20-000145",
+     "filing_type": "8-K",
+     "filed_at": "2020-08-19",
+     "fetched_at": "2026-09-20T06:42:21Z",
+     "content_sha256": "0e0189366ee7303c58bae7e24720dc40cc66114f75bb1c1375d7537237909089",
+     "excerpt": "Non-GAAP gross margin 65.5 %"
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01EG207V00NYSA7TEATENV3PYM",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "capture_method": "section",
+   "char_start": 20492,
+   "heading": "Q3 FY2021 Outlook",
+   "lead_in": "(A) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP operating expenses $ 1,535",
+    "metric": "operating expenses GAAP",
+    "target_low": 1535.0,
+    "target_high": 1535.0,
+    "unit": "USD millions",
+    "target_period": "Q3 FY2021",
+    "stated_at": "2020-08-19",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000145/q2fy21pr.htm",
+     "accession_number": "0001045810-20-000145",
+     "filing_type": "8-K",
+     "filed_at": "2020-08-19",
+     "fetched_at": "2026-09-20T06:42:21Z",
+     "content_sha256": "0e0189366ee7303c58bae7e24720dc40cc66114f75bb1c1375d7537237909089",
+     "excerpt": "GAAP operating expenses $ 1,535"
+    }
+   },
+   "evidence_lines": [
+    5,
+    5
+   ]
+  },
+  {
+   "draft_id": "01EG207V00DEPV3TMFC9R39P6T",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "capture_method": "section",
+   "char_start": 20492,
+   "heading": "Q3 FY2021 Outlook",
+   "lead_in": "(A) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP operating expenses $ 1,090",
+    "metric": "operating expenses non-GAAP",
+    "target_low": 1090.0,
+    "target_high": 1090.0,
+    "unit": "USD millions",
+    "target_period": "Q3 FY2021",
+    "stated_at": "2020-08-19",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000145/q2fy21pr.htm",
+     "accession_number": "0001045810-20-000145",
+     "filing_type": "8-K",
+     "filed_at": "2020-08-19",
+     "fetched_at": "2026-09-20T06:42:21Z",
+     "content_sha256": "0e0189366ee7303c58bae7e24720dc40cc66114f75bb1c1375d7537237909089",
+     "excerpt": "Non-GAAP operating expenses $ 1,090"
+    }
+   },
+   "evidence_lines": [
+    7,
+    7
+   ]
+  },
+  {
+   "draft_id": "01FDB8XF000QTZB36AP7ETFY1R",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581021000128-3565",
+   "capture_method": "sentence",
+   "char_start": 3565,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2022 is as follows:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP and non-GAAP gross margins are expected to be 65.2 percent and 67.0 percent, respectively, plus or minus 50 basis points.",
+    "metric": "gross margin GAAP",
+    "target_low": 64.7,
+    "target_high": 65.7,
+    "unit": "percent",
+    "target_period": "Q3 FY2022",
+    "stated_at": "2021-08-18",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000128/q2fy22pr.htm",
+     "accession_number": "0001045810-21-000128",
+     "filing_type": "8-K",
+     "filed_at": "2021-08-18",
+     "fetched_at": "2026-09-20T06:42:30Z",
+     "content_sha256": "b60b3f9b1248e2075cf9a7b9852005e76f8b40435e160672028b32ecad01c490",
+     "excerpt": "GAAP and non-GAAP gross margins are expected to be 65.2 percent and 67.0 percent, respectively, plus or minus 50 basis points."
+    }
+   }
+  },
+  {
+   "draft_id": "01FDB8XF005K8MH2XDYV31XE7Y",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581021000128-3565",
+   "capture_method": "sentence",
+   "char_start": 3565,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2022 is as follows:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP and non-GAAP gross margins are expected to be 65.2 percent and 67.0 percent, respectively, plus or minus 50 basis points.",
+    "metric": "gross margin non-GAAP",
+    "target_low": 66.5,
+    "target_high": 67.5,
+    "unit": "percent",
+    "target_period": "Q3 FY2022",
+    "stated_at": "2021-08-18",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000128/q2fy22pr.htm",
+     "accession_number": "0001045810-21-000128",
+     "filing_type": "8-K",
+     "filed_at": "2021-08-18",
+     "fetched_at": "2026-09-20T06:42:30Z",
+     "content_sha256": "b60b3f9b1248e2075cf9a7b9852005e76f8b40435e160672028b32ecad01c490",
+     "excerpt": "GAAP and non-GAAP gross margins are expected to be 65.2 percent and 67.0 percent, respectively, plus or minus 50 basis points."
+    }
+   }
+  },
+  {
+   "draft_id": "01GB6JC400713D6BTZ4VX9X1HJ",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "•Revenue is expected to be $5.90 billion, plus or minus 2%. Gaming and Professional Visualization revenue are expected to decline sequentially, as OEMs and channel partners reduce inventory levels to align with current levels of demand and prepare for NVIDIA’s new product generation. The company expects that decline to be partially offset by sequential growth in Data Center and Automotive.",
+    "metric": "revenue",
+    "target_low": 5.782,
+    "target_high": 6.018,
+    "unit": "USD billions",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•Revenue is expected to be $5.90 billion, plus or minus 2%. Gaming and Professional Visualization revenue are expected to decline sequentially, as OEMs and channel partners reduce inventory levels to align with current levels of demand and prepare for NVIDIA’s new product generation. The company expects that decline to be partially offset by sequential growth in Data Center and Automotive."
+    }
+   },
+   "evidence_lines": [
+    2,
+    2
+   ]
+  },
+  {
+   "draft_id": "01GB6JC400M6P4GRPWS0Q51MTD",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP gross margins are expected to be 62.4% and 65.0%, respectively, plus or minus 50 basis points.",
+    "metric": "gross margin GAAP",
+    "target_low": 61.9,
+    "target_high": 62.9,
+    "unit": "percent",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•GAAP and non-GAAP gross margins are expected to be 62.4% and 65.0%, respectively, plus or minus 50 basis points."
+    }
+   },
+   "evidence_lines": [
+    3,
+    3
+   ]
+  },
+  {
+   "draft_id": "01GB6JC400SEP22BCMW10D0182",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP gross margins are expected to be 62.4% and 65.0%, respectively, plus or minus 50 basis points.",
+    "metric": "gross margin non-GAAP",
+    "target_low": 64.5,
+    "target_high": 65.5,
+    "unit": "percent",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•GAAP and non-GAAP gross margins are expected to be 62.4% and 65.0%, respectively, plus or minus 50 basis points."
+    }
+   },
+   "evidence_lines": [
+    3,
+    3
+   ]
+  },
+  {
+   "draft_id": "01GB6JC4007D473F7BFRXKA6K5",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP operating expenses are expected to be approximately $2.59 billion and $1.82 billion, respectively.",
+    "metric": "operating expenses GAAP",
+    "target_low": 2.59,
+    "target_high": 2.59,
+    "unit": "USD billions",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•GAAP and non-GAAP operating expenses are expected to be approximately $2.59 billion and $1.82 billion, respectively."
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01GB6JC4003HT2X5ZGAF13K85B",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 4,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP operating expenses are expected to be approximately $2.59 billion and $1.82 billion, respectively.",
+    "metric": "operating expenses non-GAAP",
+    "target_low": 1.82,
+    "target_high": 1.82,
+    "unit": "USD billions",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•GAAP and non-GAAP operating expenses are expected to be approximately $2.59 billion and $1.82 billion, respectively."
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01GB6JC400B7N1087PSCM7TSNN",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 5,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP other income and expense are expected to be an expense of approximately $10 million, excluding gains and losses from non-affiliated investments.",
+    "metric": "other income and expense",
+    "target_low": -10.0,
+    "target_high": -10.0,
+    "unit": "USD millions",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•GAAP and non-GAAP other income and expense are expected to be an expense of approximately $10 million, excluding gains and losses from non-affiliated investments."
+    }
+   },
+   "evidence_lines": [
+    5,
+    5
+   ]
+  },
+  {
+   "draft_id": "01GB6JC400FYJZX23ZMDWQYMYT",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581022000136-2785",
+   "capture_method": "section",
+   "char_start": 2785,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 6,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP tax rates are expected to be 9.5%, plus or minus 1%, excluding any discrete items.",
+    "metric": "tax rate",
+    "target_low": 8.5,
+    "target_high": 10.5,
+    "unit": "percent",
+    "target_period": "Q3 FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+     "accession_number": "0001045810-22-000136",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:42:36Z",
+     "content_sha256": "8dfc247781ed90d5e1ad3ec054f085c96b2612d3bc50e1f8c382d39669ccf2b9",
+     "excerpt": "•GAAP and non-GAAP tax rates are expected to be 9.5%, plus or minus 1%, excluding any discrete items."
+    }
+   },
+   "evidence_lines": [
+    6,
+    6
+   ]
+  },
+  {
+   "draft_id": "01GSV6PY00QXSSKPZA4GQPMX1J",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581023000014-4880",
+   "capture_method": "sentence",
+   "char_start": 4880,
+   "heading": null,
+   "lead_in": "NVIDIA’s outlook for the first quarter of fiscal 2024 is as follows:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP and non-GAAP other income and expense are expected to be an income of approximately $50 million, excluding gains and losses from non-affiliated investments.",
+    "metric": "other income and expense",
+    "target_low": 50.0,
+    "target_high": 50.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2024",
+    "stated_at": "2023-02-22",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000014/q4fy23pr.htm",
+     "accession_number": "0001045810-23-000014",
+     "filing_type": "8-K",
+     "filed_at": "2023-02-22",
+     "fetched_at": "2026-09-20T06:42:39Z",
+     "content_sha256": "ace173acf68a8437e9b0a91b617ce53420cc5458fa4bc388524f18699b633f3e",
+     "excerpt": "GAAP and non-GAAP other income and expense are expected to be an income of approximately $50 million, excluding gains and losses from non-affiliated investments."
+    }
+   }
+  },
+  {
+   "draft_id": "01HFQJTE00HD8CF2V870R9WK19",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "•Revenue is expected to be $20.00 billion, plus or minus 2%.",
+    "metric": "revenue",
+    "target_low": 19.6,
+    "target_high": 20.4,
+    "unit": "USD billions",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•Revenue is expected to be $20.00 billion, plus or minus 2%."
+    }
+   },
+   "evidence_lines": [
+    2,
+    2
+   ]
+  },
+  {
+   "draft_id": "01HFQJTE004QVRBTEHMX2BZS46",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP gross margins are expected to be 74.5% and 75.5%, respectively, plus or minus 50 basis points.",
+    "metric": "gross margin GAAP",
+    "target_low": 74.0,
+    "target_high": 75.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•GAAP and non-GAAP gross margins are expected to be 74.5% and 75.5%, respectively, plus or minus 50 basis points."
+    }
+   },
+   "evidence_lines": [
+    3,
+    3
+   ]
+  },
+  {
+   "draft_id": "01HFQJTE0010FYQTJ77VZRN1JX",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP gross margins are expected to be 74.5% and 75.5%, respectively, plus or minus 50 basis points.",
+    "metric": "gross margin non-GAAP",
+    "target_low": 75.0,
+    "target_high": 76.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•GAAP and non-GAAP gross margins are expected to be 74.5% and 75.5%, respectively, plus or minus 50 basis points."
+    }
+   },
+   "evidence_lines": [
+    3,
+    3
+   ]
+  },
+  {
+   "draft_id": "01HFQJTE00YC569GMM15RGMDBB",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP operating expenses are expected to be approximately $3.17 billion and $2.20 billion, respectively.",
+    "metric": "operating expenses GAAP",
+    "target_low": 3.17,
+    "target_high": 3.17,
+    "unit": "USD billions",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•GAAP and non-GAAP operating expenses are expected to be approximately $3.17 billion and $2.20 billion, respectively."
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01HFQJTE0086B14H3V7VA4HANY",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 4,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP operating expenses are expected to be approximately $3.17 billion and $2.20 billion, respectively.",
+    "metric": "operating expenses non-GAAP",
+    "target_low": 2.2,
+    "target_high": 2.2,
+    "unit": "USD billions",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•GAAP and non-GAAP operating expenses are expected to be approximately $3.17 billion and $2.20 billion, respectively."
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01HFQJTE0026E7X39748STKY4H",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 5,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP other income and expense are expected to be an income of approximately $200 million, excluding gains and losses from non-affiliated investments.",
+    "metric": "other income and expense",
+    "target_low": 200.0,
+    "target_high": 200.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•GAAP and non-GAAP other income and expense are expected to be an income of approximately $200 million, excluding gains and losses from non-affiliated investments."
+    }
+   },
+   "evidence_lines": [
+    5,
+    5
+   ]
+  },
+  {
+   "draft_id": "01HFQJTE00FZ01N1NS887KABTF",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581023000225-2480",
+   "capture_method": "section",
+   "char_start": 2480,
+   "heading": "Outlook",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 6,
+   "conflict": false,
+   "assumption": {
+    "text": "•GAAP and non-GAAP tax rates are expected to be 15.0%, plus or minus 1%, excluding any discrete items.",
+    "metric": "tax rate",
+    "target_low": 14.0,
+    "target_high": 16.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2024",
+    "stated_at": "2023-11-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+     "accession_number": "0001045810-23-000225",
+     "filing_type": "8-K",
+     "filed_at": "2023-11-21",
+     "fetched_at": "2026-09-20T06:42:45Z",
+     "content_sha256": "ca3ec103afc25c8b1d6182d17c398f1b8cc872308f5851240579defc0432d052",
+     "excerpt": "•GAAP and non-GAAP tax rates are expected to be 15.0%, plus or minus 1%, excluding any discrete items."
+    }
+   },
+   "evidence_lines": [
+    6,
+    6
+   ]
+  },
+  {
+   "draft_id": "01J6B4GD00Z3ZQ91EQGFWAHKK7",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "c-0001045810-000104581024000262-3542",
+   "capture_method": "sentence",
+   "char_start": 3542,
+   "heading": "Outlook",
+   "lead_in": "NVIDIA’s outlook for the third quarter of fiscal 2025 is as follows:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP and non-GAAP other income and expense are expected to be an income of approximately $350 million, excluding gains and losses from non-affiliated investments and publicly-held equity securities.",
+    "metric": "other income and expense",
+    "target_low": 350.0,
+    "target_high": 350.0,
+    "unit": "USD millions",
+    "target_period": "Q3 FY2025",
+    "stated_at": "2024-08-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000262/q2fy25pr.htm",
+     "accession_number": "0001045810-24-000262",
+     "filing_type": "8-K",
+     "filed_at": "2024-08-28",
+     "fetched_at": "2026-09-20T06:42:49Z",
+     "content_sha256": "4e8ec12b4387b58669360777b0b763cc0d7f63326bd3aba34b6301d57c5460cf",
+     "excerpt": "GAAP and non-GAAP other income and expense are expected to be an income of approximately $350 million, excluding gains and losses from non-affiliated investments and publicly-held equity securities."
+    }
+   }
+  },
+  {
+   "draft_id": "01JD3DWS00DZ65XNAVF5C78BPW",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "capture_method": "section",
+   "char_start": 21071,
+   "heading": "Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP gross margin 73.0 %",
+    "metric": "gross margin GAAP",
+    "target_low": 73.0,
+    "target_high": 73.0,
+    "unit": "percent",
+    "target_period": "Q4 FY2025",
+    "stated_at": "2024-11-20",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000315/q3fy25pr.htm",
+     "accession_number": "0001045810-24-000315",
+     "filing_type": "8-K",
+     "filed_at": "2024-11-20",
+     "fetched_at": "2026-09-20T06:42:51Z",
+     "content_sha256": "162fac8188ca99b458dd882f148de9c5e37cd37754a8fa120ea1b1755a766e5e",
+     "excerpt": "GAAP gross margin 73.0 %"
+    }
+   },
+   "evidence_lines": [
+    2,
+    2
+   ]
+  },
+  {
+   "draft_id": "01JD3DWS00FZX23AKYSCQ13G74",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "capture_method": "section",
+   "char_start": 21071,
+   "heading": "Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP gross margin 73.5 %",
+    "metric": "gross margin non-GAAP",
+    "target_low": 73.5,
+    "target_high": 73.5,
+    "unit": "percent",
+    "target_period": "Q4 FY2025",
+    "stated_at": "2024-11-20",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000315/q3fy25pr.htm",
+     "accession_number": "0001045810-24-000315",
+     "filing_type": "8-K",
+     "filed_at": "2024-11-20",
+     "fetched_at": "2026-09-20T06:42:51Z",
+     "content_sha256": "162fac8188ca99b458dd882f148de9c5e37cd37754a8fa120ea1b1755a766e5e",
+     "excerpt": "Non-GAAP gross margin 73.5 %"
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01JD3DWS00FHZCSBQP2RYXYJ9X",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "capture_method": "section",
+   "char_start": 21071,
+   "heading": "Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP operating expenses $ 4,750",
+    "metric": "operating expenses GAAP",
+    "target_low": 4750.0,
+    "target_high": 4750.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2025",
+    "stated_at": "2024-11-20",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000315/q3fy25pr.htm",
+     "accession_number": "0001045810-24-000315",
+     "filing_type": "8-K",
+     "filed_at": "2024-11-20",
+     "fetched_at": "2026-09-20T06:42:51Z",
+     "content_sha256": "162fac8188ca99b458dd882f148de9c5e37cd37754a8fa120ea1b1755a766e5e",
+     "excerpt": "GAAP operating expenses $ 4,750"
+    }
+   },
+   "evidence_lines": [
+    5,
+    5
+   ]
+  },
+  {
+   "draft_id": "01JD3DWS00EZ346YPZM8NBCRP4",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "capture_method": "section",
+   "char_start": 21071,
+   "heading": "Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP operating expenses $ 3,400",
+    "metric": "operating expenses non-GAAP",
+    "target_low": 3400.0,
+    "target_high": 3400.0,
+    "unit": "USD millions",
+    "target_period": "Q4 FY2025",
+    "stated_at": "2024-11-20",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000315/q3fy25pr.htm",
+     "accession_number": "0001045810-24-000315",
+     "filing_type": "8-K",
+     "filed_at": "2024-11-20",
+     "fetched_at": "2026-09-20T06:42:51Z",
+     "content_sha256": "162fac8188ca99b458dd882f148de9c5e37cd37754a8fa120ea1b1755a766e5e",
+     "excerpt": "Non-GAAP operating expenses $ 3,400"
+    }
+   },
+   "evidence_lines": [
+    7,
+    7
+   ]
+  },
+  {
+   "draft_id": "01KJ91GV00K71TBEMRSPECJY6J",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "capture_method": "section",
+   "char_start": 25477,
+   "heading": "Q1 FY2027 Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP gross margin 74.9 %",
+    "metric": "gross margin GAAP",
+    "target_low": 74.9,
+    "target_high": 74.9,
+    "unit": "percent",
+    "target_period": "Q1 FY2027",
+    "stated_at": "2026-02-25",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000019/q4fy26pr.htm",
+     "accession_number": "0001045810-26-000019",
+     "filing_type": "8-K",
+     "filed_at": "2026-02-25",
+     "fetched_at": "2026-09-20T07:25:22Z",
+     "content_sha256": "b61e6e66c346a7a3ce0ab17090432ec87d87cb6ad7b9e4fe9153693bf3c541e7",
+     "excerpt": "GAAP gross margin 74.9 %"
+    }
+   },
+   "evidence_lines": [
+    2,
+    2
+   ]
+  },
+  {
+   "draft_id": "01KJ91GV00X8VXXPZNJ959MRQ8",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "capture_method": "section",
+   "char_start": 25477,
+   "heading": "Q1 FY2027 Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP gross margin* 75.0 %",
+    "metric": "gross margin non-GAAP",
+    "target_low": 75.0,
+    "target_high": 75.0,
+    "unit": "percent",
+    "target_period": "Q1 FY2027",
+    "stated_at": "2026-02-25",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000019/q4fy26pr.htm",
+     "accession_number": "0001045810-26-000019",
+     "filing_type": "8-K",
+     "filed_at": "2026-02-25",
+     "fetched_at": "2026-09-20T07:25:22Z",
+     "content_sha256": "b61e6e66c346a7a3ce0ab17090432ec87d87cb6ad7b9e4fe9153693bf3c541e7",
+     "excerpt": "Non-GAAP gross margin* 75.0 %"
+    }
+   },
+   "evidence_lines": [
+    4,
+    4
+   ]
+  },
+  {
+   "draft_id": "01KJ91GV00T9SNCMZWT25QJ0P8",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "capture_method": "section",
+   "char_start": 25477,
+   "heading": "Q1 FY2027 Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP operating expenses $ 7,700",
+    "metric": "operating expenses GAAP",
+    "target_low": 7700.0,
+    "target_high": 7700.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2027",
+    "stated_at": "2026-02-25",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000019/q4fy26pr.htm",
+     "accession_number": "0001045810-26-000019",
+     "filing_type": "8-K",
+     "filed_at": "2026-02-25",
+     "fetched_at": "2026-09-20T07:25:22Z",
+     "content_sha256": "b61e6e66c346a7a3ce0ab17090432ec87d87cb6ad7b9e4fe9153693bf3c541e7",
+     "excerpt": "GAAP operating expenses $ 7,700"
+    }
+   },
+   "evidence_lines": [
+    5,
+    5
+   ]
+  },
+  {
+   "draft_id": "01KJ91GV006MAH9C5A3B63B6PE",
+   "cik": "0001045810",
+   "ticker": "NVDA",
+   "company": "NVIDIA Corporation",
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "capture_method": "section",
+   "char_start": 25477,
+   "heading": "Q1 FY2027 Outlook",
+   "lead_in": "(B) Stock-based compensation consists of the following:",
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP operating expenses* $ 7,500",
+    "metric": "operating expenses non-GAAP",
+    "target_low": 7500.0,
+    "target_high": 7500.0,
+    "unit": "USD millions",
+    "target_period": "Q1 FY2027",
+    "stated_at": "2026-02-25",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000019/q4fy26pr.htm",
+     "accession_number": "0001045810-26-000019",
+     "filing_type": "8-K",
+     "filed_at": "2026-02-25",
+     "fetched_at": "2026-09-20T07:25:22Z",
+     "content_sha256": "b61e6e66c346a7a3ce0ab17090432ec87d87cb6ad7b9e4fe9153693bf3c541e7",
+     "excerpt": "Non-GAAP operating expenses* $ 7,500"
+    }
+   },
+   "evidence_lines": [
+    7,
+    7
+   ]
+  },
+  {
+   "draft_id": "01DJRQJ7002W2AFVY51G47ZYKT",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "c-0000027419-000002741919000018-3052",
+   "capture_method": "sentence",
+   "char_start": 3052,
+   "heading": "Third Quarter and Full-Year 2019 Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "For both the third quarter and second half of 2019, Target expects comparable sales growth in line with the 3.4 percent comparable sales growth the company delivered in the second quarter of 2019.",
+    "metric": "comparable sales",
+    "target_low": 3.4,
+    "target_high": 3.4,
+    "unit": "percent",
+    "target_period": "Q3 FY2019",
+    "stated_at": "2019-08-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741919000018/a2019q2ex-99_20190803.htm",
+     "accession_number": "0000027419-19-000018",
+     "filing_type": "8-K",
+     "filed_at": "2019-08-21",
+     "fetched_at": "2026-09-20T06:43:14Z",
+     "content_sha256": "e52b29f315c112af0141cba516f65e1c7cfa8a3ceb939efe523e5637c9ba144b",
+     "excerpt": "For both the third quarter and second half of 2019, Target expects comparable sales growth in line with the 3.4 percent comparable sales growth the company delivered in the second quarter of 2019."
+    }
+   }
+  },
+  {
+   "draft_id": "01H0KG3A00STMMKHSHM9HSNWTN",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741923000023-17138",
+   "capture_method": "section",
+   "char_start": 17138,
+   "heading": "GAAP diluted earnings per share guidance",
+   "lead_in": null,
+   "table_header": "Q2 2023 Full Year 2023",
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "$1.30 - $1.70 $7.75 - $8.75",
+    "metric": "EPS GAAP",
+    "target_low": 1.3,
+    "target_high": 1.7,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2023",
+    "stated_at": "2023-05-17",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741923000023/a2023q1ex-99.htm",
+     "accession_number": "0000027419-23-000023",
+     "filing_type": "8-K",
+     "filed_at": "2023-05-17",
+     "fetched_at": "2026-09-20T06:43:44Z",
+     "content_sha256": "d8e5fe7cdbbd4d1f6fd5a201cbc563e80879cd39c32dc2cb0acce20b67ffb878",
+     "excerpt": "$1.30 - $1.70 $7.75 - $8.75"
+    }
+   },
+   "evidence_lines": [
+    1,
+    1
+   ]
+  },
+  {
+   "draft_id": "01H0KG3A00SSWBH6V44YXV10WS",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741923000023-17138",
+   "capture_method": "section",
+   "char_start": 17138,
+   "heading": "GAAP diluted earnings per share guidance",
+   "lead_in": null,
+   "table_header": "Q2 2023 Full Year 2023",
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "$1.30 - $1.70 $7.75 - $8.75",
+    "metric": "EPS GAAP",
+    "target_low": 7.75,
+    "target_high": 8.75,
+    "unit": "USD per share",
+    "target_period": "FY2023",
+    "stated_at": "2023-05-17",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741923000023/a2023q1ex-99.htm",
+     "accession_number": "0000027419-23-000023",
+     "filing_type": "8-K",
+     "filed_at": "2023-05-17",
+     "fetched_at": "2026-09-20T06:43:44Z",
+     "content_sha256": "d8e5fe7cdbbd4d1f6fd5a201cbc563e80879cd39c32dc2cb0acce20b67ffb878",
+     "excerpt": "$1.30 - $1.70 $7.75 - $8.75"
+    }
+   },
+   "evidence_lines": [
+    1,
+    1
+   ]
+  },
+  {
+   "draft_id": "01HYESHZ00DXE23WDD6E98SQ7Y",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "c-0000027419-000002741924000126-2918",
+   "capture_method": "sentence",
+   "char_start": 2918,
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35.",
+    "metric": "comparable sales",
+    "target_low": 0.0,
+    "target_high": 2.0,
+    "unit": "percent",
+    "target_period": "Q2 FY2024",
+    "stated_at": "2024-05-22",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000126/a2024q1ex-99.htm",
+     "accession_number": "0000027419-24-000126",
+     "filing_type": "8-K",
+     "filed_at": "2024-05-22",
+     "fetched_at": "2026-09-20T06:43:51Z",
+     "content_sha256": "07ba2b4fd9f35a5b40aa5fcee36aab69dbb0112cb78f7f148280178e7ce8a888",
+     "excerpt": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35."
+    }
+   }
+  },
+  {
+   "draft_id": "01HYESHZ00QVPJQ7GVEAYCJM74",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "c-0000027419-000002741924000126-2918",
+   "capture_method": "sentence",
+   "char_start": 2918,
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35.",
+    "metric": "EPS GAAP",
+    "target_low": 1.95,
+    "target_high": 2.35,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2024",
+    "stated_at": "2024-05-22",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000126/a2024q1ex-99.htm",
+     "accession_number": "0000027419-24-000126",
+     "filing_type": "8-K",
+     "filed_at": "2024-05-22",
+     "fetched_at": "2026-09-20T06:43:51Z",
+     "content_sha256": "07ba2b4fd9f35a5b40aa5fcee36aab69dbb0112cb78f7f148280178e7ce8a888",
+     "excerpt": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35."
+    }
+   }
+  },
+  {
+   "draft_id": "01HYESHZ00WHAFA8PKMD4M6A08",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "c-0000027419-000002741924000126-2918",
+   "capture_method": "sentence",
+   "char_start": 2918,
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35.",
+    "metric": "EPS non-GAAP",
+    "target_low": 1.95,
+    "target_high": 2.35,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2024",
+    "stated_at": "2024-05-22",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000126/a2024q1ex-99.htm",
+     "accession_number": "0000027419-24-000126",
+     "filing_type": "8-K",
+     "filed_at": "2024-05-22",
+     "fetched_at": "2026-09-20T06:43:51Z",
+     "content_sha256": "07ba2b4fd9f35a5b40aa5fcee36aab69dbb0112cb78f7f148280178e7ce8a888",
+     "excerpt": "For the second quarter, the Company expects a 0 to 2 percent increase in its comparable sales, and GAAP and Adjusted EPS of $1.95 to $2.35."
+    }
+   }
+  },
+  {
+   "draft_id": "01HYESHZ00WS7DQ073BJ6Y0YFZ",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741924000126-15105",
+   "capture_method": "section",
+   "char_start": 15105,
+   "heading": "GAAP diluted earnings per share guidance",
+   "lead_in": null,
+   "table_header": "Q2 2024 Full Year 2024",
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "$1.95 - $2.35 $8.60 - $9.60",
+    "metric": "EPS GAAP",
+    "target_low": 8.6,
+    "target_high": 9.6,
+    "unit": "USD per share",
+    "target_period": "FY2024",
+    "stated_at": "2024-05-22",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000126/a2024q1ex-99.htm",
+     "accession_number": "0000027419-24-000126",
+     "filing_type": "8-K",
+     "filed_at": "2024-05-22",
+     "fetched_at": "2026-09-20T06:43:51Z",
+     "content_sha256": "07ba2b4fd9f35a5b40aa5fcee36aab69dbb0112cb78f7f148280178e7ce8a888",
+     "excerpt": "$1.95 - $2.35 $8.60 - $9.60"
+    }
+   },
+   "evidence_lines": [
+    1,
+    1
+   ]
+  },
+  {
+   "draft_id": "01JVR27K00JG9Q7GS9MZNGZV5F",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741925000096-3216",
+   "capture_method": "section",
+   "char_start": 3216,
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "For fiscal 2025, the Company now expects a low-single digit decline in sales, and GAAP EPS of $8.00 to $10.00. Adjusted EPS, which excludes the gains from the litigation settlements in the first quarter, is expected to be approximately $7.00 to $9.00.",
+    "metric": "EPS GAAP",
+    "target_low": 8.0,
+    "target_high": 10.0,
+    "unit": "USD per share",
+    "target_period": "FY2025",
+    "stated_at": "2025-05-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741925000096/a2025q1ex-99.htm",
+     "accession_number": "0000027419-25-000096",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-21",
+     "fetched_at": "2026-09-20T06:43:58Z",
+     "content_sha256": "f1ad72478a198fb1b436e4f6bd8e839820fda31becd671f805a34e7aa453753c",
+     "excerpt": "For fiscal 2025, the Company now expects a low-single digit decline in sales, and GAAP EPS of $8.00 to $10.00. Adjusted EPS, which excludes the gains from the litigation settlements in the first quarter, is expected to be approximately $7.00 to $9.00."
+    }
+   },
+   "evidence_lines": [
+    1,
+    1
+   ]
+  },
+  {
+   "draft_id": "01JVR27K000DB0Q3JFEJYWB3R9",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741925000096-3216",
+   "capture_method": "section",
+   "char_start": 3216,
+   "heading": "Guidance",
+   "lead_in": "For additional media materials, please visit:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "For fiscal 2025, the Company now expects a low-single digit decline in sales, and GAAP EPS of $8.00 to $10.00. Adjusted EPS, which excludes the gains from the litigation settlements in the first quarter, is expected to be approximately $7.00 to $9.00.",
+    "metric": "EPS non-GAAP",
+    "target_low": 7.0,
+    "target_high": 9.0,
+    "unit": "USD per share",
+    "target_period": "FY2025",
+    "stated_at": "2025-05-21",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741925000096/a2025q1ex-99.htm",
+     "accession_number": "0000027419-25-000096",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-21",
+     "fetched_at": "2026-09-20T06:43:58Z",
+     "content_sha256": "f1ad72478a198fb1b436e4f6bd8e839820fda31becd671f805a34e7aa453753c",
+     "excerpt": "For fiscal 2025, the Company now expects a low-single digit decline in sales, and GAAP EPS of $8.00 to $10.00. Adjusted EPS, which excludes the gains from the litigation settlements in the first quarter, is expected to be approximately $7.00 to $9.00."
+    }
+   },
+   "evidence_lines": [
+    1,
+    1
+   ]
+  },
+  {
+   "draft_id": "01KJRFX500DKCQ2B59B9Q7DB44",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741926000012-26074",
+   "capture_method": "section",
+   "char_start": 26074,
+   "heading": "Adjusted diluted earnings per share guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "$1.30+(a)",
+    "metric": "EPS non-GAAP",
+    "target_low": 1.3,
+    "target_high": 1.3,
+    "unit": "USD per share",
+    "target_period": "Q1 FY2026",
+    "stated_at": "2026-03-03",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741926000012/a2025q4ex-99.htm",
+     "accession_number": "0000027419-26-000012",
+     "filing_type": "8-K",
+     "filed_at": "2026-03-03",
+     "fetched_at": "2026-09-20T07:25:35Z",
+     "content_sha256": "9457d595e9dab24bd1f3ebb9cb4fccdca88ca8a0d30a5c3435d5f15a1dbb662a",
+     "excerpt": "$1.30+(a)"
+    }
+   },
+   "evidence_lines": [
+    1,
+    1
+   ]
+  },
+  {
+   "draft_id": "01KJRFX500N0J5SVHFETTAGS37",
+   "cik": "0000027419",
+   "ticker": "TGT",
+   "company": "Target Corporation",
+   "custom_id": "b-0000027419-000002741926000012-26074",
+   "capture_method": "section",
+   "char_start": 26074,
+   "heading": "Adjusted diluted earnings per share guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "$7.50 - $8.50",
+    "metric": "EPS non-GAAP",
+    "target_low": 7.5,
+    "target_high": 8.5,
+    "unit": "USD per share",
+    "target_period": "FY2026",
+    "stated_at": "2026-03-03",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741926000012/a2025q4ex-99.htm",
+     "accession_number": "0000027419-26-000012",
+     "filing_type": "8-K",
+     "filed_at": "2026-03-03",
+     "fetched_at": "2026-09-20T07:25:35Z",
+     "content_sha256": "9457d595e9dab24bd1f3ebb9cb4fccdca88ca8a0d30a5c3435d5f15a1dbb662a",
+     "excerpt": "$7.50 - $8.50"
+    }
+   },
+   "evidence_lines": [
+    2,
+    2
+   ]
+  },
+  {
+   "draft_id": "01DT31QM00SAHTZXNHG1AQ036V",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "c-0001108524-000110852419000067-6480",
+   "capture_method": "sentence",
+   "char_start": 6480,
+   "heading": null,
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "FY24: Long range target for FY24 high end of range $34B to $35B as of November 20, 2019.",
+    "metric": "revenue",
+    "target_low": 34.0,
+    "target_high": 35.0,
+    "unit": "USD billions",
+    "target_period": "FY2024",
+    "stated_at": "2019-11-20",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852419000067/investorday2019.htm",
+     "accession_number": "0001108524-19-000067",
+     "filing_type": "8-K",
+     "filed_at": "2019-11-20",
+     "fetched_at": "2026-09-20T06:44:13Z",
+     "content_sha256": "afb50a23122829fda31c9f152083e38c0e756bd1196ac756fcfce9933e56881f",
+     "excerpt": "FY24: Long range target for FY24 high end of range $34B to $35B as of November 20, 2019."
+    }
+   }
+  },
+  {
+   "draft_id": "01ERDSJK00BNB4QJ0P7JH0JQK8",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "Revenue\n$5.665 - $5.675\nBillion",
+    "metric": "revenue",
+    "target_low": 5.665,
+    "target_high": 5.675,
+    "unit": "USD billions",
+    "target_period": "Q1 FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "Revenue\n$5.665 - $5.675\nBillion"
+    }
+   },
+   "evidence_lines": [
+    1,
+    3
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK00EBRP531CBEC068YN",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Revenue\n$5.665 - $5.675\nBillion\n$21.10 - $21.11\nBillion",
+    "metric": "revenue",
+    "target_low": 21.1,
+    "target_high": 21.11,
+    "unit": "USD billions",
+    "target_period": "FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "Revenue\n$5.665 - $5.675\nBillion\n$21.10 - $21.11\nBillion"
+    }
+   },
+   "evidence_lines": [
+    1,
+    5
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK00VERR7CTWSK9BMA1P",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP operating margin\nN/A\n~2.0%",
+    "metric": "operating margin GAAP",
+    "target_low": 2.0,
+    "target_high": 2.0,
+    "unit": "percent",
+    "target_period": "FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "GAAP operating margin\nN/A\n~2.0%"
+    }
+   },
+   "evidence_lines": [
+    15,
+    17
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK00EYNVYN30D6HBXQBE",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP operating margin\nN/A\n~17.6%",
+    "metric": "operating margin non-GAAP",
+    "target_low": 17.6,
+    "target_high": 17.6,
+    "unit": "percent",
+    "target_period": "FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "Non-GAAP operating margin\nN/A\n~17.6%"
+    }
+   },
+   "evidence_lines": [
+    20,
+    22
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK00MJ82KMEM7J35FCFF",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 4,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP earnings per share\n$0.05 - $0.06",
+    "metric": "EPS GAAP",
+    "target_low": 0.05,
+    "target_high": 0.06,
+    "unit": "USD per share",
+    "target_period": "Q1 FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "GAAP earnings per share\n$0.05 - $0.06"
+    }
+   },
+   "evidence_lines": [
+    25,
+    26
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK003JCX5QSXGAWF5VQC",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 5,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP earnings per share\n$0.05 - $0.06\n$4.14 - $4.15",
+    "metric": "EPS GAAP",
+    "target_low": 4.14,
+    "target_high": 4.15,
+    "unit": "USD per share",
+    "target_period": "FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "GAAP earnings per share\n$0.05 - $0.06\n$4.14 - $4.15"
+    }
+   },
+   "evidence_lines": [
+    25,
+    27
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK00K48AB3C48G77EGS0",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 6,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP earnings per share\n$0.73 - $0.74",
+    "metric": "EPS non-GAAP",
+    "target_low": 0.73,
+    "target_high": 0.74,
+    "unit": "USD per share",
+    "target_period": "Q1 FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "Non-GAAP earnings per share\n$0.73 - $0.74"
+    }
+   },
+   "evidence_lines": [
+    30,
+    31
+   ]
+  },
+  {
+   "draft_id": "01ERDSJK00THFMSBFHZAP54EHP",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "capture_method": "section",
+   "char_start": 5095,
+   "heading": "Guidance",
+   "lead_in": null,
+   "table_header": null,
+   "item_index": 7,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP earnings per share\n$0.73 - $0.74\n$4.62 - $4.63",
+    "metric": "EPS non-GAAP",
+    "target_low": 4.62,
+    "target_high": 4.63,
+    "unit": "USD per share",
+    "target_period": "FY2022",
+    "stated_at": "2020-12-01",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312520307200/d18491dex991.htm",
+     "accession_number": "0001193125-20-307200",
+     "filing_type": "8-K",
+     "filed_at": "2020-12-01",
+     "fetched_at": "2026-09-20T06:44:21Z",
+     "content_sha256": "011d68c13b169e92649dec35f9feb606f020cf9b7e9e4c99f9d043f1e898637b",
+     "excerpt": "Non-GAAP earnings per share\n$0.73 - $0.74\n$4.62 - $4.63"
+    }
+   },
+   "evidence_lines": [
+    30,
+    32
+   ]
+  },
+  {
+   "draft_id": "01F6NHXT00FNTRE38Z0Y1G0GKV",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "c-0001108524-000110852421000027-34976",
+   "capture_method": "sentence",
+   "char_start": 34976,
+   "heading": null,
+   "lead_in": "Specifically, management is excluding the following items from its non-GAAP operating margin and non-GAAP earnings per share, as applicable, for the periods presented in the Q1 FY22 financial statements and for its non-GAAP estimates for Q2 and FY22:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "For fiscal 2022, the company uses a projected non-GAAP tax rate of 21.5%, which reflects",
+    "metric": "tax rate",
+    "target_low": 21.5,
+    "target_high": 21.5,
+    "unit": "percent",
+    "target_period": "FY2022",
+    "stated_at": "2021-05-27",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852421000027/crm-q1fy22xexhibit991.htm",
+     "accession_number": "0001108524-21-000027",
+     "filing_type": "8-K",
+     "filed_at": "2021-05-27",
+     "fetched_at": "2026-09-20T06:44:27Z",
+     "content_sha256": "989f5c5536c775a130c316f1198a3f85c69013595e6f9b2264a2962db970def0",
+     "excerpt": "For fiscal 2022, the company uses a projected non-GAAP tax rate of 21.5%, which reflects"
+    }
+   }
+  },
+  {
+   "draft_id": "01G4BPK100033H9JCP08DFYXDQ",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "capture_method": "section",
+   "char_start": 6433,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP operating margin(1)\n~3.8%",
+    "metric": "operating margin GAAP",
+    "target_low": 3.8,
+    "target_high": 3.8,
+    "unit": "percent",
+    "target_period": "FY2023",
+    "stated_at": "2022-05-31",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000019/crm-q1fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000019",
+     "filing_type": "8-K",
+     "filed_at": "2022-05-31",
+     "fetched_at": "2026-09-20T06:44:37Z",
+     "content_sha256": "68a29fec0f77cd87fb23a2b00ace225314119adaab60f62ddbd69233c1aabd51",
+     "excerpt": "GAAP operating margin(1)\n~3.8%"
+    }
+   },
+   "evidence_lines": [
+    1,
+    2
+   ]
+  },
+  {
+   "draft_id": "01G4BPK1005KTF8CW4449T1ZBW",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "capture_method": "section",
+   "char_start": 6433,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP operating margin(1)\n~20.4%",
+    "metric": "operating margin non-GAAP",
+    "target_low": 20.4,
+    "target_high": 20.4,
+    "unit": "percent",
+    "target_period": "FY2023",
+    "stated_at": "2022-05-31",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000019/crm-q1fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000019",
+     "filing_type": "8-K",
+     "filed_at": "2022-05-31",
+     "fetched_at": "2026-09-20T06:44:37Z",
+     "content_sha256": "68a29fec0f77cd87fb23a2b00ace225314119adaab60f62ddbd69233c1aabd51",
+     "excerpt": "Non-GAAP operating margin(1)\n~20.4%"
+    }
+   },
+   "evidence_lines": [
+    8,
+    9
+   ]
+  },
+  {
+   "draft_id": "01G4BPK100ZDPX1415RE3GG36M",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "capture_method": "section",
+   "char_start": 6433,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP earnings (loss) per share range(1)(2)\n($0.03) - ($0.02) $0.38 - $0.40",
+    "metric": "EPS GAAP",
+    "target_low": -0.03,
+    "target_high": -0.02,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2023",
+    "stated_at": "2022-05-31",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000019/crm-q1fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000019",
+     "filing_type": "8-K",
+     "filed_at": "2022-05-31",
+     "fetched_at": "2026-09-20T06:44:37Z",
+     "content_sha256": "68a29fec0f77cd87fb23a2b00ace225314119adaab60f62ddbd69233c1aabd51",
+     "excerpt": "GAAP earnings (loss) per share range(1)(2)\n($0.03) - ($0.02) $0.38 - $0.40"
+    }
+   },
+   "evidence_lines": [
+    15,
+    16
+   ]
+  },
+  {
+   "draft_id": "01G4BPK1005JVSV3KZCG6K22WF",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "capture_method": "section",
+   "char_start": 6433,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP earnings (loss) per share range(1)(2)\n($0.03) - ($0.02) $0.38 - $0.40",
+    "metric": "EPS GAAP",
+    "target_low": 0.38,
+    "target_high": 0.4,
+    "unit": "USD per share",
+    "target_period": "FY2023",
+    "stated_at": "2022-05-31",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000019/crm-q1fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000019",
+     "filing_type": "8-K",
+     "filed_at": "2022-05-31",
+     "fetched_at": "2026-09-20T06:44:37Z",
+     "content_sha256": "68a29fec0f77cd87fb23a2b00ace225314119adaab60f62ddbd69233c1aabd51",
+     "excerpt": "GAAP earnings (loss) per share range(1)(2)\n($0.03) - ($0.02) $0.38 - $0.40"
+    }
+   },
+   "evidence_lines": [
+    15,
+    16
+   ]
+  },
+  {
+   "draft_id": "01G4BPK100JXQ4TXN8Y6VK6NY3",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "capture_method": "section",
+   "char_start": 6433,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 4,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP diluted earnings per share(2)\n$1.01 - $1.02 $4.74 - $4.76",
+    "metric": "EPS non-GAAP",
+    "target_low": 1.01,
+    "target_high": 1.02,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2023",
+    "stated_at": "2022-05-31",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000019/crm-q1fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000019",
+     "filing_type": "8-K",
+     "filed_at": "2022-05-31",
+     "fetched_at": "2026-09-20T06:44:37Z",
+     "content_sha256": "68a29fec0f77cd87fb23a2b00ace225314119adaab60f62ddbd69233c1aabd51",
+     "excerpt": "Non-GAAP diluted earnings per share(2)\n$1.01 - $1.02 $4.74 - $4.76"
+    }
+   },
+   "evidence_lines": [
+    23,
+    24
+   ]
+  },
+  {
+   "draft_id": "01G4BPK100HWCE48EBM8HFCJ1Z",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852422000019-6433",
+   "capture_method": "section",
+   "char_start": 6433,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 5,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP diluted earnings per share(2)\n$1.01 - $1.02 $4.74 - $4.76",
+    "metric": "EPS non-GAAP",
+    "target_low": 4.74,
+    "target_high": 4.76,
+    "unit": "USD per share",
+    "target_period": "FY2023",
+    "stated_at": "2022-05-31",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000019/crm-q1fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000019",
+     "filing_type": "8-K",
+     "filed_at": "2022-05-31",
+     "fetched_at": "2026-09-20T06:44:37Z",
+     "content_sha256": "68a29fec0f77cd87fb23a2b00ace225314119adaab60f62ddbd69233c1aabd51",
+     "excerpt": "Non-GAAP diluted earnings per share(2)\n$1.01 - $1.02 $4.74 - $4.76"
+    }
+   },
+   "evidence_lines": [
+    23,
+    24
+   ]
+  },
+  {
+   "draft_id": "01GB6JC4001FFJTXE30XA9NATP",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "c-0001108524-000110852422000038-37076",
+   "capture_method": "sentence",
+   "char_start": 37076,
+   "heading": null,
+   "lead_in": "As described above, the company excludes or adjusts for the following in its non-GAAP results and guidance:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "For fiscal 2023, the company uses a projected non-GAAP tax rate of 22%, which reflects currently available information, as well as other factors and assumptions.",
+    "metric": "tax rate",
+    "target_low": 22.0,
+    "target_high": 22.0,
+    "unit": "percent",
+    "target_period": "FY2023",
+    "stated_at": "2022-08-24",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000038/crm-q2fy23xexhibit991.htm",
+     "accession_number": "0001108524-22-000038",
+     "filing_type": "8-K",
+     "filed_at": "2022-08-24",
+     "fetched_at": "2026-09-20T06:44:38Z",
+     "content_sha256": "4a7173411df20794f636dd8e879c2ae30924ab899047531ec761e08b86f32d6f",
+     "excerpt": "For fiscal 2023, the company uses a projected non-GAAP tax rate of 22%, which reflects currently available information, as well as other factors and assumptions."
+    }
+   }
+  },
+  {
+   "draft_id": "01HQPG5K00QC0SYWC4E8DKRVDZ",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP operating margin(1)\n~20.4%",
+    "metric": "operating margin GAAP",
+    "target_low": 20.4,
+    "target_high": 20.4,
+    "unit": "percent",
+    "target_period": "FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "GAAP operating margin(1)\n~20.4%"
+    }
+   },
+   "evidence_lines": [
+    1,
+    2
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K00KDAM5VPFENWW27TN",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP operating margin(1)\n~32.5%",
+    "metric": "operating margin non-GAAP",
+    "target_low": 32.5,
+    "target_high": 32.5,
+    "unit": "percent",
+    "target_period": "FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "Non-GAAP operating margin(1)\n~32.5%"
+    }
+   },
+   "evidence_lines": [
+    10,
+    11
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K00NNG8SPZBGX7M4Z41",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP diluted earnings per share range(1)(2)\n$1.42 - $1.44 $6.07 - $6.15",
+    "metric": "EPS GAAP",
+    "target_low": 1.42,
+    "target_high": 1.44,
+    "unit": "USD per share",
+    "target_period": "Q1 FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "GAAP diluted earnings per share range(1)(2)\n$1.42 - $1.44 $6.07 - $6.15"
+    }
+   },
+   "evidence_lines": [
+    19,
+    20
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K004WZ0B7ZDEYJTTQAE",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "GAAP diluted earnings per share range(1)(2)\n$1.42 - $1.44 $6.07 - $6.15",
+    "metric": "EPS GAAP",
+    "target_low": 6.07,
+    "target_high": 6.15,
+    "unit": "USD per share",
+    "target_period": "FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "GAAP diluted earnings per share range(1)(2)\n$1.42 - $1.44 $6.07 - $6.15"
+    }
+   },
+   "evidence_lines": [
+    19,
+    20
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K0008288FARW70QJXMN",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 4,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP diluted earnings per share(2)\n$2.37 - $2.39 $9.68 - $9.76",
+    "metric": "EPS non-GAAP",
+    "target_low": 2.37,
+    "target_high": 2.39,
+    "unit": "USD per share",
+    "target_period": "Q1 FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "Non-GAAP diluted earnings per share(2)\n$2.37 - $2.39 $9.68 - $9.76"
+    }
+   },
+   "evidence_lines": [
+    29,
+    30
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K00F5BYEQPDCYP7M93F",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 5,
+   "conflict": false,
+   "assumption": {
+    "text": "Non-GAAP diluted earnings per share(2)\n$2.37 - $2.39 $9.68 - $9.76",
+    "metric": "EPS non-GAAP",
+    "target_low": 9.68,
+    "target_high": 9.76,
+    "unit": "USD per share",
+    "target_period": "FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "Non-GAAP diluted earnings per share(2)\n$2.37 - $2.39 $9.68 - $9.76"
+    }
+   },
+   "evidence_lines": [
+    29,
+    30
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K008CB82C65YJVJ2EZC",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 6,
+   "conflict": false,
+   "assumption": {
+    "text": "(1) The Company's GAAP tax provision is expected to be approximately 22.5% for the three months ended April 30, 2024, and approximately 22.5% for the year ended January 31, 2025. The GAAP tax rates may fluctuate due to discrete tax items and related effects in conjunction with certain provisions in the Tax Cuts and Jobs Act, future acquisitions or other transactions.",
+    "metric": "tax rate",
+    "target_low": 22.5,
+    "target_high": 22.5,
+    "unit": "percent",
+    "target_period": "Q1 FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "(1) The Company's GAAP tax provision is expected to be approximately 22.5% for the three months ended April 30, 2024, and approximately 22.5% for the year ended January 31, 2025. The GAAP tax rates may fluctuate due to discrete tax items and related effects in conjunction with certain provisions in the Tax Cuts and Jobs Act, future acquisitions or other transactions."
+    }
+   },
+   "evidence_lines": [
+    35,
+    35
+   ]
+  },
+  {
+   "draft_id": "01HQPG5K005HBEXGPHTYKE1FCY",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852424000002-7818",
+   "capture_method": "section",
+   "char_start": 7818,
+   "heading": "Guidance",
+   "lead_in": "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "table_header": null,
+   "item_index": 7,
+   "conflict": false,
+   "assumption": {
+    "text": "(1) The Company's GAAP tax provision is expected to be approximately 22.5% for the three months ended April 30, 2024, and approximately 22.5% for the year ended January 31, 2025. The GAAP tax rates may fluctuate due to discrete tax items and related effects in conjunction with certain provisions in the Tax Cuts and Jobs Act, future acquisitions or other transactions.",
+    "metric": "tax rate",
+    "target_low": 22.5,
+    "target_high": 22.5,
+    "unit": "percent",
+    "target_period": "FY2025",
+    "stated_at": "2024-02-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852424000002/crm-q4fy24xexhibit991.htm",
+     "accession_number": "0001108524-24-000002",
+     "filing_type": "8-K",
+     "filed_at": "2024-02-28",
+     "fetched_at": "2026-09-20T06:44:49Z",
+     "content_sha256": "99d02e164cf57707be75d84a81b706d252e3fbf4d09abf95729a28aca86d7d36",
+     "excerpt": "(1) The Company's GAAP tax provision is expected to be approximately 22.5% for the three months ended April 30, 2024, and approximately 22.5% for the year ended January 31, 2025. The GAAP tax rates may fluctuate due to discrete tax items and related effects in conjunction with certain provisions in the Tax Cuts and Jobs Act, future acquisitions or other transactions."
+    }
+   },
+   "evidence_lines": [
+    35,
+    35
+   ]
+  },
+  {
+   "draft_id": "01JWA30M00PP6ZKNKNGFVRM1MA",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852425000027-3875",
+   "capture_method": "section",
+   "char_start": 3875,
+   "heading": "Full Year FY26 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "Revenue\n$41.0 - $41.3 billion",
+    "metric": "revenue",
+    "target_low": 41.0,
+    "target_high": 41.3,
+    "unit": "USD billions",
+    "target_period": "FY2026",
+    "stated_at": "2025-05-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000027/crm-q1fy26xexhibit991.htm",
+     "accession_number": "0001108524-25-000027",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-28",
+     "fetched_at": "2026-09-20T06:44:58Z",
+     "content_sha256": "baabf4093c0bdec537a29c3d99e3e68e5aa41e439f87a9698a6b2f9c36d0c5c9",
+     "excerpt": "Revenue\n$41.0 - $41.3 billion"
+    }
+   },
+   "evidence_lines": [
+    3,
+    4
+   ]
+  },
+  {
+   "draft_id": "01JWA30M00F4K6CHVJZ1WBBECV",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852425000027-3875",
+   "capture_method": "section",
+   "char_start": 3875,
+   "heading": "Full Year FY26 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Operating margin 21.6% 34.0%",
+    "metric": "operating margin GAAP",
+    "target_low": 21.6,
+    "target_high": 21.6,
+    "unit": "percent",
+    "target_period": "FY2026",
+    "stated_at": "2025-05-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000027/crm-q1fy26xexhibit991.htm",
+     "accession_number": "0001108524-25-000027",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-28",
+     "fetched_at": "2026-09-20T06:44:58Z",
+     "content_sha256": "baabf4093c0bdec537a29c3d99e3e68e5aa41e439f87a9698a6b2f9c36d0c5c9",
+     "excerpt": "Operating margin 21.6% 34.0%"
+    }
+   },
+   "evidence_lines": [
+    9,
+    9
+   ]
+  },
+  {
+   "draft_id": "01JWA30M008MCPC59J65JWFD9S",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852425000027-3875",
+   "capture_method": "section",
+   "char_start": 3875,
+   "heading": "Full Year FY26 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "Operating margin 21.6% 34.0%",
+    "metric": "operating margin non-GAAP",
+    "target_low": 34.0,
+    "target_high": 34.0,
+    "unit": "percent",
+    "target_period": "FY2026",
+    "stated_at": "2025-05-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000027/crm-q1fy26xexhibit991.htm",
+     "accession_number": "0001108524-25-000027",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-28",
+     "fetched_at": "2026-09-20T06:44:58Z",
+     "content_sha256": "baabf4093c0bdec537a29c3d99e3e68e5aa41e439f87a9698a6b2f9c36d0c5c9",
+     "excerpt": "Operating margin 21.6% 34.0%"
+    }
+   },
+   "evidence_lines": [
+    9,
+    9
+   ]
+  },
+  {
+   "draft_id": "01JWA30M001Z4YYBKJB34QXFSG",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852425000027-3875",
+   "capture_method": "section",
+   "char_start": 3875,
+   "heading": "Full Year FY26 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "table_header": null,
+   "item_index": 3,
+   "conflict": false,
+   "assumption": {
+    "text": "Diluted net income per share\n$7.15 - $7.21 $11.27 - $11.33",
+    "metric": "EPS GAAP",
+    "target_low": 7.15,
+    "target_high": 7.21,
+    "unit": "USD per share",
+    "target_period": "FY2026",
+    "stated_at": "2025-05-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000027/crm-q1fy26xexhibit991.htm",
+     "accession_number": "0001108524-25-000027",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-28",
+     "fetched_at": "2026-09-20T06:44:58Z",
+     "content_sha256": "baabf4093c0bdec537a29c3d99e3e68e5aa41e439f87a9698a6b2f9c36d0c5c9",
+     "excerpt": "Diluted net income per share\n$7.15 - $7.21 $11.27 - $11.33"
+    }
+   },
+   "evidence_lines": [
+    10,
+    11
+   ]
+  },
+  {
+   "draft_id": "01JWA30M00X2K61G3R7N5G18CP",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852425000027-3875",
+   "capture_method": "section",
+   "char_start": 3875,
+   "heading": "Full Year FY26 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "table_header": null,
+   "item_index": 4,
+   "conflict": false,
+   "assumption": {
+    "text": "Diluted net income per share\n$7.15 - $7.21 $11.27 - $11.33",
+    "metric": "EPS non-GAAP",
+    "target_low": 11.27,
+    "target_high": 11.33,
+    "unit": "USD per share",
+    "target_period": "FY2026",
+    "stated_at": "2025-05-28",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000027/crm-q1fy26xexhibit991.htm",
+     "accession_number": "0001108524-25-000027",
+     "filing_type": "8-K",
+     "filed_at": "2025-05-28",
+     "fetched_at": "2026-09-20T06:44:58Z",
+     "content_sha256": "baabf4093c0bdec537a29c3d99e3e68e5aa41e439f87a9698a6b2f9c36d0c5c9",
+     "excerpt": "Diluted net income per share\n$7.15 - $7.21 $11.27 - $11.33"
+    }
+   },
+   "evidence_lines": [
+    10,
+    11
+   ]
+  },
+  {
+   "draft_id": "01KSKBP80048Z880D6BAT13BYP",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852426000125-4702",
+   "capture_method": "section",
+   "char_start": 4702,
+   "heading": "Q2 FY27 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2027 and full-year fiscal 2027:",
+   "table_header": null,
+   "item_index": 0,
+   "conflict": false,
+   "assumption": {
+    "text": "Revenue\n$11.27 - $11.35 billion",
+    "metric": "revenue",
+    "target_low": 11.27,
+    "target_high": 11.35,
+    "unit": "USD billions",
+    "target_period": "Q2 FY2027",
+    "stated_at": "2026-05-27",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000125/crm-q1fy27xexhibit991.htm",
+     "accession_number": "0001108524-26-000125",
+     "filing_type": "8-K",
+     "filed_at": "2026-05-27",
+     "fetched_at": "2026-09-20T07:25:49Z",
+     "content_sha256": "07653b4c191fc126ff92e83e3a7c73ab6d4e31bbdae4ecd59844d8f6751695c3",
+     "excerpt": "Revenue\n$11.27 - $11.35 billion"
+    }
+   },
+   "evidence_lines": [
+    3,
+    4
+   ]
+  },
+  {
+   "draft_id": "01KSKBP8008Y7YZBFEJB2PDEVY",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852426000125-4702",
+   "capture_method": "section",
+   "char_start": 4702,
+   "heading": "Q2 FY27 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2027 and full-year fiscal 2027:",
+   "table_header": null,
+   "item_index": 1,
+   "conflict": false,
+   "assumption": {
+    "text": "Diluted net income per share\n$1.74 - $1.76 $3.25 - $3.27",
+    "metric": "EPS GAAP",
+    "target_low": 1.74,
+    "target_high": 1.76,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2027",
+    "stated_at": "2026-05-27",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000125/crm-q1fy27xexhibit991.htm",
+     "accession_number": "0001108524-26-000125",
+     "filing_type": "8-K",
+     "filed_at": "2026-05-27",
+     "fetched_at": "2026-09-20T07:25:49Z",
+     "content_sha256": "07653b4c191fc126ff92e83e3a7c73ab6d4e31bbdae4ecd59844d8f6751695c3",
+     "excerpt": "Diluted net income per share\n$1.74 - $1.76 $3.25 - $3.27"
+    }
+   },
+   "evidence_lines": [
+    10,
+    11
+   ]
+  },
+  {
+   "draft_id": "01KSKBP800FFF1C90JAQ3QY373",
+   "cik": "0001108524",
+   "ticker": "CRM",
+   "company": "Salesforce, Inc.",
+   "custom_id": "b-0001108524-000110852426000125-4702",
+   "capture_method": "section",
+   "char_start": 4702,
+   "heading": "Q2 FY27 Guidance",
+   "lead_in": "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2027 and full-year fiscal 2027:",
+   "table_header": null,
+   "item_index": 2,
+   "conflict": false,
+   "assumption": {
+    "text": "Diluted net income per share\n$1.74 - $1.76 $3.25 - $3.27",
+    "metric": "EPS non-GAAP",
+    "target_low": 3.25,
+    "target_high": 3.27,
+    "unit": "USD per share",
+    "target_period": "Q2 FY2027",
+    "stated_at": "2026-05-27",
+    "evidence": {
+     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000125/crm-q1fy27xexhibit991.htm",
+     "accession_number": "0001108524-26-000125",
+     "filing_type": "8-K",
+     "filed_at": "2026-05-27",
+     "fetched_at": "2026-09-20T07:25:49Z",
+     "content_sha256": "07653b4c191fc126ff92e83e3a7c73ab6d4e31bbdae4ecd59844d8f6751695c3",
+     "excerpt": "Diluted net income per share\n$1.74 - $1.76 $3.25 - $3.27"
+    }
+   },
+   "evidence_lines": [
+    10,
+    11
+   ]
+  }
+ ],
+ "rejects": [
+  {
+   "custom_id": "c-0000027419-000002741919000018-3052",
+   "item": {
+    "metric": "comparable sales",
+    "unit": "percent",
+    "target_period": "FY2019",
+    "value_low": 3.4,
+    "value_high": 3.4,
+    "plus_minus": null,
+    "plus_minus_kind": "none"
+   },
+   "reason": "target_period 'FY2019' is a full year, but the evidence is about a half-year"
+  },
+  {
+   "custom_id": "b-0000027419-000002741921000013-2980",
+   "item": {
+    "metric": "operating margin GAAP",
+    "unit": "percent",
+    "target_period": "Q2 FY2021",
+    "value_low": null,
+    "value_high": null,
+    "plus_minus": null,
+    "plus_minus_kind": "none",
+    "line_first": 1,
+    "line_last": 1
+   },
+   "reason": "no number stated"
+  },
+  {
+   "custom_id": "b-0000027419-000002741921000013-2980",
+   "item": {
+    "metric": "operating margin GAAP",
+    "unit": "percent",
+    "target_period": "FY2021",
+    "value_low": 7.0,
+    "value_high": 8.0,
+    "plus_minus": null,
+    "plus_minus_kind": "none",
+    "line_first": 2,
+    "line_last": 2
+   },
+   "reason": "a range, but the evidence has no 'to', 'between', dash or plus or minus"
+  },
+  {
+   "custom_id": "c-0001108524-000110852424000002-43047",
+   "item": {
+    "metric": "tax rate",
+    "unit": "percent",
+    "target_period": "FY2025",
+    "value_low": 22.0,
+    "value_high": 22.0,
+    "plus_minus": null,
+    "plus_minus_kind": "none"
+   },
+   "reason": "the evidence is in the past tense ('used') and says nothing forward-looking"
+  },
+  {
+   "custom_id": "c-0001108524-000110852426000056-43944",
+   "item": {
+    "metric": "tax rate",
+    "unit": "percent",
+    "target_period": "FY2027",
+    "value_low": 20.5,
+    "value_high": 20.5,
+    "plus_minus": null,
+    "plus_minus_kind": "none"
+   },
+   "reason": "value_low 20.5 is not in the evidence text"
+  }
+ ],
+ "lines_above": {
+  "b-0001045810-000104581020000145-20492": [
+   "Purchase of property and equipment and intangible assets (217) (155) (113) (372) (241)",
+   "Free cash flow $ 1,349 $ 754 $ 823 $ 2,104 $ 1,415",
+   "(A) Stock-based compensation consists of the following:",
+   "Three Months Ended Six Months Ended",
+   "July 26, April 26, July 28, July 26, July 28,",
+   "2020 2020 2019 2020 2019",
+   "Cost of revenue $ 14 $ 21 $ 8 $ 35 $ 12",
+   "Research and development $ 228 $ 134 $ 145 $ 362 $ 259",
+   "Sales, general and administrative $ 132 $ 69 $ 71 $ 201 $ 130",
+   "(B) Acquisition-related and other costs primarily include amortization of intangible assets, inventory step-up, transaction costs, and certain compensation charges.",
+   "(C) Income tax impact of non-GAAP adjustments, including the recognition of excess tax benefits or deficiencies related to stock-based compensation under GAAP accounting standard (ASU 2016-09).",
+   "NVIDIA CORPORATION",
+   "RECONCILIATION OF GAAP TO NON-GAAP OUTLOOK",
+   "Q3 FY2021 Outlook"
+  ],
+  "b-0001045810-000104581022000136-2785": [
+   "Gross margin 43.5 % 65.5 % 64.8 % Down 22.0 pts Down 21.3 pts",
+   "Operating expenses $2,416 $3,563 $1,771 Down 32% Up 36%",
+   "Operating income $499 $1,868 $2,444 Down 73% Down 80%",
+   "Net income $656 $1,618 $2,374 Down 59% Down 72%",
+   "Diluted earnings per share $0.26 $0.64 $0.94 Down 59% Down 72%",
+   "Non-GAAP",
+   "($ in millions, except earnings per share) Q2 FY23 Q1 FY23 Q2 FY22 Q/Q Y/Y",
+   "Revenue $6,704 $8,288 $6,507 Down 19% Up 3%",
+   "Gross margin 45.9 % 67.1 % 66.7 % Down 21.2 pts Down 20.8 pts",
+   "Operating expenses $1,749 $1,608 $1,266 Up 9% Up 38%",
+   "Operating income $1,325 $3,955 $3,071 Down 66% Down 57%",
+   "Net income $1,292 $3,443 $2,623 Down 62% Down 51%",
+   "Diluted earnings per share $0.51 $1.36 $1.04 Down 63% Down 51%",
+   "Outlook"
+  ],
+  "b-0001045810-000104581023000225-2480": [
+   "Gross margin 74.0 % 70.1 % 53.6 % Up 3.9 pts Up 20.4 pts",
+   "Operating expenses $2,983 $2,662 $2,576 Up 12% Up 16%",
+   "Operating income $10,417 $6,800 $601 Up 53% Up 1,633%",
+   "Net income $9,243 $6,188 $680 Up 49% Up 1,259%",
+   "Diluted earnings per share $3.71 $2.48 $0.27 Up 50% Up 1,274%",
+   "Non-GAAP",
+   "($ in millions, except earnings per share) Q3 FY24 Q2 FY24 Q3 FY23 Q/Q Y/Y",
+   "Revenue $18,120 $13,507 $5,931 Up 34% Up 206%",
+   "Gross margin 75.0 % 71.2 % 56.1 % Up 3.8 pts Up 18.9 pts",
+   "Operating expenses $2,026 $1,838 $1,793 Up 10% Up 13%",
+   "Operating income $11,557 $7,776 $1,536 Up 49% Up 652%",
+   "Net income $10,020 $6,740 $1,456 Up 49% Up 588%",
+   "Diluted earnings per share $4.02 $2.70 $0.58 Up 49% Up 593%",
+   "Outlook"
+  ],
+  "b-0001045810-000104581024000315-21071": [
+   "(B) Stock-based compensation consists of the following:",
+   "Three Months Ended Nine Months Ended",
+   "October 27, July 28, October 29, October 27, October 29,",
+   "2024 2024 2023 2024 2023",
+   "Cost of revenue $ 50 $ 40 $ 38 $ 125 $ 96",
+   "Research and development $ 910 $ 832 $ 701 $ 2,469 $ 1,826",
+   "Sales, general and administrative $ 292 $ 282 $ 240 $ 822 $ 633",
+   "(C) Other consists of IP-related costs and assets held for sale related adjustments",
+   "(D) Income tax impact of non-GAAP adjustments, including the recognition of excess tax benefits or deficiencies related to stock-based compensation under GAAP accounting standard (ASU 2016-09).",
+   "(E) Reflects a ten-for-one stock split on June 7, 2024",
+   "NVIDIA CORPORATION",
+   "RECONCILIATION OF GAAP TO NON-GAAP OUTLOOK",
+   "Q4 FY2025",
+   "Outlook"
+  ],
+  "b-0001045810-000104581026000019-25477": [
+   "Research and development $ 83 $ 35 $ 27 $ 176 $ 79",
+   "Sales, general and administrative $ 7 $ 4 $ 16 $ 28 $ 51",
+   "(B) Stock-based compensation consists of the following:",
+   "Three Months Ended Twelve Months Ended",
+   "January 25, October 26, January 26, January 25, January 26,",
+   "2026 2025 2025 2026 2025",
+   "Cost of revenue $ 69 $ 70 $ 53 $ 261 $ 178",
+   "Research and development $ 1,217 $ 1,206 $ 955 $ 4,676 $ 3,423",
+   "Sales, general and administrative $ 347 $ 379 $ 313 $ 1,449 $ 1,136",
+   "(C) Interest expense related to acquisition consideration discount to be paid in the future and amortization of debt discount.",
+   "(D) Income tax impact of non-GAAP adjustments, including the recognition of excess tax benefits or deficiencies related to stock-based compensation under GAAP accounting standard (ASU 2016-09).",
+   "NVIDIA CORPORATION",
+   "RECONCILIATION OF GAAP TO NON-GAAP OUTLOOK",
+   "Q1 FY2027 Outlook"
+  ],
+  "b-0000027419-000002741921000013-2980": [
+   "◦Store comparable sales increased 18.0 percent, on top of 0.9 percent growth last year. Digital comparable sales grew 50 percent, on top of 141 percent growth a year ago.",
+   "◦Same-day services (Order Pickup, Drive Up and Shipt) grew more than 90 percent, led by growth in Drive Up of 123 percent.",
+   "◦More than 95 percent of Target’s first quarter sales were fulfilled by its stores.",
+   "•The Company gained more than $1 billion in market share in the first quarter, on top of a $1 billion share gain in first quarter 2020.",
+   "•First quarter GAAP EPS of $4.17 was 643.2 percent higher than last year. First quarter Adjusted EPS1 of $3.69 was 525.0 percent higher than last year.",
+   "•For additional media materials, please visit:",
+   "https://corporate.target.com/article/2021/05/q1-2021-earnings",
+   "MINNEAPOLIS (May 19, 2021) – Target Corporation (NYSE: TGT) today announced its first quarter 2021 financial results, which reflected robust growth in both sales and profitability. The Company reported first quarter GAAP earnings per share (EPS) of $4.17, up 643.2 percent from $0.56 in 2020. First quarter Adjusted EPS of $3.69, which excluded a $0.53 gain on the sale of Dermstore, grew 525.0 percent compared with $0.59 in 2020. The attached tables provide a reconciliation of non-GAAP to GAAP measures. All earnings per share figures refer to diluted EPS.",
+   "– more –",
+   "1Adjusted EPS, a non-GAAP financial measure, excludes the impact of certain discretely managed items. See the tables of this release for additional information about the items that have been excluded from Adjusted EPS.",
+   "Target Corporation Reports First Quarter Earnings — Page 2 of 11",
+   "“Our performance in the first quarter was outstanding on every measure, and showcased the power of putting our stores at the center of our strategy. Store comp sales grew 18.0 percent in the quarter, even as they also fulfilled more than three quarters of Target’s digital sales - including more than 90-percent growth of our same-day services. Importantly, market-share gains of more than $1 billion in the first quarter, on top of $1 billion in share gains a year ago, demonstrate Target’s continued relevance with our guests, even as they have many more shopping options compared with a year ago,” said Brian Cornell, chairman and chief executive officer of Target Corporation.",
+   "“Given the trust we’ve built with our guests quarter after quarter and our commitment to adjusting along with them to the ongoing shifts in the macro environment, we're confident in continued comp growth in the second quarter and through the remainder of the year, as well as a healthy full-year operating margin rate.”",
+   "Fiscal 2021 Guidance"
+  ],
+  "b-0000027419-000002741923000023-17138": [
+   "$ 2.05 $ 2.16 (4.8) %",
+   "Adjustments",
+   "Other (a)",
+   "$ — $ — $ — $ 20 $ 15 $ 0.03",
+   "Adjusted diluted earnings per share",
+   "$ 2.05 $ 2.19 (6.2) %",
+   "(a)Other items unrelated to current period operations, none of which were individually significant.",
+   "Reconciliation of Non-GAAP",
+   "Adjusted EPS Guidance Guidance",
+   "Q2 2023 Full Year 2023",
+   "(unaudited)",
+   "Per Share",
+   "Per Share",
+   "GAAP diluted earnings per share guidance"
+  ],
+  "b-0000027419-000002741924000126-15105": [
+   "Target Corporation Reports First Quarter Earnings — Page 10 of 11",
+   "TARGET CORPORATION",
+   "Reconciliation of Non-GAAP Financial Measures",
+   "To provide additional transparency, we disclose non-GAAP adjusted diluted earnings per share (Adjusted EPS). When applicable, this metric excludes certain discretely managed items. We believe this information is useful in providing period-to-period comparisons of the results of our operations. This measure is not in accordance with, or an alternative to, U.S. GAAP. The most comparable GAAP measure is diluted earnings per share. Adjusted EPS should not be considered in isolation or as a substitution for analysis of our results as reported in accordance with GAAP. Other companies may calculate Adjusted EPS differently, limiting the usefulness of the measure for comparisons with other companies.",
+   "Reconciliation of Non-GAAP",
+   "Adjusted EPS Three Months Ended",
+   "May 4, 2024 April 29, 2023 Change",
+   "GAAP and adjusted diluted earnings per share",
+   "$ 2.03 $ 2.05 (1.0) %",
+   "Reconciliation of Non-GAAP",
+   "Adjusted EPS Guidance Guidance",
+   "(per share) (unaudited)",
+   "Q2 2024 Full Year 2024",
+   "GAAP diluted earnings per share guidance"
+  ],
+  "b-0000027419-000002741925000096-3216": [
+   "◦Key seasonal moments such as Valentine's Day and Easter outperformed non-holiday periods throughout the quarter.",
+   "◦The Company's limited-time partnership with kate spade was the strongest designer collaboration in the last decade.",
+   "•First quarter SG&A Expense and Operating Income included $593 million in pre-tax gains from the settlement of credit card interchange fee litigation.",
+   "•First quarter GAAP EPS was $2.27 compared with $2.03 last year. Adjusted EPS1, which excludes the gains from litigation settlements, was $1.30.",
+   "•The Company has established an acceleration office led by Michael Fiddelke, with the purpose of enabling faster decisions and execution of its core strategic initiatives in support of a return to growth.",
+   "For additional media materials, please visit:",
+   "https://corporate.target.com/news-features/article/2025/05/q1-2025-earnings",
+   "MINNEAPOLIS (May 21, 2025) – Target Corporation (NYSE: TGT) today announced its first quarter 2025 financial results.",
+   "The Company reported first quarter GAAP earnings per share (EPS) of $2.27 and Adjusted earnings per share1 of $1.30 compared with GAAP and Adjusted EPS of $2.03 in 2024. The attached tables provide a reconciliation of non-GAAP to GAAP measures. All earnings per share figures refer to diluted EPS.",
+   "– more –",
+   "1Adjusted diluted earnings per share (Adjusted EPS), a non-GAAP financial measure, excludes the impact of certain discretely managed items. See the tables of this release for additional information.",
+   "Target Corporation Reports First Quarter Earnings — Page 2 of 11",
+   "\"In the first quarter, our team navigated a highly challenging environment and focused on delivering the outstanding assortment, experience and value guests expect from Target,\" said Brian Cornell, chair and chief executive officer of Target Corporation. \"While our sales fell short of our expectations, we saw several bright spots in the quarter, including healthy digital growth, led by a 36 percent increase in same-day delivery through Target Circle 360, and our strongest designer collaboration in more than a decade, kate spade for Target. While these highlights reinforce our confidence in the underlying health of our business, we’re not satisfied with current performance and know we have opportunities to deliver faster progress on our roadmap for growth. This morning, we announced the establishment of a multi-year acceleration office, led by Michael Fiddelke, along with several leadership changes. These steps forward are intended to build more speed and agility into how we operate, and position key capabilities to drive long-term profitable growth. With these changes and the financial strength to continue investing in our business, I’m confident we can emerge an even stronger company over time.\"",
+   "Guidance"
+  ],
+  "b-0000027419-000002741926000012-26074": [
+   "Target Corporation Reports Fourth Quarter and Full-Year 2025 Earnings — Page 14 of 14",
+   "2026 GAAP EPS, SG&A expenses, SG&A expense rate, operating income, and operating (income) margin rate may include the impact of certain discrete items, which may be excluded in calculating Adjusted EPS, Adjusted SG&A expenses, Adjusted SG&A expense rate, Adjusted operating income, and Adjusted operating income margin rate. The guidance does not currently reflect any such discrete items, which are subject to variability and therefore cannot be reconciled without unreasonable efforts. In the past, these items have included both gains and losses, including certain asset impairments, severance, and other items that are discretely managed",
+   "Reconciliation of Non-GAAP",
+   "Adjusted EPS Guidance",
+   "(per share) (unaudited)",
+   "Q1 2026",
+   "Full Year 2026",
+   "GAAP diluted earnings per share guidance",
+   "$1.30+(a)",
+   "$7.50 - $8.50",
+   "Estimated adjustments",
+   "Other (b)",
+   "$ — $ —",
+   "Adjusted diluted earnings per share guidance"
+  ],
+  "b-0001108524-000119312520307200-5095": [
+   "guidance, GAAP earnings per share guidance, and non-GAAP earnings per share guidance previously provided on August 25, 2020 for its full fiscal year 2021. As of December 1, 2020, the Company is",
+   "initiating its GAAP operating margin guidance for its full fiscal year 2021. As of December 1, 2020, the Company is maintaining its non-GAAP operating margin guidance and operating cash flow guidance",
+   "previously provided on August 25, 2020 for its full fiscal year 2021. As of December 1, 2020, the Company is initiating its revenue guidance for its first quarter of fiscal year 2022 and for its full fiscal year 2022.",
+   "Management will provide further commentary around these guidance assumptions on its earnings call, which is expected to occur on December 1, 2020 at 2:00",
+   "PM Pacific Time.",
+   "Our guidance assumes no change to the value of the Company’s strategic investment portfolio resulting from ASU 2016-01 as it is not possible to forecast future gains and losses. In addition, the guidance below is based on estimated GAAP tax rates that reflect the Company’s currently available information, and excludes",
+   "forecasted discrete tax items such as excess tax benefits from stock-based compensation. The GAAP tax rates may fluctuate due to future acquisitions or other transactions.",
+   "Q4 FY21",
+   "Guidance",
+   "Full Year FY21",
+   "Guidance",
+   "Q1 FY22 Guidance",
+   "Full Year FY22",
+   "Guidance"
+  ],
+  "b-0001108524-000110852422000019-6433": [
+   "GAAP earnings (loss) per share ($0.03) - ($0.02) $0.38 - $0.40",
+   "Non-GAAP earnings per share $1.01 - $1.02 $4.74 - $4.76",
+   "Operating Cash Flow Growth (Y/Y) N/A ~21% - 22%",
+   "Current Remaining Performance Obligation Growth (Y/Y) ~15% N/A",
+   "FX Impact(5)",
+   "~(3 pts) N/A",
+   "(1) Full Year fiscal 2023 revenue guidance includes contributions from Slack Technologies, Inc. of approximately $1.5 billion, net of purchase accounting.",
+   "(2) Revenue FX impact is calculated by taking the current period rates compared to the prior period average rates.",
+   "(3)~($600M) y/y FX headwind represents an incremental ~($300M) y/y headwind, in addition to the ~($300M) y/y headwind provided as of Q4 fiscal 2022 earnings.",
+   "(4) Non-GAAP operating margin is a non-GAAP financial measure. Refer to the Appendix for an explanation of non-GAAP financial measures, and why we believe these measures can be useful, as well as a reconciliation of non-GAAP financial measures to the most comparable GAAP measures, when applicable.",
+   "(5) cRPO FX impact is calculated by taking the current period rates compared to the prior period ending rates. FX impact of ~(3 pts) represents a headwind of 3 points of growth.",
+   "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "Full Year FY23",
+   "Guidance"
+  ],
+  "b-0001108524-000110852424000002-7818": [
+   "$2.37 - $2.39 $9.68 - $9.76",
+   "Operating Cash Flow Growth (Y/Y)",
+   "N/A 21% - 24%",
+   "Current Remaining Performance Obligation Growth (Y/Y) 11% N/A",
+   "FX Impact(3)",
+   "($200M) Y/Y FX N/A",
+   "(1) Revenue FX impact is calculated by taking the current period rates compared to the prior period average rates.",
+   "(2) Non-GAAP operating margin and non-GAAP Diluted EPS are non-GAAP financial measures. See below for an explanation of non-GAAP financial measures. The Company's shares used in computing GAAP Diluted EPS guidance and non-GAAP Diluted",
+   "EPS guidance excludes any impact to share count from potential Q1 - Q4 FY25 repurchase activity under our share repurchase program.",
+   "(3) Current Remaining Performance Obligation FX impact is calculated by taking the current period rates compared to the prior period ending rates.",
+   "(4) Subscription & Support revenue excludes professional services revenue.",
+   "The following is a reconciliation of GAAP operating margin guidance to non-GAAP operating margin guidance for the full year:",
+   "Full Year FY25",
+   "Guidance"
+  ],
+  "b-0001108524-000110852425000027-3875": [
+   "•Maintains full year FY26 operating cash flow growth guidance of approximately 10% to 11% Y/Y",
+   "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2026 and full-year fiscal 2026:",
+   "Q2 FY26 Guidance",
+   "GAAP",
+   "Non-GAAP(1)",
+   "Revenue",
+   "$10.11 - $10.16 billion",
+   "Revenue growth(2)",
+   "8% - 9% 7% - 8% CC, $100M Y/Y FX",
+   "Diluted net income per share",
+   "$1.80 - $1.82 $2.76 - $2.78",
+   "Current remaining performance obligation growth(3)",
+   "Approximately 10% Approximately 9% CC, $300M Y/Y FX",
+   "Full Year FY26 Guidance"
+  ],
+  "b-0001108524-000110852426000125-4702": [
+   "•Processed more than 28.6 trillion tokens to date, up 152% Q/Q",
+   "•More than 50% of Agentforce and Data 360 bookings came from existing customers in Q1",
+   "•In Q1, Data 360 ingested 52 trillion records, up 136% Y/Y, including 35 trillion via Zero Copy, up 277% Y/Y, and processed 12 terabytes of unstructured data",
+   "•Processed nearly 1 trillion API calls across Core products in Q1",
+   "•Slack Model Context Protocol (\"MCP\") surpassed 1 million active users within six weeks of launch",
+   "•Public Sector Industry Cloud ARR surpasses $2 billion, up 23% Y/Y in Q1, with Public Sector AWUs up nearly 400% Q/Q",
+   "Guidance",
+   "•Initiates second quarter FY27 revenue guidance of $11.27 billion to $11.35 billion, up 10% - 11% Y/Y and 10% in CC, including slightly above 4pts Informatica contribution",
+   "•Raises midpoint of full year FY27 revenue guidance, now expects full year FY27 revenue of $45.9 billion to $46.2 billion, up 11% Y/Y and 10% - 11% in CC, including approximately 3pts Informatica contribution",
+   "•Maintains full year FY27 subscription & support revenue growth guidance of slightly under 12% Y/Y and approximately 11% in CC, including approximately 3pts Informatica contribution",
+   "•Updates full year FY27 GAAP operating margin guidance of 20.6%, and maintains non-GAAP operating margin guidance of 34.3%",
+   "•Updates full year FY27 operating cash flow growth guidance and free cash flow growth guidance to approximately 4% - 5% Y/Y to reflect the impact of the $25 billion debt issuance for the ASR",
+   "Salesforce's guidance includes GAAP and non-GAAP financial measures. The following tables summarize Salesforce's guidance for the second quarter fiscal 2027 and full-year fiscal 2027:",
+   "Q2 FY27 Guidance"
+  ]
+ },
+ "wrong": [
+  {
+   "custom_id": "b-0000027419-000002741926000012-26074",
+   "metric": "EPS non-GAAP",
+   "target_period": "Q1 FY2026",
+   "kind": "wrong-value",
+   "fixes": [
+    2
+   ],
+   "why": "The table says '$1.30+(a)': at least 1.30, and footnote (a) says flat to up slightly on last year's 1.30. The model returned a point, 1.30 to 1.30."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "revenue",
+   "target_period": "Q1 FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "revenue",
+   "target_period": "FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "operating margin GAAP",
+   "target_period": "FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "operating margin non-GAAP",
+   "target_period": "FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "EPS GAAP",
+   "target_period": "Q1 FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "EPS GAAP",
+   "target_period": "FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "EPS non-GAAP",
+   "target_period": "Q1 FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  },
+  {
+   "custom_id": "b-0001108524-000119312520307200-5095",
+   "metric": "EPS non-GAAP",
+   "target_period": "FY2022",
+   "kind": "wrong-value",
+   "fixes": [
+    1
+   ],
+   "why": "Four columns (Q4 FY21, FY21, Q1 FY22, FY22), one label per line above the block; the model took columns 1 and 2 for Q1 FY22 and FY22. Correct: Q4 FY2021 and FY2021."
+  }
+ ],
+ "caveats": [
+  {
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "metric": "gross margin GAAP",
+   "target_period": "Q3 FY2021",
+   "note": "A point from a reconciliation table; the outlook bullet in the same filing says 'plus or minus 50 basis points'."
+  },
+  {
+   "custom_id": "b-0001045810-000104581020000145-20492",
+   "metric": "gross margin non-GAAP",
+   "target_period": "Q3 FY2021",
+   "note": "A point from a reconciliation table; the outlook bullet in the same filing says 'plus or minus 50 basis points'."
+  },
+  {
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "metric": "gross margin GAAP",
+   "target_period": "Q4 FY2025",
+   "note": "A point from a reconciliation table; the outlook bullet in the same filing says 'plus or minus 50 basis points'."
+  },
+  {
+   "custom_id": "b-0001045810-000104581024000315-21071",
+   "metric": "gross margin non-GAAP",
+   "target_period": "Q4 FY2025",
+   "note": "A point from a reconciliation table; the outlook bullet in the same filing says 'plus or minus 50 basis points'."
+  },
+  {
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "metric": "gross margin GAAP",
+   "target_period": "Q1 FY2027",
+   "note": "A point from a reconciliation table; the outlook bullet in the same filing says 'plus or minus 50 basis points'."
+  },
+  {
+   "custom_id": "b-0001045810-000104581026000019-25477",
+   "metric": "gross margin non-GAAP",
+   "target_period": "Q1 FY2027",
+   "note": "A point from a reconciliation table; the outlook bullet in the same filing says 'plus or minus 50 basis points'."
+  }
+ ]
+}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from research_record.text import TEXT_VERSION, html_to_text, sentence_spans
+from research_record.text import TEXT_VERSION, html_to_text, html_to_text_and_gaps, sentence_spans
 
 
 def sentences(text: str) -> list[str]:
@@ -118,3 +118,24 @@ def test_leading_bullet_glyphs_sit_outside_the_span() -> None:
 def test_empty_and_blank_input() -> None:
     assert sentence_spans("") == []
     assert sentence_spans("\n\n") == []
+
+
+# --- blank-line gaps -------------------------------------------------------
+
+
+def test_the_text_with_gaps_is_character_for_character_the_text_without() -> None:
+    html = "<p>Outlook</p><div><div><p>A. B.</p></div></div><table><tr><td>x</td></tr></table><p></p><p>&nbsp;</p><p>tail</p>"
+    text, gaps = html_to_text_and_gaps(html)
+    assert text == html_to_text(html) and len(gaps) == len(text.split("\n"))
+
+
+def test_a_gap_counts_the_blank_lines_that_were_collapsed_before_a_line() -> None:
+    plain = html_to_text_and_gaps("<p>A</p><p>B</p>")[1]
+    spaced = html_to_text_and_gaps("<p>A</p><p>&nbsp;</p><p>&nbsp;</p><p>B</p>")[1]
+    assert plain == [1, 1] and spaced[0] == 1
+    assert spaced[1] > plain[1]  # the empty paragraphs between A and B show up as a bigger gap before B
+
+
+def test_every_line_has_a_gap_and_the_gaps_are_never_negative() -> None:
+    _, gaps = html_to_text_and_gaps("<div>one</div><div><div>two</div></div><p>three</p>")
+    assert len(gaps) == 3 and all(g >= 0 for g in gaps)

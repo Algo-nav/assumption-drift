@@ -4,10 +4,57 @@ edgar:
   filing_types: ["8-K", "10-K", "10-Q"]
   date_from: "2019-01-01"
   date_to: "2026-09-20"
-companies:   # Navneet fills the full 30; three to prove the pipeline end to end
-  - {name: "NVIDIA Corporation", ticker: "NVDA", cik: "0001045810"}
-  - {name: "Target Corporation", ticker: "TGT", cik: "0000027419"}
-  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524"}
+# Navneet fills the full 30; three to prove the pipeline end to end.
+# fiscal_year_end_month is the month the fiscal year ends in (from each company's 10-K cover page). It
+# dates a period label such as "Q4 FY21", so a table header that only names periods already over on the
+# filing date is not taken for a guidance header. fiscal_year_named_for says which calendar year the label
+# carries: "end" (the default) for a year that ENDS in it (NVIDIA fiscal 2024 ended January 28, 2024),
+# "start" for a year that STARTS in it (Target fiscal 2022 ended January 28, 2023).
+companies:
+  - {name: "NVIDIA Corporation", ticker: "NVDA", cik: "0001045810", fiscal_year_end_month: 1}
+  - {name: "Target Corporation", ticker: "TGT", cik: "0000027419", fiscal_year_end_month: 1, fiscal_year_named_for: start}
+  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524", fiscal_year_end_month: 1}
+# The only metrics a draft may be about. Haiku must pick from this list or return nothing, so a
+# figure for anything else (gross profit, growth rates, segment revenue) never becomes a row.
+# Capital return, buybacks and dividends are deliberately not here.
+metrics:
+  - "revenue"
+  - "gross margin GAAP"
+  - "gross margin non-GAAP"
+  - "operating expenses GAAP"
+  - "operating expenses non-GAAP"
+  - "operating margin GAAP"
+  - "operating margin non-GAAP"
+  - "operating income"
+  - "EPS GAAP"
+  - "EPS non-GAAP"
+  - "tax rate"
+  - "other income and expense"
+  - "comparable sales"
+  - "free cash flow"
+
+# What each metric is measured in. A draft whose unit is the wrong kind for its metric is rejected
+# in code, whatever the model said: a margin is never dollars, and operating income or free cash
+# flow is never a percentage. The unit kinds are in 03_structure.py (UNIT_KIND):
+#   dollars    USD, USD thousands, USD millions, USD billions
+#   per share  USD per share
+#   percent    percent, percentage points, basis points
+metric_kinds:
+  "revenue": dollars
+  "gross margin GAAP": percent
+  "gross margin non-GAAP": percent
+  "operating expenses GAAP": dollars
+  "operating expenses non-GAAP": dollars
+  "operating margin GAAP": percent
+  "operating margin non-GAAP": percent
+  "operating income": dollars
+  "EPS GAAP": per share
+  "EPS non-GAAP": per share
+  "tax rate": percent
+  "other income and expense": dollars
+  "comparable sales": percent
+  "free cash flow": dollars
+
 llm:
   model: "claude-haiku-4-5"
   budget_usd: 10   # one budget across 03_structure and 04_outcomes, not one each
@@ -55,15 +102,45 @@ candidates:
   # Segments longer than this are table blobs or legal boilerplate. Dropped and counted.
   max_sentence_chars: 1200
 
-  # Section-aware capture, 8-K exhibits only. Guidance often sits in a table or
-  # bullet list under a heading, with the label and the number on separate lines,
-  # so no single sentence carries both a forward term and a number. Every number
-  # line within `section_lines` lines under a matching heading is a candidate too.
-  # A heading is a short line (at most `heading_max_words` words) that matches the
-  # pattern and does not end like a sentence.
+  # Section capture, 8-K exhibits only. Guidance often sits in a table or bullet list under a
+  # heading, with the label and the number on separate lines, so no single sentence carries
+  # both. The whole block is one candidate and one request, never a bare value line alone.
+  # A heading is a short line (at most `heading_max_words` words) that matches `section_heading`
+  # and does not end like a sentence. A block runs from the line after its heading until the
+  # first of:
+  #   another matching heading; a line matching `section_end_headings` (Highlights, Results...);
+  #   a blank-line gap of `section_gap_lines` or more; a short title-like line after a gap of
+  #   `section_heading_gap` or more (unless it is a table label, which is followed by a value);
+  #   or `section_max_lines` lines. "Blank lines" are the ones the extractor collapsed, so a
+  #   gap of 4 means the layout had a section break there. Table rows can have gaps of 3 to 6.
+  # A block's figures often sit in columns whose periods are named in a header row ABOVE the heading.
+  # The header is found within `table_header_lookback_lines` lines above the block: the nearest line that
+  # names two or more periods ("Q2 2023 Full Year 2023"), or, where the header cells were broken onto
+  # separate lines (Salesforce), the lines that name a period, joined with " | ". A cell is at most
+  # `table_header_max_words` long and nothing but period labels and words like "Guidance". A line with
+  # Y/Y, vs, change or % is never a cell, and a header whose periods all ended before the filing date is a
+  # table of results, not guidance (it needs the company's fiscal_year_end_month, above). It is stored on
+  # the candidate as `table_header` and shown to the model as the first line of the block. It is never part
+  # of the evidence excerpt.
+  table_header_lookback_lines: 10
+  table_header_max_words: 10
   section_heading: '\b(?:Financial Outlook|Guidance|Outlook)\b'
-  section_lines: 15
+  section_max_lines: 40
+  section_gap_lines: 8
+  section_heading_gap: 4
   heading_max_words: 8
+  section_end_headings:
+    - '(?:Business |Financial |Company )?Highlights'
+    - '(?:Financial |Operating |Consolidated )?Results(?: of Operations)?'
+    - 'Reconciliations?.*'
+    - 'Conference Call.*'
+    - '.*Webcast.*'
+    - 'Non-GAAP (?:Financial )?Measures.*'
+    - 'Forward-Looking.*'
+    - 'Safe Harbor.*'
+    - 'About .*'
+    - 'Shareholder Letter'
+    - '(?:Investor |Media )?Contacts?:?'
 
   # Context stored with every candidate: the nearest preceding lead-in line (a line
   # ending in a colon, searched back `lead_in_lookback_lines` lines, at most
@@ -90,6 +167,7 @@ outcomes:
     - {when: 'revenue|net sales|total sales', match: 'revenue|net sales|total sales'}
     - {when: 'gross margin', match: 'gross margin'}
     - {when: 'operating margin|operating income margin', match: 'operating (?:income )?margin|operating income rate'}
+    - {when: 'operating income', match: 'operating income|income from operations|operating profit'}
     - {when: 'operating expense|opex', match: 'operating expenses'}
     - {when: 'eps|earnings per share|per share', match: 'earnings per share|eps|per diluted share|diluted earnings'}
     - {when: 'tax rate', match: 'tax rate'}

@@ -51,3 +51,10 @@ def test_a_config_with_another_user_agent_is_refused(tmp_path) -> None:
     bad.write_text('edgar: {user_agent: "Somebody else@example.com"}\n')
     with pytest.raises(ValueError, match="user_agent"):
         common.load_config(bad)
+
+
+def test_every_company_has_a_fiscal_year_end_month_and_targets_years_are_named_for_the_year_they_start(config) -> None:
+    listed = {c.ticker: c for c in common.companies(config)}
+    assert all(isinstance(c.fiscal_year_end_month, int) and 1 <= c.fiscal_year_end_month <= 12 for c in listed.values())
+    # From each company's 10-K: NVIDIA "fiscal year ended January 27, 2019", Salesforce "January 31, 2019", Target "Fiscal 2022 will end January 28, 2023".
+    assert {t: (c.fiscal_year_end_month, c.fiscal_year_named_for) for t, c in listed.items()} == {"NVDA": (1, "end"), "TGT": (1, "start"), "CRM": (1, "end")}

@@ -11,9 +11,21 @@ an unapproved row is never published.
   hand_verified  set by the human for the rows they re-found on EDGAR by hand
                  (SCOPE 4.3: at least 10% of approved rows per company)
   reviewer_note  free text for the reviewer
+  conflict       true when 03_structure found two section-captured drafts for the same
+                 company, metric, period and filing date with different numbers. Both rows
+                 are here, both marked, and neither was chosen: the reviewer decides which
+                 (if either) is right and approves at most one. Not a schema field, and it
+                 never leaves this queue.
+  empty_block    true on a row that is not a draft at all: 03_structure listed an 8-K outlook block
+                 that the model answered but that produced no draft (an empty answer, or every item
+                 rejected by a guard), and this row is the flag to go and look at it. It carries the
+                 filing's source and the start of the block, and `aid_flag_note` says why it is empty.
+                 It is not a record: its metric, unit and range are blank, so it cannot be published
+                 whatever is put in `approved`. If the block does hold guidance, add the rows by hand.
   aid_*          context to help the reviewer. Not schema fields, and ignored downstream:
-                 what the rubric would call the row, how the line was captured, the heading
-                 and lead-in the period was inferred from, and why an outcome is missing.
+                 what the rubric would call the row, how the line was captured, the heading,
+                 lead-in and table header row the period was inferred from, and why an
+                 outcome is missing.
 
 Every row is `open`: the rubric's word for a draft nobody has reviewed. `aid_proposed_status`
 is what `rubric.resolve` says from the numbers alone, so a reviewer can see the direction
@@ -22,7 +34,7 @@ of travel. It never proposes `withdrawn`: no step looks for withdrawn guidance.
 This script never overwrites a review file. Rows already in a CSV are kept exactly as they
 are, hand edits and all, and only drafts whose record_id is not there yet are appended.
 
-Reads   data/drafts/{cik}.jsonl, data/outcomes/{cik}.jsonl
+Reads   data/drafts/{cik}.jsonl, data/drafts/{cik}.empty_blocks.jsonl, data/outcomes/{cik}.jsonl
 Writes  data/review/{cik}.csv
 """
 
@@ -47,7 +59,9 @@ from research_record.schema import ResearchRecord
 
 REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
-AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_outcome_note"]
+FLAG_COLUMNS = ["conflict", "empty_block"]
+AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
+               "aid_flag_note"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -69,7 +83,7 @@ def schema_columns(model: type[BaseModel] = ResearchRecord, prefix: str = "") ->
     return columns
 
 
-COLUMNS = schema_columns() + REVIEWER_COLUMNS + AID_COLUMNS
+COLUMNS = schema_columns() + REVIEWER_COLUMNS + FLAG_COLUMNS + AID_COLUMNS
 COLUMN_SET = frozenset(COLUMNS)
 
 
@@ -165,11 +179,37 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         approved="false",
         hand_verified="false",
         reviewer_note="",
+        conflict="true" if draft.get("conflict") else "false",
+        empty_block="false",
         aid_proposed_status=proposed_status(record),
         aid_capture_method=draft.get("capture_method") or "",
         aid_heading=draft.get("heading") or "",
         aid_lead_in=draft.get("lead_in") or "",
+        aid_table_header=draft.get("table_header") or "",
         aid_outcome_note="" if record.outcome else (outcome_row or {}).get("outcome_reason") or "outcome search not run",
+    )
+    return row
+
+
+def build_empty_block_row(block: dict[str, Any]) -> dict[str, str]:
+    """A flag, not a record: an outlook block that produced no draft. It names the company and the filing, gives the
+    source and the start of the block as its excerpt, and leaves everything a record needs (metric, unit, range,
+    period, claim) blank so that it can never be mistaken for one."""
+    row = {c: "" for c in COLUMNS}
+    row.update(record_id=block["block_id"], company=block["company"], ticker=block["ticker"], cik=block["cik"], status="open")
+    row["assumption.stated_at"] = block["filed_at"]
+    if block.get("evidence"):
+        row.update({c: v for c, v in _walk(block["evidence"], "assumption.evidence.") if c in COLUMN_SET})
+    row.update(
+        approved="false",
+        hand_verified="false",
+        conflict="false",
+        empty_block="true",
+        aid_capture_method="section",
+        aid_heading=block.get("heading") or "",
+        aid_lead_in=block.get("lead_in") or "",
+        aid_table_header=block.get("table_header") or "",
+        aid_flag_note=block["reason"],
     )
     return row
 
@@ -201,6 +241,7 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
 def review_company(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
     """Merge new drafts into the company's CSV. Existing rows are never touched."""
     drafts = _read_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl")
+    blocks = _read_jsonl(DRAFTS_DIR / f"{company.cik}.empty_blocks.jsonl")
     outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
     path = REVIEW_DIR / f"{company.cik}.csv"
     existing = read_csv(path) if path.exists() else []
@@ -216,6 +257,10 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
             stats["invalid"] += 1
             print(f"  {d['draft_id']}: not a valid record, left out of the queue: {str(exc)[:160]}", file=sys.stderr)
     stats["added"] = len(new_rows)
+    for block in blocks:  # flags for outlook blocks that produced no draft; added once, never touched again
+        if block["block_id"] not in known:
+            new_rows.append(build_empty_block_row(block))
+            stats["flagged"] += 1
     rows = existing + new_rows
     if new_rows:  # never leave an empty queue file that looks like work was done
         write_csv(path, rows)
@@ -235,9 +280,11 @@ def main(argv: list[str] | None = None) -> int:
     print("'proposed' is what the rubric says from the numbers alone)")
     for company in targets:
         rows, stats = review_company(company, today)
-        by_status = Counter(r["status"] for r in rows)
-        by_proposed = Counter(r["aid_proposed_status"] for r in rows)
-        print(f"  {company.ticker}: {len(rows):,} rows ({stats['added']} added, {stats['kept']} kept, {stats['invalid']} invalid)")
+        drafted = [r for r in rows if r.get("empty_block") != "true"]
+        by_status = Counter(r["status"] for r in drafted)
+        by_proposed = Counter(r["aid_proposed_status"] for r in drafted)
+        print(f"  {company.ticker}: {len(rows):,} rows ({stats['added']} added, {stats['kept']} kept, {stats['invalid']} invalid; "
+              f"{sum(r.get('empty_block') == 'true' for r in rows)} empty-block flags, {stats['flagged']} new)")
         print(f"     status:   {dict(sorted(by_status.items()))}")
         print(f"     proposed: {dict(sorted(by_proposed.items()))}")
     return 0

@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from html.parser import HTMLParser
 
-__all__ = ["TEXT_VERSION", "html_to_text", "sentence_spans"]
+__all__ = ["TEXT_VERSION", "html_to_text", "html_to_text_and_gaps", "sentence_spans"]
 
 TEXT_VERSION = 1
 
@@ -84,6 +84,32 @@ def _decode(content: bytes | str) -> str:
         return content.decode("cp1252", errors="replace")
 
 
+def html_to_text_and_gaps(content: bytes | str) -> tuple[str, list[int]]:
+    """The text of `html_to_text`, plus for every line how many blank lines came before it.
+
+    The blank lines are what the layout looked like before they were collapsed: one between
+    neighbouring paragraphs, more before a table row or a new section, many before a page
+    break. A block of guidance ends where they pile up. The text is character for character
+    what `html_to_text` returns, so offsets computed on either are interchangeable.
+    """
+    extractor = _Extractor()
+    extractor.feed(_decode(content))
+    extractor.close()
+    text = _H_SPACE.sub(" ", _ZERO_WIDTH.sub("", "".join(extractor.parts)))
+    lines: list[str] = []
+    gaps: list[int] = []
+    blanks = 0
+    for raw in text.split("\n"):
+        line = raw.strip()
+        if not line:
+            blanks += 1
+            continue
+        lines.append(line)
+        gaps.append(blanks)
+        blanks = 0
+    return "\n".join(lines), gaps
+
+
 def html_to_text(content: bytes | str) -> str:
     """Visible text of an HTML document, one block per line.
 
@@ -91,11 +117,7 @@ def html_to_text(content: bytes | str) -> str:
     included, collapse to one space. Blank lines are dropped. Nothing else is
     rewritten, so quotes, dashes and symbols come out as the filer wrote them.
     """
-    extractor = _Extractor()
-    extractor.feed(_decode(content))
-    extractor.close()
-    text = _H_SPACE.sub(" ", _ZERO_WIDTH.sub("", "".join(extractor.parts)))
-    return "\n".join(line for line in (raw.strip() for raw in text.split("\n")) if line)
+    return html_to_text_and_gaps(content)[0]
 
 
 # --- sentences -------------------------------------------------------------

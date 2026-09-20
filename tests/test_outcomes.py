@@ -121,6 +121,17 @@ def test_guidance_bullets_at_the_top_of_a_release_do_not_make_it_a_release_for_t
         ("operating cash flow growth", "Cash flow from operations rose", True),
         ("revenue", "Gross margin 75.2 %", False),
         ("headcount growth", "Headcount rose to 5,000", True),  # no group: falls back to its content words
+        ("gross margin non-GAAP", "Gross margin 75.2 %", True),  # the canonical, mixed-case names
+        ("gross margin GAAP", "GAAP gross margin was 75.0%", True),
+        ("EPS GAAP", "Diluted earnings per share $2.30", True),
+        ("EPS non-GAAP", "Non-GAAP EPS was $1.87", True),
+        ("operating expenses GAAP", "GAAP operating expenses $4,250", True),
+        ("operating income", "Income from operations was $5 billion", True),
+        ("operating income", "Gross margin 75.2 %", False),
+        ("tax rate", "The effective tax rate was 17%", True),
+        ("other income and expense", "Other income, net $500", True),
+        ("comparable sales", "Comparable sales rose 2.1 percent", True),
+        ("free cash flow", "Free cash flow was $5 billion", True),
     ],
 )
 def test_metric_pattern_says_which_lines_are_about_the_metric(metric, line, expected) -> None:
@@ -386,3 +397,26 @@ def test_a_dry_run_leaves_no_empty_output_files(world, config_path, monkeypatch)
     assert outcomes.main(["--config", str(config_path)]) == 0
     out = world / "outcomes"
     assert not out.exists() or all(p.stat().st_size > 0 for p in out.iterdir())
+
+
+def test_every_configured_metric_has_a_term_group_so_none_falls_back_to_guessing() -> None:
+    groups = OCFG["metric_terms"]
+    for metric in CONFIG["metrics"]:
+        assert any(re.search(g["when"], metric, re.IGNORECASE) for g in groups), f"{metric!r} has no metric_terms group"
+
+
+def test_a_non_gaap_metric_ranks_the_non_gaap_row_above_the_gaap_one(world) -> None:
+    raw = world / "raw" / COMPANY.cik
+    body = ("<p>Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024</p><p>GAAP</p>"
+            "<p>Gross margin 75.0 % 73.4 %</p><p>Non-GAAP</p><p>Gross margin 75.2 % 73.6 %</p>")
+    html = f"<html><body>{body}</body></html>".encode()
+    acc = "0000000123-24-000099"
+    (raw / f"{acc}.html").write_bytes(html)
+    (raw / f"{acc}.meta.json").write_text(json.dumps({
+        "cik": COMPANY.cik, "accession": acc, "filing_type": "8-K", "filed_at": "2024-05-02", "http_status": 200,
+        "final_url": "https://www.sec.gov/Archives/edgar/data/123/x/release.htm", "fetched_at": "2026-09-20T12:00:00+00:00",
+        "content_sha256": hashlib.sha256(html).hexdigest()}))
+    d = draft(metric="gross margin non-GAAP", unit="percent", low=74.0, high=76.0)
+    _, index, _ = requests_for(d)
+    lines = {l.sentence: l.score for l in index["o-D1"][1] if l.accession == acc}
+    assert lines["Gross margin 75.2 % 73.6 %"] > lines["Gross margin 75.0 % 73.4 %"]

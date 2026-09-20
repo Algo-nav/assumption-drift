@@ -270,8 +270,9 @@ def select_lines(
     number: re.Pattern[str],
 ) -> list[Line]:
     """Lines in these releases that name the metric next to a number (and `extra`, if given). Best first, then in order."""
-    wants_non_gaap = "non-gaap" in metric
-    wants_gaap = "gaap" in metric and not wants_non_gaap
+    lowered = metric.lower()  # canonical names are mixed case: "gross margin non-GAAP"
+    wants_non_gaap = "non-gaap" in lowered
+    wants_gaap = "gaap" in lowered and not wants_non_gaap
     scored: list[tuple[int, int, Line]] = []
     order = 0
     for meta in metas:
@@ -531,7 +532,7 @@ def _json_check(*keys: str):
 def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: float, check) -> dict[str, llm.Result] | None:
     """Project, print, and (with --submit) run one stage. None means it stopped."""
     archive = llm.RawArchive(step)
-    have = archive.load()
+    have = llm.current_results(archive.load(), requests, cfg.model)
     todo = [r for r in requests if not (r.custom_id in have and have[r.custom_id].ok)]
     print(f"{step}: {len(requests):,} requests ({len(requests) - len(todo):,} already answered, {len(todo):,} to send)")
     exact = llm.credentials_available(client, cfg.model)
@@ -587,7 +588,7 @@ def main(argv: list[str] | None = None) -> int:
         if results is None:
             return 3
     else:
-        results = llm.RawArchive(STEP_OUTCOMES).load()
+        results = llm.current_results(llm.RawArchive(STEP_OUTCOMES).load(), requests, cfg.model)
     outcomes, o_rejects, o_reasons = derive_outcomes(o_index, results, stores, ocfg)
     rejects += o_rejects
     reasons.update(o_reasons)
@@ -600,7 +601,7 @@ def main(argv: list[str] | None = None) -> int:
         if k_results is None:
             return 3
     else:
-        k_results = llm.RawArchive(STEP_ACK).load()
+        k_results = llm.current_results(llm.RawArchive(STEP_ACK).load(), ack_requests, cfg.model)
     acks, k_rejects = derive_acknowledgements(k_index, k_results, stores)
     rejects += k_rejects
 

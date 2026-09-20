@@ -40,6 +40,12 @@ BATCH_DIR = REPO_ROOT / "data" / "batches"  # read at call time, so tests can po
 _CUSTOM_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 #: Deliberately low, so the offline estimate errs on the high side.
 CHARS_PER_TOKEN_ESTIMATE = 3.0
+#: Every request, canary and batch alike, is sent at temperature 0: extraction should not vary between runs, and a
+#: change in the drafts should come from a change in the prompt or the code, not from sampling.
+#: anthropic 1.x no longer has `temperature` as a keyword of `messages.create()` (passing it is a TypeError), though
+#: the API and claude-haiku-4-5 still accept it. So a direct call carries it in `extra_body`, and a batch request
+#: keeps it in its `params` dict, which the SDK forwards as it is. See `LlmRequest.create_kwargs`.
+TEMPERATURE = 0
 
 
 class BudgetExceeded(RuntimeError):
@@ -126,10 +132,18 @@ class LlmRequest:
         return {
             "model": model,
             "max_tokens": self.max_tokens,
+            "temperature": TEMPERATURE,
             "system": self.system,
             "messages": [{"role": "user", "content": self.user}],
             "output_config": {"format": {"type": "json_schema", "schema": self.schema}},
         }
+
+    def create_kwargs(self, model: str) -> dict[str, Any]:
+        """The keyword arguments for a direct `client.messages.create(...)` call, which is how the canary is sent.
+        Everything in `params` is a keyword of that method except `temperature`, which goes in `extra_body`."""
+        params = self.params(model)
+        temperature = params.pop("temperature")
+        return {**params, "extra_body": {"temperature": temperature}}
 
     def fingerprint(self, model: str) -> str:
         return hashlib.sha256(json.dumps(self.params(model), sort_keys=True).encode()).hexdigest()
@@ -273,19 +287,20 @@ class Result:
     output_tokens: int = 0
     error: str | None = None
     batch_id: str | None = None
+    fingerprint: str | None = None  # of the request it answered; a changed prompt or schema no longer matches
 
     @property
     def ok(self) -> bool:
         return self.status == "succeeded"
 
 
-def _message_result(custom_id: str, message: Any, batch_id: str) -> Result:
+def _message_result(custom_id: str, message: Any, batch_id: str, fingerprint: str | None = None) -> Result:
     text = next((b.text for b in message.content if getattr(b, "type", None) == "text"), None)
     usage = message.usage
     status = "truncated" if getattr(message, "stop_reason", None) == "max_tokens" else "succeeded"
     if text is None:
         status = "errored"
-    return Result(custom_id, status, text, usage.input_tokens, usage.output_tokens, None, batch_id)
+    return Result(custom_id, status, text, usage.input_tokens, usage.output_tokens, None, batch_id, fingerprint)
 
 
 class RawArchive:
@@ -332,6 +347,14 @@ def parse_json_text(text: str | None) -> Any:
         return None
 
 
+def current_results(results: dict[str, Result], requests: list[LlmRequest], model: str) -> dict[str, Result]:
+    """The archived results that answer THESE requests. Editing a prompt or a schema changes a request's
+    fingerprint, so an answer given to the old wording is never mistaken for an answer to the new one.
+    Results archived before fingerprints existed carry none, and are treated as stale."""
+    wanted = {r.custom_id: r.fingerprint(model) for r in requests}
+    return {cid: res for cid, res in results.items() if cid in wanted and res.fingerprint == wanted[cid]}
+
+
 # --- the batch runner ------------------------------------------------------
 
 
@@ -362,49 +385,59 @@ def run_batch(
     """Submit what has no successful result yet, wait, archive. Safe to run again."""
     ledger = ledger or Ledger()
     archive = archive or RawArchive(step)
-    have = archive.load()
+    fingerprints = {r.custom_id: r.fingerprint(llm.model) for r in requests}
+    have = current_results(archive.load(), requests, llm.model)
     outcome = BatchOutcome(results=have)
+
+    def finish() -> BatchOutcome:
+        # Only answers to THESE requests, whatever else the archive holds.
+        outcome.results = current_results(archive.load(), requests, llm.model)
+        return outcome
 
     batch_id: str | None = None
     if archive.state_path.exists():
-        batch_id = json.loads(archive.state_path.read_text())["batch_id"]
+        state = json.loads(archive.state_path.read_text())
+        batch_id = state["batch_id"]
+        fingerprints = state.get("fingerprints") or fingerprints  # the wording the batch was submitted with
         log(f"{step}: resuming pending batch {batch_id}; nothing new is submitted")
     else:
         todo = [r for r in requests if not (r.custom_id in have and have[r.custom_id].ok)]
         if not todo:
             log(f"{step}: every request already has a successful result")
-            return outcome
+            return finish()
         check_budget(projection, llm, ledger)
 
         canary, batch_reqs = todo[0], todo[1:]
-        message = client.messages.create(**canary.params(llm.model))
-        first = _message_result(canary.custom_id, message, "canary")
+        message = client.messages.create(**canary.create_kwargs(llm.model))
+        first = _message_result(canary.custom_id, message, "canary", fingerprints[canary.custom_id])
         check_error: Exception | None = None
         if first.ok:
             try:
                 canary_check(first.text or "")
             except Exception as exc:  # noqa: BLE001 - re-raised below, after the paid-for result is safe
                 check_error = exc
-                first = Result(first.custom_id, "invalid", first.text, first.input_tokens, first.output_tokens, str(exc)[:200], "canary")
+                first = Result(first.custom_id, "invalid", first.text, first.input_tokens, first.output_tokens, str(exc)[:200], "canary", first.fingerprint)
         # Archive and cost it before anything can raise: it was paid for either way.
         archive.append([first])
-        outcome.results[first.custom_id] = first
         ledger.append(kind="canary", step=step, batch_id="canary", usd=llm.usd(first.input_tokens, first.output_tokens, batch=False))
         if check_error is not None:
             raise check_error
         log(f"{step}: canary request ok ({first.input_tokens} in, {first.output_tokens} out)")
         if not first.ok:
             outcome.notes.append(f"canary {first.custom_id} came back {first.status}")
-            return outcome
+            return finish()
         if not batch_reqs:
-            return outcome
+            return finish()
 
         batch = client.messages.batches.create(
             requests=[{"custom_id": r.custom_id, "params": r.params(llm.model)} for r in batch_reqs]
         )
         batch_id = batch.id
         archive.state_path.parent.mkdir(parents=True, exist_ok=True)
-        archive.state_path.write_text(json.dumps({"batch_id": batch_id, "requests": len(batch_reqs)}))
+        archive.state_path.write_text(json.dumps({
+            "batch_id": batch_id, "requests": len(batch_reqs),
+            "fingerprints": {r.custom_id: fingerprints[r.custom_id] for r in batch_reqs},
+        }))
         ledger.append(kind="submitted", step=step, batch_id=batch_id, usd=projection.usd_worst, requests=len(batch_reqs))
         outcome.submitted = len(batch_reqs)
         log(f"{step}: submitted batch {batch_id} with {len(batch_reqs):,} requests")
@@ -418,22 +451,18 @@ def run_batch(
             outcome.pending_batch = batch_id
             log(f"{step}: batch {batch_id} still processing ({batch.request_counts.processing:,} left). "
                 "Run the same command again to resume; nothing will be resubmitted.")
-            return outcome
+            return finish()
         sleep(poll_seconds)
 
     collected: list[Result] = []
     for item in client.messages.batches.results(batch_id):
         res = item.result
         if res.type == "succeeded":
-            collected.append(_message_result(item.custom_id, res.message, batch_id))
+            collected.append(_message_result(item.custom_id, res.message, batch_id, fingerprints.get(item.custom_id)))
         else:
             error = getattr(getattr(res, "error", None), "type", None)
-            collected.append(Result(item.custom_id, res.type, None, 0, 0, error, batch_id))
+            collected.append(Result(item.custom_id, res.type, None, 0, 0, error, batch_id, fingerprints.get(item.custom_id)))
     archive.append(collected)
-    for r in collected:
-        if r.custom_id in outcome.results and outcome.results[r.custom_id].ok and not r.ok:
-            continue
-        outcome.results[r.custom_id] = r
     actual = llm.usd(sum(r.input_tokens for r in collected), sum(r.output_tokens for r in collected))
     ledger.append(kind="ended", step=step, batch_id=batch_id, usd=actual, succeeded=sum(r.ok for r in collected))
     archive.state_path.unlink(missing_ok=True)
@@ -441,4 +470,4 @@ def run_batch(
     log(f"{step}: batch ended, {len(collected) - len(failed):,} succeeded, {len(failed):,} did not; actual cost ${actual:.2f}")
     if failed:
         outcome.notes.append(f"{len(failed)} requests did not succeed; run again to retry them")
-    return outcome
+    return finish()

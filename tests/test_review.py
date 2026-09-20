@@ -37,13 +37,13 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 50
+    assert len(cols) == len(set(cols)) == 54
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-8:] == ["approved", "hand_verified", "reviewer_note", "aid_proposed_status", "aid_capture_method",
-                         "aid_heading", "aid_lead_in", "aid_outcome_note"]
-    assert set(review.schema_columns()) == set(cols[:-8])
+    assert cols[-12:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
+                          "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note"]
+    assert set(review.schema_columns()) == set(cols[:-12])
 
 
 # --- the words code writes -------------------------------------------------
@@ -120,7 +120,7 @@ def test_every_row_has_exactly_the_columns_whatever_is_null(parts) -> None:
 def unflatten(row: dict[str, str]) -> dict:
     tree: dict = {}
     for column, text in row.items():
-        if column in review.REVIEWER_COLUMNS or column.startswith("aid_"):
+        if column in review.REVIEWER_COLUMNS or column in review.FLAG_COLUMNS or column.startswith("aid_"):
             continue
         node = tree
         *path, leaf = column.split(".")
@@ -223,3 +223,145 @@ def test_the_csv_is_plain_utf8_with_one_header_row(dirs, parts) -> None:
     text = (dirs / "review" / f"{COMPANY.cik}.csv").read_text(encoding="utf-8")
     assert not text.startswith("\ufeff") and text.splitlines()[0].split(",")[0] == "record_id" and "\r" not in text
     assert len(list(csv.reader(text.splitlines()))) == 2
+
+
+# --- conflicts and the table header (second pilot review) -------------------
+
+
+def test_a_draft_not_in_conflict_says_conflict_false(parts) -> None:
+    draft, outcome_row, _ = parts
+    assert review.build_row(draft, outcome_row, TODAY)["conflict"] == "false"
+    assert review.build_row({**draft, "conflict": False}, outcome_row, TODAY)["conflict"] == "false"
+
+
+def test_two_conflicting_drafts_are_both_written_to_the_csv_with_conflict_true_and_neither_is_approved(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    other = another(draft, "Z")
+    other["assumption"] = {**other["assumption"], "target_low": 7_000.0, "target_high": 8_000.0}  # a different answer for the same key
+    seed(dirs, [{**draft, "conflict": True}, {**other, "conflict": True}], [outcome_row])
+    rows, stats = review.review_company(COMPANY, TODAY)
+    assert stats["added"] == 2
+    on_disk = review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")
+    assert [(r["conflict"], r["approved"]) for r in on_disk] == [("true", "false"), ("true", "false")]
+    assert {r["assumption.target_low"] for r in on_disk} == {"5000.0", "7000.0"}
+    assert len({(r["assumption.metric"], r["assumption.target_period"], r["assumption.stated_at"]) for r in on_disk}) == 1  # same key
+
+
+def test_the_conflict_mark_survives_a_rerun_and_a_hand_edit(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [{**draft, "conflict": True}], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true", reviewer_note="this one is right; the other is the wrong column")
+    review.write_csv(path, edited)
+    review.review_company(COMPANY, TODAY)  # the same draft again, now saying conflict false: the reviewer's row is not touched
+    assert [(r["conflict"], r["approved"]) for r in review.read_csv(path)] == [("true", "true")]
+
+
+def test_the_table_header_row_is_shown_as_an_aid_and_is_not_a_schema_column(parts) -> None:
+    draft, outcome_row, _ = parts
+    assert review.build_row({**draft, "table_header": "Q2 2023 Full Year 2023"}, outcome_row, TODAY)["aid_table_header"] == "Q2 2023 Full Year 2023"
+    assert review.build_row(draft, outcome_row, TODAY)["aid_table_header"] == ""
+    assert "conflict" not in review.schema_columns() and "aid_table_header" not in review.schema_columns()
+    assert "conflict" not in ResearchRecord.model_fields  # never a field of the record itself
+
+
+# --- outlook blocks that produced no draft (third pilot review) --------------------------------
+
+
+def empty_block(block_id="01HZY8Q9XMR3T7VBN2CDEFGHJA", reason="the model returned no items", evidence=True):
+    return {"block_id": block_id, "custom_id": "b-1", "cik": COMPANY.cik, "ticker": "EXMP", "company": COMPANY.name,
+            "accession": "0000000123-24-000001", "filed_at": "2024-02-01", "char_start": 100, "heading": "Q1 FY27 Guidance",
+            "lead_in": "Our outlook is as follows:", "table_header": "Q1 2027 | Full Year 2027", "block_lines": 4, "reason": reason,
+            "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/123/000000012324000001/x.htm", "accession_number": "0000000123-24-000001",
+                         "filing_type": "8-K", "filed_at": "2024-02-01", "fetched_at": "2026-09-20T12:00:00Z", "content_sha256": "a" * 64,
+                         "excerpt": "Tax rate\n17.0%"} if evidence else None}
+
+
+def seed_blocks(dirs, blocks):
+    (dirs / "drafts" / f"{COMPANY.cik}.empty_blocks.jsonl").write_text("".join(json.dumps(b) + "\n" for b in blocks))
+
+
+def test_an_outlook_block_with_no_draft_is_flagged_in_the_csv_as_a_row_of_its_own(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    seed_blocks(dirs, [empty_block()])
+    rows, stats = review.review_company(COMPANY, TODAY)
+    assert (stats["added"], stats["flagged"], len(rows)) == (1, 1, 2)
+    on_disk = review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")
+    assert [r["empty_block"] for r in on_disk] == ["false", "true"] and [r["conflict"] for r in on_disk] == ["false", "false"]
+    flag = on_disk[1]
+    assert (flag["record_id"], flag["company"], flag["ticker"], flag["cik"], flag["status"]) == ("01HZY8Q9XMR3T7VBN2CDEFGHJA", COMPANY.name, "EXMP", COMPANY.cik, "open")
+    assert (flag["assumption.stated_at"], flag["assumption.evidence.accession_number"], flag["assumption.evidence.filing_type"]) == ("2024-02-01", "0000000123-24-000001", "8-K")
+    assert flag["assumption.evidence.source_url"].startswith("https://www.sec.gov/") and flag["assumption.evidence.excerpt"] == "Tax rate\n17.0%"
+    assert (flag["aid_capture_method"], flag["aid_heading"], flag["aid_lead_in"], flag["aid_table_header"]) == ("section", "Q1 FY27 Guidance", "Our outlook is as follows:", "Q1 2027 | Full Year 2027")
+    assert flag["aid_flag_note"] == "the model returned no items" and (flag["approved"], flag["hand_verified"], flag["reviewer_note"]) == ("false", "false", "")
+
+
+def test_a_flag_row_leaves_blank_everything_a_record_needs() -> None:
+    flag = review.build_empty_block_row(empty_block())
+    blank = ["claim", "assumption.text", "assumption.metric", "assumption.target_low", "assumption.target_high", "assumption.unit", "assumption.target_period",
+             "outcome.reported_value", "outcome.reported_at", "invalidation_condition", "acknowledged_at", "days_to_falsifiable", "last_reviewed_at", "reviewer",
+             "aid_proposed_status", "aid_outcome_note"]
+    assert all(flag[c] == "" for c in blank) and set(flag) == set(review.COLUMNS)
+
+
+def test_a_flag_row_can_never_be_published_as_a_record_whatever_is_typed_in_approved() -> None:
+    flag = {**review.build_empty_block_row(empty_block()), "approved": "true"}
+    with pytest.raises(Exception) as caught:  # pydantic's ValidationError
+        ResearchRecord(**unflatten(flag))
+    assert "metric" in str(caught.value) and "target_period" in str(caught.value)
+
+
+def test_a_flag_without_evidence_is_still_written_with_its_source_cells_blank() -> None:
+    flag = review.build_empty_block_row(empty_block(evidence=False))
+    assert flag["empty_block"] == "true" and flag["assumption.evidence.source_url"] == "" and flag["assumption.stated_at"] == "2024-02-01"
+
+
+def test_a_rerun_does_not_flag_the_same_block_twice_and_leaves_a_hand_edited_flag_alone(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    seed_blocks(dirs, [empty_block()])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[1].update(reviewer_note="looked: prose about margins, no figure to guide to", aid_flag_note="edited")
+    review.write_csv(path, edited)
+    seed_blocks(dirs, [empty_block(), empty_block("01HZY8Q9XMR3T7VBN2CDEFGHJB", "1 item(s) returned, all rejected: x")])
+    rows, stats = review.review_company(COMPANY, TODAY)
+    assert (stats["added"], stats["flagged"], len(rows)) == (0, 1, 3)  # only the new block is added
+    kept = review.read_csv(path)
+    assert (kept[1]["reviewer_note"], kept[1]["aid_flag_note"]) == ("looked: prose about margins, no figure to guide to", "edited")
+    assert kept[2]["aid_flag_note"].startswith("1 item(s) returned") and [r["empty_block"] for r in kept] == ["false", "true", "true"]
+
+
+def test_flags_alone_still_make_a_queue_file_and_no_flags_and_no_drafts_make_none(dirs) -> None:
+    seed(dirs, [])
+    review.review_company(COMPANY, TODAY)
+    assert not (dirs / "review").exists()
+    seed_blocks(dirs, [empty_block()])
+    rows, _ = review.review_company(COMPANY, TODAY)
+    assert len(rows) == 1 and (dirs / "review" / f"{COMPANY.cik}.csv").exists()
+
+
+def test_the_flag_column_is_not_a_schema_field_and_the_draft_rows_say_false(parts) -> None:
+    draft, outcome_row, _ = parts
+    assert "empty_block" not in review.schema_columns() and "empty_block" not in ResearchRecord.model_fields
+    assert review.build_row(draft, outcome_row, TODAY)["empty_block"] == "false"
+
+
+def test_the_summary_counts_drafts_by_status_and_flags_apart(dirs, parts, tmp_path, capsys) -> None:
+    import yaml
+
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    seed_blocks(dirs, [empty_block()])
+    cfg = common.load_config()
+    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik}]
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(cfg))
+    assert review.main(["--config", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "2 rows (1 added, 0 kept, 0 invalid; 1 empty-block flags, 1 new)" in out
+    assert "status:   {'open': 1}" in out and "proposed: {'missed': 1}" in out  # the flag is in neither count

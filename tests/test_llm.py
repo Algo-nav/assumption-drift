@@ -224,3 +224,145 @@ def test_a_truncated_answer_is_not_a_success() -> None:
 )
 def test_json_text_parsing_tolerates_a_code_fence(text, expected) -> None:
     assert llm.parse_json_text(text) == expected
+
+
+# --- a changed prompt invalidates old answers ------------------------------
+
+
+def reworded(requests, suffix=" (new wording)"):
+    return [llm.LlmRequest(r.custom_id, r.system, r.user + suffix, r.max_tokens, r.schema) for r in requests]
+
+
+def test_current_results_only_include_answers_to_the_same_request() -> None:
+    requests = reqs(3)
+    run(fakes.FakeAnthropic(), requests)
+    archived = llm.RawArchive("step").load()
+    assert set(llm.current_results(archived, requests, CFG.model)) == {"r-0", "r-1", "r-2"}
+    assert llm.current_results(archived, reworded(requests), CFG.model) == {}  # same ids, different wording
+    changed_schema = [llm.LlmRequest(r.custom_id, r.system, r.user, r.max_tokens, {**SCHEMA, "title": "v2"}) for r in requests]
+    assert llm.current_results(archived, changed_schema, CFG.model) == {}
+
+
+def test_editing_a_prompt_sends_the_requests_again_instead_of_reusing_the_old_answers() -> None:
+    requests = reqs(4)
+    run(fakes.FakeAnthropic(), requests)
+    again = fakes.FakeAnthropic()
+    outcome = run(again, reworded(requests))
+    assert len(again.messages.create_calls) == 1 and len(again.messages.batches.created[0]) == 3  # canary + the other three
+    assert all(r.fingerprint == req.fingerprint(CFG.model) for req, r in zip(reworded(requests), (outcome.results[q.custom_id] for q in requests)))
+
+
+def test_results_archived_before_fingerprints_existed_are_stale(tmp_path) -> None:
+    archive = llm.RawArchive("step")
+    archive.append([llm.Result("r-0", "succeeded", '{"items": []}', 10, 5, None, "old_batch")])  # what the pilot wrote
+    assert llm.RawArchive("step").load()["r-0"].fingerprint is None
+    client = fakes.FakeAnthropic()
+    outcome = run(client, reqs(1))
+    assert len(client.messages.create_calls) == 1  # r-0 was sent again, as the canary
+    assert outcome.results["r-0"].fingerprint == reqs(1)[0].fingerprint(CFG.model)
+
+
+def test_a_batch_that_was_pending_while_the_prompt_changed_is_stored_under_the_wording_it_was_sent_with() -> None:
+    original = reqs(5)
+    slow = fakes.FakeAnthropic(batch_ready=False)
+    clock = iter([0, 0, 10, 9999, 9999])
+    run(slow, original, wait_seconds=30, clock=lambda: next(clock))
+    slow.batch_ready = True
+    outcome = run(slow, reworded(original))  # someone edited the prompt in the meantime
+    archived = llm.RawArchive("step").load()
+    assert archived["r-3"].fingerprint == original[3].fingerprint(CFG.model)  # the old wording
+    assert "r-3" not in outcome.results  # so it does not count as an answer to the new wording
+
+
+# --- temperature ------------------------------------------------------------
+
+
+def test_every_request_is_built_at_temperature_zero() -> None:
+    params = reqs(1)[0].params("claude-haiku-4-5")
+    assert params["temperature"] == 0 and llm.TEMPERATURE == 0
+
+
+def test_the_canary_and_the_batch_are_both_sent_at_temperature_zero() -> None:
+    client = fakes.FakeAnthropic()
+    run(client, reqs(4))
+    (canary,) = client.messages.create_calls
+    assert "temperature" not in canary and canary["extra_body"] == {"temperature": 0}  # a direct call: create() has no such keyword in anthropic 1.x
+    assert [item["params"]["temperature"] for item in client.messages.batches.created[0]] == [0, 0, 0]  # a batch request keeps it in params
+
+
+def test_create_kwargs_are_params_with_the_temperature_moved_to_extra_body() -> None:
+    request = reqs(1)[0]
+    params, kwargs = request.params("claude-haiku-4-5"), request.create_kwargs("claude-haiku-4-5")
+    assert params["temperature"] == 0 and "temperature" not in kwargs
+    assert {k: v for k, v in kwargs.items() if k != "extra_body"} == {k: v for k, v in params.items() if k != "temperature"}
+    assert kwargs["extra_body"] == {"temperature": 0} and "temperature" in params  # params itself is not changed
+
+
+# --- against the real SDK, offline: the fake client takes any keyword, which is how a bad one got through once ------------
+
+
+def test_every_keyword_of_the_canary_call_is_one_the_installed_sdk_accepts() -> None:
+    """The canary failed once with `TypeError: Messages.create() got an unexpected keyword argument 'temperature'`, and every test
+    passed, because the fake client's create() takes anything. This asks the SDK."""
+    import inspect
+
+    import anthropic
+
+    accepted = set(inspect.signature(anthropic.resources.messages.Messages.create).parameters)
+    assert set(reqs(1)[0].create_kwargs("claude-haiku-4-5")) <= accepted
+
+
+def _real_client(seen: list[dict]):
+    """The real SDK, and a transport that records the request body and answers like the API."""
+    import anthropic
+    import httpx2
+
+    message = {"id": "msg_1", "type": "message", "role": "assistant", "model": "claude-haiku-4-5", "stop_reason": "end_turn", "stop_sequence": None,
+               "content": [{"type": "text", "text": "{\"items\":[]}"}], "usage": {"input_tokens": 1, "output_tokens": 1}}
+
+    def handler(request):
+        seen.append({"path": request.url.path, "body": json.loads(request.content)})
+        return httpx2.Response(200, json=message)
+
+    return anthropic.Anthropic(api_key="test-key", max_retries=0, http_client=anthropic.DefaultHttpxClient(transport=httpx2.MockTransport(handler)))
+
+
+def test_the_real_sdk_sends_the_canary_with_temperature_zero_in_the_request_body() -> None:
+    seen: list[dict] = []
+    request = reqs(1)[0]
+    _real_client(seen).messages.create(**request.create_kwargs("claude-haiku-4-5"))
+    (sent,) = seen
+    assert sent["path"] == "/v1/messages" and sent["body"]["temperature"] == 0
+    assert {k: v for k, v in sent["body"].items() if k != "temperature"} == {k: v for k, v in request.params("claude-haiku-4-5").items() if k != "temperature"}
+
+
+def test_the_real_sdk_forwards_temperature_zero_in_each_batch_request() -> None:
+    seen: list[dict] = []
+    requests = reqs(3)
+    _real_client(seen).messages.batches.create(requests=[{"custom_id": r.custom_id, "params": r.params("claude-haiku-4-5")} for r in requests])
+    (sent,) = seen
+    assert sent["path"] == "/v1/messages/batches"
+    assert [item["params"]["temperature"] for item in sent["body"]["requests"]] == [0, 0, 0]
+    assert [item["params"] for item in sent["body"]["requests"]] == [r.params("claude-haiku-4-5") for r in requests]  # forwarded as they are
+
+
+def test_counting_tokens_does_not_send_a_temperature() -> None:
+    """count_tokens takes the model, system, messages and output format, and nothing to sample with."""
+    seen: list[dict] = []
+
+    class Counting(fakes.FakeAnthropic):
+        def __init__(self):
+            super().__init__()
+            original = self.messages.count_tokens
+            self.messages.count_tokens = lambda **kw: (seen.append(kw), original(**kw))[1]
+
+    llm.count_input_tokens(Counting(), CFG, reqs(1))
+    assert seen and all("temperature" not in kw for kw in seen)
+
+
+def test_the_temperature_is_part_of_what_makes_an_answer_current(monkeypatch) -> None:
+    """Answers given before the temperature was fixed are not reused as answers to the new requests."""
+    request = reqs(1)[0]
+    before = request.fingerprint("claude-haiku-4-5")
+    monkeypatch.setattr(llm, "TEMPERATURE", 1)
+    assert request.fingerprint("claude-haiku-4-5") != before
