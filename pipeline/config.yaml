@@ -152,7 +152,8 @@ candidates:
   context_max_chars: 300
 
 # Phase 2, 04_outcomes.py. Regex narrows the search, Haiku reads what is left.
-# Only 8-K exhibits are searched, for outcomes and for acknowledgements.
+# Outcomes and withdrawals are looked for in 8-K exhibits only. Acknowledgements are looked for in every
+# cached filing: the 8-K exhibits, the 10-Q and the 10-K.
 outcomes:
   search_days: 550      # look this far past stated_at for the release reporting the period
   ack_days: 400         # and this far past the outcome for an acknowledgement
@@ -177,6 +178,16 @@ outcomes:
     - {when: 'crpo|remaining performance', match: 'crpo|remaining performance obligation'}
     - {when: 'capital expenditure|capex', match: 'capital expenditures|capex|capital spending'}
     - {when: 'comparable sales', match: 'comparable sales'}
+  # A withdrawal is looked for in the 8-K exhibits filed after the guidance and up to the day the period closed.
+  # A sentence is read when it has one of these phrases AND one of the subjects: "suspending its dividend" is not
+  # about guidance, and "outlook" alone is not a withdrawal. The model then says whether the sentence really is
+  # the company withdrawing, suspending or no longer providing guidance that covers the draft's metric and period.
+  withdrawal_phrases:
+    - 'withdr(?:aw|aws|ew|awn|awing|awal)'
+    - 'suspend(?:s|ed|ing)?'
+    - 'suspension'
+    - 'no longer (?:provid|issu|giv)(?:e|es|ing)'
+  withdrawal_subjects: 'guidance|outlook|forecast|expectations|projections|targets?'
   acknowledgement_phrases:
     - 'below'
     - 'short of'

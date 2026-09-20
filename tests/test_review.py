@@ -37,13 +37,14 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 54
+    assert len(cols) == len(set(cols)) == 55
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-12:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
-                          "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note"]
-    assert set(review.schema_columns()) == set(cols[:-12])
+    assert cols[-13:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
+                          "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note",
+                          "aid_withdrawal_note"]
+    assert set(review.schema_columns()) == set(cols[:-13])
 
 
 # --- the words code writes -------------------------------------------------
@@ -365,3 +366,70 @@ def test_the_summary_counts_drafts_by_status_and_flags_apart(dirs, parts, tmp_pa
     out = capsys.readouterr().out
     assert "2 rows (1 added, 0 kept, 0 invalid; 1 empty-block flags, 1 new)" in out
     assert "status:   {'open': 1}" in out and "proposed: {'missed': 1}" in out  # the flag is in neither count
+
+
+# --- withdrawn: proposed from what 04_outcomes found -----------------------------------------------------------
+
+
+def withdrawn(outcome_row, withdrawn_at="2024-03-01", period_close="2024-12-31"):
+    evidence = {**outcome_row["outcome"]["evidence"], "filed_at": withdrawn_at, "filing_type": "8-K", "excerpt": "The Company is withdrawing its fiscal 2024 guidance.",
+                "source_url": "https://www.sec.gov/Archives/edgar/data/123/000000012324000003/release.htm"}
+    return {**outcome_row, "withdrawal": {"withdrawn_at": withdrawn_at, "period_close": period_close, "evidence": evidence}}
+
+
+def test_a_withdrawal_that_04_found_is_proposed_as_withdrawn_and_carries_its_evidence(parts) -> None:
+    draft, outcome_row, _ = parts
+    assert review.build_row(draft, outcome_row, TODAY)["aid_proposed_status"] == "missed"  # from the numbers alone: 4800 against 5000 to 6000
+    row = review.build_row(draft, withdrawn(outcome_row), TODAY)
+    assert row["aid_proposed_status"] == "withdrawn" and row["status"] == "open"  # a proposal: the row is still a draft
+    note = row["aid_withdrawal_note"]
+    assert "filed 2024-03-01, before the period closed on 2024-12-31" in note and "The Company is withdrawing its fiscal 2024 guidance." in note
+    assert "https://www.sec.gov/Archives/edgar/data/123/000000012324000003/release.htm" in note
+
+
+def test_a_row_with_no_withdrawal_has_no_note(parts) -> None:
+    draft, outcome_row, _ = parts
+    assert review.build_row(draft, outcome_row, TODAY)["aid_withdrawal_note"] == ""
+    assert review.build_row(draft, {**outcome_row, "withdrawal": None}, TODAY)["aid_withdrawal_note"] == ""
+    assert review.build_row(draft, None, TODAY)["aid_withdrawal_note"] == ""
+
+
+def test_a_withdrawal_outranks_the_numbers_and_a_row_with_no_outcome_is_withdrawn_not_unresolved(parts) -> None:
+    draft, outcome_row, _ = parts
+    hit = {**outcome_row, "outcome": {**outcome_row["outcome"], "reported_value": 5500.0}}  # would be met
+    assert review.build_row(draft, hit, TODAY)["aid_proposed_status"] == "met"
+    assert review.build_row(draft, withdrawn(hit), TODAY)["aid_proposed_status"] == "withdrawn"
+    none = {"draft_id": draft["draft_id"], "outcome": None, "outcome_reason": "no later 8-K release for that period found",
+            "acknowledgement": None, "withdrawal": withdrawn(outcome_row)["withdrawal"]}
+    assert review.build_row(draft, none, TODAY)["aid_proposed_status"] == "withdrawn"
+    assert review.build_row(draft, {**none, "withdrawal": None}, TODAY)["aid_proposed_status"] == "unresolved"
+
+
+def test_the_last_day_of_the_period_still_counts_and_the_day_after_does_not(parts) -> None:
+    """The rubric's own date test (`withdrawn_before_close`), applied again to what 04 wrote."""
+    draft, outcome_row, _ = parts
+    assert review.build_row(draft, withdrawn(outcome_row, "2024-12-31", "2024-12-31"), TODAY)["aid_proposed_status"] == "withdrawn"
+    late = review.build_row(draft, withdrawn(outcome_row, "2025-01-01", "2024-12-31"), TODAY)
+    assert late["aid_proposed_status"] == "missed" and late["aid_withdrawal_note"] == ""  # not a withdrawal under the rubric: it resolves on the numbers
+
+
+@pytest.mark.parametrize("bad", [{}, {"withdrawn_at": "2024-03-01"}, {"withdrawn_at": "soon", "period_close": "2024-12-31"}, {"withdrawn_at": "2024-03-01", "period_close": None}])
+def test_a_withdrawal_that_is_malformed_is_ignored(parts, bad) -> None:
+    draft, outcome_row, _ = parts
+    row = review.build_row(draft, {**outcome_row, "withdrawal": bad}, TODAY)
+    assert row["aid_proposed_status"] == "missed" and row["aid_withdrawal_note"] == ""
+
+
+def test_a_withdrawn_row_reaches_the_csv_and_the_summary_counts_it(dirs, parts, tmp_path, capsys) -> None:
+    import yaml
+
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft, another(draft, "Z")], [withdrawn(outcome_row), {**outcome_row, "draft_id": another(draft, "Z")["draft_id"]}])
+    cfg = common.load_config()
+    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik}]
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(cfg))
+    assert review.main(["--config", str(path)]) == 0
+    rows = review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")
+    assert sorted(r["aid_proposed_status"] for r in rows) == ["missed", "withdrawn"] and {r["status"] for r in rows} == {"open"}
+    assert "proposed: {'missed': 1, 'withdrawn': 1}" in capsys.readouterr().out

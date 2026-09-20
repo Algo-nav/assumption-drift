@@ -1,27 +1,38 @@
 """Phase 2, step 2: what the company later reported, and whether it ever admitted a miss.
 
-    python -m pipeline.04_outcomes [--company TICKER ...] [--stage outcomes|ack|all]
+    python -m pipeline.04_outcomes [--company TICKER ...] [--stage outcomes|ack|withdrawal|all]
                                    [--submit] [--wait-minutes M]
 
-A dry run unless --submit is given. Two stages, each a Haiku batch behind the same
+A dry run unless --submit is given. Three stages, each a Haiku batch behind the same
 cost gate as 03_structure (one budget across all of them):
 
-  outcomes  For each draft, find the company's later 8-K earnings releases whose
-            headline names the draft's period, pick the lines that name the metric
-            next to a number, and ask the model which line states the ACTUAL result.
-  ack       For each draft whose outcome resolves to "missed" by the rubric, find later
-            lines that mention the metric next to words like "below" or "short of",
-            and ask the model whether one admits the shortfall. The earliest wins.
+  outcomes    For each draft, find the company's later 8-K earnings releases whose
+              headline names the draft's period, pick the lines that name the metric
+              next to a number, and ask the model which line states the ACTUAL result.
+  ack         For each draft whose outcome resolves to "missed" by the rubric, find later
+              lines that mention the metric next to words like "below" or "short of",
+              and ask the model whether one admits the shortfall. The earliest wins.
+  withdrawal  For each draft, find the 8-K exhibits filed after the guidance and up to the
+              day its period closed, pick the sentences that say withdraw, suspend or no
+              longer providing about guidance, and ask the model whether one is the company
+              withdrawing guidance that covers the draft's metric and period. The earliest
+              wins. It needs the company's fiscal calendar (config.yaml) to know when the
+              period closed, and a draft it cannot date is not searched.
 
-Only 8-K exhibits are searched, in both stages. That is a scope choice: acknowledgements
-in a later 10-Q or 10-K are not looked for, so "never acknowledged" is an upper bound.
+Outcomes and withdrawals are looked for in 8-K exhibits only. Acknowledgements are looked
+for in every cached filing after the outcome, the 10-Q and the 10-K included.
+
+Nothing is written to data/outcomes/ unless --submit is given and every stage that ran has
+finished. A batch still processing when --wait-minutes runs out stops the run with exit 5
+and writes nothing; run it again to resume. What is written comes from every request's
+answer, this run's and earlier ones.
 
 Nothing the model returns is trusted blindly. Values are converted between units by
 code, a value wildly off the guidance is rejected as a unit or row mix-up, and every
 outcome carries the verbatim line it came from. "No outcome" always has a reason.
 
 Reads   data/drafts/{cik}.jsonl, data/raw/{cik}/
-Writes  data/outcomes/{cik}.jsonl          one row per draft: outcome, acknowledgement, reasons
+Writes  data/outcomes/{cik}.jsonl          one row per draft: outcome, acknowledgement, withdrawal, reasons
         data/outcomes/{cik}.rejects.jsonl  model answers that failed a check, with the reason
         data/batches/04_*                  raw model output and pending batch state
 """
@@ -52,6 +63,7 @@ structure_step = importlib.import_module("pipeline.03_structure")
 
 STEP_OUTCOMES = "04_outcomes"
 STEP_ACK = "04_acknowledgements"
+STEP_WITHDRAWAL = "04_withdrawals"
 MAX_TOKENS = 200
 EXPECTED_OUTPUT_TOKENS = 30
 EXCERPT_LIMIT = 400
@@ -117,6 +129,20 @@ Rules
 - The line must be about the same metric and the same period. A miss on another metric or another period does not count.
 - It must reference the shortfall against guidance or expectations. A line that only states the result, or only gives a new outlook, does not count. A line that says guidance was revised because the result came in lower does.
 - Do not count a line that says results were above or in line with guidance.
+"""
+
+WITHDRAWAL_SYSTEM = """\
+You decide whether a company withdrew or suspended its own guidance.
+
+You are given the guidance (metric, period, the range the company guided to, when it was stated, and the day the period ends) and a numbered list of lines from the company's later 8-K exhibits, all filed before the period ended, oldest first.
+
+Return the numbers of the lines that say, in the company's own words, that it is withdrawing, suspending or no longer providing guidance that covers that metric and that period: its guidance as a whole, its guidance for that period, or its guidance for that metric. Return an empty list if none do.
+
+Rules
+- It must be the company's own financial guidance or outlook. Suspending a dividend, a share repurchase program, an operation or a service does not count, nor does withdrawing an offer or a filing.
+- It must cover this metric and this period. Withdrawing guidance for another metric, or only for another period, does not count.
+- Raising, lowering, updating or reaffirming guidance is not withdrawing it.
+- A line that only says the company may withdraw or update guidance in future, or that describes a risk, does not count.
 """
 
 
@@ -207,16 +233,20 @@ class DocText:
 
 
 class DocStore:
-    """One company's cached 8-K exhibits, read and split once."""
+    """One company's cached filings, read and split once.
+
+    `metas` is the 8-K exhibits, and is what the outcome and withdrawal searches read. `all_metas` is every intact
+    cached filing, the 10-Q and the 10-K included, and is what the acknowledgement search reads. Both are oldest first."""
 
     def __init__(self, company: Company) -> None:
         folder = common.RAW_DIR / company.cik
         metas = [common.read_meta(p) for p in folder.glob("*.meta.json")] if folder.exists() else []
         self.folder = folder
-        self.metas = sorted(
-            (m for m in metas if m and m.get("http_status") == 200 and m["filing_type"] == "8-K"),
+        self.all_metas = sorted(
+            (m for m in metas if m and m.get("http_status") == 200 and (folder / f"{m['accession']}.html").exists()),
             key=lambda m: (m["filed_at"], m["accession"]),
         )
+        self.metas = [m for m in self.all_metas if m["filing_type"] == "8-K"]
         self._docs: dict[str, DocText] = {}
 
     def get(self, meta: dict[str, Any]) -> DocText:
@@ -465,7 +495,7 @@ def build_ack_requests(
                 continue
             reported = outcome["reported_at"]
             horizon = min(today, date.fromisoformat(reported) + timedelta(days=int(cfg["ack_days"]))).isoformat()
-            metas = [m for m in store.metas if reported <= m["filed_at"] <= horizon]
+            metas = [m for m in store.all_metas if reported <= m["filed_at"] <= horizon]  # every filing: the 10-Q and 10-K too
             lines = select_lines(store, metas, matcher, phrases, a["metric"], parse_period(a["target_period"]), cfg, number)
             if not lines:
                 continue
@@ -501,13 +531,111 @@ def derive_acknowledgements(
             continue
         line = lines[valid[0] - 1]  # lines are already oldest first
         try:
-            meta = next(m for m in stores[d["cik"]].metas if m["accession"] == line.accession)
+            meta = next(m for m in stores[d["cik"]].all_metas if m["accession"] == line.accession)
             found[d["draft_id"]] = {
                 "acknowledged_at": line.filed_at,
                 "evidence": _evidence(meta, line.sentence).model_dump(mode="json"),
             }
         except (StopIteration, ValidationError) as exc:
             rejects.append({"draft_id": d["draft_id"], "reason": str(exc)[:300]})
+    return found, rejects
+
+
+# --- stage 3: withdrawals ---------------------------------------------------
+
+
+def select_withdrawal_lines(
+    store: DocStore, metas: list[dict[str, Any]], phrases: re.Pattern[str], subjects: re.Pattern[str], cfg: dict[str, Any]
+) -> list[Line]:
+    """Sentences that say withdraw, suspend or no longer providing, about guidance, oldest first. No number is needed:
+    "The Company is withdrawing its guidance." has none, and nor does it name the metric."""
+    found: list[Line] = []
+    for meta in metas:
+        doc = store.get(meta)
+        for k, (start, end) in enumerate(doc.spans):
+            sentence = doc.text[start:end]
+            if len(sentence) > EXCERPT_LIMIT or not phrases.search(sentence) or not subjects.search(sentence):
+                continue
+            li = doc.line_of(start)
+            found.append(Line(
+                accession=meta["accession"], filed_at=meta["filed_at"], sentence=sentence, char_start=start,
+                before=[doc.text[a:b][:300] for a, b in doc.spans[max(0, k - 2) : k]],
+                section=_section_label(doc, li, int(cfg["section_lookback_lines"])), units_note=None, score=0))
+    found.sort(key=lambda line: (line.filed_at, line.accession, line.char_start))
+    return found[: int(cfg["max_lines"])]
+
+
+def build_withdrawal_requests(
+    drafts_by_company: dict[str, list[dict[str, Any]]],
+    companies_by_cik: dict[str, Company],
+    stores: dict[str, DocStore],
+    cfg: dict[str, Any],
+    *,
+    today: date,
+) -> tuple[list[llm.LlmRequest], dict[str, tuple[dict[str, Any], list[Line], date]]]:
+    """A request per draft that has candidate sentences in the 8-K exhibits filed after the guidance and on or before
+    the day its period closed. A draft whose period cannot be dated (no fiscal calendar, or a period not understood)
+    is not searched: without the close there is no "before the period closed" to test."""
+    phrases = re.compile("|".join(f"(?:{p})" for p in cfg["withdrawal_phrases"]), re.IGNORECASE)
+    subjects = re.compile(cfg["withdrawal_subjects"], re.IGNORECASE)
+    requests: list[llm.LlmRequest] = []
+    index: dict[str, tuple[dict[str, Any], list[Line], date]] = {}
+    for cik, drafts in drafts_by_company.items():
+        store, company = stores[cik], companies_by_cik[cik]
+        for d in drafts:
+            a = d["assumption"]
+            period = parse_period(a["target_period"])
+            close = company.period_end(period[1], period[0]) if period else None
+            if close is None:
+                continue
+            horizon = min(today, close).isoformat()
+            metas = [m for m in store.metas if a["stated_at"] < m["filed_at"] <= horizon]
+            lines = select_withdrawal_lines(store, metas, phrases, subjects, cfg)
+            if not lines:
+                continue
+            user = (
+                f"Guidance: {d['company']} guided {a['metric']} for {a['target_period']} to {_range_text(a)} {a['unit']} "
+                f"(stated {a['stated_at']}). The period ends {close.isoformat()}.\n\n"
+                f"Lines from the company's 8-K exhibits filed after that and before the period ended (oldest first):\n{render_lines(lines)}"
+            )
+            cid = f"w-{d['draft_id']}"
+            requests.append(llm.LlmRequest(cid, WITHDRAWAL_SYSTEM, user, MAX_TOKENS, ACK_SCHEMA))
+            index[cid] = (d, lines, close)
+    return requests, index
+
+
+def derive_withdrawals(
+    index: dict[str, tuple[dict[str, Any], list[Line], date]],
+    results: dict[str, llm.Result],
+    stores: dict[str, DocStore],
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    """(withdrawal per draft_id, rejects). The earliest line the model confirms wins, and it must be dated on or before
+    the day the period closed, which is the rubric's own test (`rubric.withdrawn_before_close`)."""
+    found: dict[str, dict[str, Any]] = {}
+    rejects: list[dict[str, Any]] = []
+    for cid, (d, lines, close) in index.items():
+        res = results.get(cid)
+        if res is None or not res.ok:
+            continue
+        payload = llm.parse_json_text(res.text)
+        if not isinstance(payload, dict) or not isinstance(payload.get("indices"), list):
+            rejects.append({"draft_id": d["draft_id"], "reason": "output did not parse as {indices: [...]}"})
+            continue
+        valid = sorted(int(i) for i in payload["indices"] if isinstance(i, int) and 1 <= i <= len(lines))
+        for n in valid:  # oldest first
+            line = lines[n - 1]
+            if not rubric.withdrawn_before_close(date.fromisoformat(line.filed_at), close):
+                continue
+            try:
+                meta = next(m for m in stores[d["cik"]].metas if m["accession"] == line.accession)
+                found[d["draft_id"]] = {
+                    "withdrawn_at": line.filed_at,
+                    "period_close": close.isoformat(),
+                    "evidence": _evidence(meta, line.sentence).model_dump(mode="json"),
+                }
+            except (StopIteration, ValidationError) as exc:
+                rejects.append({"draft_id": d["draft_id"], "reason": str(exc)[:300]})
+            break
     return found, rejects
 
 
@@ -529,8 +657,17 @@ def _json_check(*keys: str):
     return check
 
 
-def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: float, check) -> dict[str, llm.Result] | None:
-    """Project, print, and (with --submit) run one stage. None means it stopped."""
+class Stopped(Exception):
+    """A stage stopped the run, and nothing is written: no credentials or over the budget (3), a batch still processing (5)."""
+
+    def __init__(self, code: int) -> None:
+        super().__init__(code)
+        self.code = code
+
+
+def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: float, check) -> dict[str, llm.Result]:
+    """Project, print, and (with --submit) run one stage. The answers to every request, this run's and earlier ones.
+    Raises Stopped when the run cannot go on."""
     archive = llm.RawArchive(step)
     have = llm.current_results(archive.load(), requests, cfg.model)
     todo = [r for r in requests if not (r.custom_id in have and have[r.custom_id].ok)]
@@ -544,24 +681,28 @@ def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: f
     if not exact:
         print("STOPPED: no API credentials found. Set ANTHROPIC_API_KEY (or put it in .env at the repo root) "
               "and run again. Nothing was submitted.", file=sys.stderr)
-        return None
+        raise Stopped(3)
     try:
         outcome = llm.run_batch(client, cfg, step, todo, projection=projection, canary_check=check,
                                 ledger=ledger, archive=archive, wait_seconds=wait_minutes * 60)
     except llm.BudgetExceeded as exc:
         print(f"STOPPED: {exc}", file=sys.stderr)
-        return None
+        raise Stopped(3) from exc
     for note in outcome.notes:
         print(f"note: {note}")
-    return outcome.results
+    if outcome.pending_batch:
+        print(f"STOPPED: batch {outcome.pending_batch} ({step}) has not ended, so nothing was written to data/outcomes/. "
+              "Run the same command again to resume it; nothing will be resubmitted.", file=sys.stderr)
+        raise Stopped(5)
+    return llm.current_results(archive.load(), requests, cfg.model)  # run_batch answers only the requests it was given
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Find outcomes and acknowledgements for draft assumptions.")
+    parser = argparse.ArgumentParser(description="Find outcomes, acknowledgements and withdrawals for draft assumptions.")
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER")
-    parser.add_argument("--stage", choices=["outcomes", "ack", "all"], default="all")
-    parser.add_argument("--submit", action="store_true", help="really call the API; without it this is a dry run")
+    parser.add_argument("--stage", choices=["outcomes", "ack", "withdrawal", "all"], default="all")
+    parser.add_argument("--submit", action="store_true", help="really call the API and write data/outcomes/; without it this is a dry run")
     parser.add_argument("--wait-minutes", type=float, default=60)
     args = parser.parse_args(argv)
 
@@ -569,6 +710,7 @@ def main(argv: list[str] | None = None) -> int:
     cfg, ocfg = llm.LlmConfig.from_config(config["llm"]), config["outcomes"]
     number = candidates_step.Settings.from_config(config["candidates"]).number
     targets = companies(config, args.company)
+    by_cik = {c.cik: c for c in targets}
     drafts = {c.cik: load_drafts(c) for c in targets}
     stores = {c.cik: DocStore(c) for c in targets}
     today = date.today()
@@ -579,34 +721,35 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  {len(requests):,} drafts have a matching later release with candidate lines; "
           f"{len(reasons):,} have no request, with a reason recorded")
 
-    outcomes: dict[str, dict[str, Any]] = {}
     rejects: list[dict[str, Any]] = []
-    acks: dict[str, dict[str, Any]] = {}
-    if args.stage in ("outcomes", "all"):
-        results = _stage(client, cfg, ledger, STEP_OUTCOMES, requests, submit=args.submit,
-                         wait_minutes=args.wait_minutes, check=_json_check("index", "value", "unit"))
-        if results is None:
-            return 3
-    else:
-        results = llm.current_results(llm.RawArchive(STEP_OUTCOMES).load(), requests, cfg.model)
-    outcomes, o_rejects, o_reasons = derive_outcomes(o_index, results, stores, ocfg)
-    rejects += o_rejects
-    reasons.update(o_reasons)
 
-    ack_requests, k_index = build_ack_requests(drafts, outcomes, stores, ocfg, number, today=today)
-    if args.stage in ("ack", "all"):
-        print(f"  {len(outcomes):,} outcomes found, {len(ack_requests):,} of them misses with candidate acknowledgement lines")
-        k_results = _stage(client, cfg, ledger, STEP_ACK, ack_requests, submit=args.submit,
-                           wait_minutes=args.wait_minutes, check=_json_check("indices"))
-        if k_results is None:
-            return 3
-    else:
-        k_results = llm.current_results(llm.RawArchive(STEP_ACK).load(), ack_requests, cfg.model)
-    acks, k_rejects = derive_acknowledgements(k_index, k_results, stores)
-    rejects += k_rejects
+    def run(stage: str, step: str, reqs: list[llm.LlmRequest], check) -> dict[str, llm.Result]:
+        if args.stage in (stage, "all"):
+            return _stage(client, cfg, ledger, step, reqs, submit=args.submit, wait_minutes=args.wait_minutes, check=check)
+        return llm.current_results(llm.RawArchive(step).load(), reqs, cfg.model)
 
-    if not args.submit:
-        print("dry run: nothing was submitted. Add --submit to run the batches.")
+    try:
+        results = run("outcomes", STEP_OUTCOMES, requests, _json_check("index", "value", "unit"))
+        outcomes, o_rejects, o_reasons = derive_outcomes(o_index, results, stores, ocfg)
+        rejects += o_rejects
+        reasons.update(o_reasons)
+
+        ack_requests, k_index = build_ack_requests(drafts, outcomes, stores, ocfg, number, today=today)
+        if args.stage in ("ack", "all"):
+            print(f"  {len(outcomes):,} outcomes found, {len(ack_requests):,} of them misses with candidate acknowledgement lines")
+        k_results = run("ack", STEP_ACK, ack_requests, _json_check("indices"))
+        acks, k_rejects = derive_acknowledgements(k_index, k_results, stores)
+        rejects += k_rejects
+
+        w_requests, w_index = build_withdrawal_requests(drafts, by_cik, stores, ocfg, today=today)
+        if args.stage in ("withdrawal", "all"):
+            print(f"  {len(w_requests):,} drafts have a candidate withdrawal sentence in an 8-K exhibit before their period closed")
+        w_results = run("withdrawal", STEP_WITHDRAWAL, w_requests, _json_check("indices"))
+        withdrawals, w_rejects = derive_withdrawals(w_index, w_results, stores)
+        rejects += w_rejects
+    except Stopped as stop:
+        return stop.code
+
     for company in targets:
         rows = []
         for d in drafts[company.cik]:
@@ -616,11 +759,15 @@ def main(argv: list[str] | None = None) -> int:
                 "outcome": outcomes.get(did),
                 "outcome_reason": None if did in outcomes else reasons.get(did, "outcome search not run"),
                 "acknowledgement": acks.get(did),
+                "withdrawal": withdrawals.get(did),
             })
-        write_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl", rows)
-        write_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl", [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])])
+        if args.submit:  # a dry run never writes to data/outcomes/: with stale or missing answers it would empty what is there
+            write_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl", rows)
+            write_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl", [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])])
         print(f"  {company.ticker}: {len(rows):,} drafts, {sum(1 for r in rows if r['outcome'])} with an outcome, "
-              f"{sum(1 for r in rows if r['acknowledgement'])} acknowledged")
+              f"{sum(1 for r in rows if r['acknowledgement'])} acknowledged, {sum(1 for r in rows if r['withdrawal'])} withdrawn")
+    if not args.submit:
+        print("dry run: nothing was submitted, and nothing was written to data/outcomes/. Add --submit to run the batches.")
     return 0
 
 

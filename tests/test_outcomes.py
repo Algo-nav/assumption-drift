@@ -320,7 +320,7 @@ def test_an_empty_or_out_of_range_answer_is_no_acknowledgement(world) -> None:
 @pytest.fixture
 def config_path(world):
     cfg = common.load_config()
-    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik}]
+    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik, "fiscal_year_end_month": 6}]
     path = world / "config.yaml"
     path.write_text(yaml.safe_dump(cfg))
     return path
@@ -328,6 +328,9 @@ def config_path(world):
 
 def respond(params: dict) -> str:
     user = params["messages"][0]["content"]
+    if params["system"] == outcomes.WITHDRAWAL_SYSTEM:
+        hit = re.search(r"\[(\d+)\][^\[]*?LINE: [^\n]*withdrawing its fiscal 2024 guidance", user)
+        return json.dumps({"indices": [int(hit.group(1))] if hit else []})
     if params["system"] == outcomes.ACK_SYSTEM:
         hit = re.search(r"\[(\d+)\][^\[]*?LINE: [^\n]*below our guidance", user)
         return json.dumps({"indices": [int(hit.group(1))] if hit else []})
@@ -344,16 +347,16 @@ def read_outcomes(world):
     return [json.loads(l) for l in (world / "outcomes" / f"{COMPANY.cik}.jsonl").read_text().splitlines()]
 
 
-def test_a_dry_run_only_counts_tokens_and_writes_reasons(world, config_path, monkeypatch, capsys) -> None:
+def test_a_dry_run_only_counts_tokens_and_writes_nothing(world, config_path, monkeypatch, capsys) -> None:
+    """It used to write a row per draft with the reason there was no outcome. With stale or missing answers that overwrote real outcomes."""
     seed_drafts(world, draft(), draft("D2", period="Q4 FY2030"))
     client = fakes.FakeAnthropic(respond=respond)
     monkeypatch.setattr(llm, "make_client", lambda: client)
     assert outcomes.main(["--config", str(config_path)]) == 0
     assert client.messages.create_calls == [] and client.messages.batches.created == []
-    rows = {r["draft_id"]: r for r in read_outcomes(world)}
-    assert rows["D1"]["outcome"] is None and rows["D1"]["outcome_reason"] == "outcome search not completed"
-    assert "no later 8-K release" in rows["D2"]["outcome_reason"]
-    assert "dry run" in capsys.readouterr().out
+    assert not (world / "outcomes").exists()
+    out = capsys.readouterr().out
+    assert "nothing was written to data/outcomes/" in out and "EXMP: 2 drafts, 0 with an outcome, 0 acknowledged, 0 withdrawn" in out
 
 
 def test_submit_runs_both_stages_and_only_a_miss_is_searched_for_an_acknowledgement(world, config_path, monkeypatch) -> None:
@@ -420,3 +423,351 @@ def test_a_non_gaap_metric_ranks_the_non_gaap_row_above_the_gaap_one(world) -> N
     _, index, _ = requests_for(d)
     lines = {l.sentence: l.score for l in index["o-D1"][1] if l.accession == acc}
     assert lines["Gross margin 75.2 % 73.6 %"] > lines["Gross margin 75.0 % 73.4 %"]
+
+
+# --- helpers for the tests below ------------------------------------------------------------------------
+
+
+def add_filing(world, suffix, filed, form, lines, title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024", cached=True):
+    """One more cached filing of any form, in the same shape the fixture writes."""
+    raw = world / "raw" / COMPANY.cik
+    acc = f"0000000123-24-00{suffix}"
+    html = ("<html><body>" + f"<p>{title}</p>" + "".join(f"<p>{line}</p>" for line in lines) + "</body></html>").encode()
+    if cached:
+        (raw / f"{acc}.html").write_bytes(html)
+    (raw / f"{acc}.meta.json").write_text(json.dumps({
+        "cik": COMPANY.cik, "accession": acc, "filing_type": form, "filed_at": filed, "http_status": 200,
+        "final_url": f"https://www.sec.gov/Archives/edgar/data/123/{acc.replace('-', '')}/{form.lower()}.htm",
+        "fetched_at": "2026-09-20T12:00:00+00:00", "content_sha256": hashlib.sha256(html).hexdigest()}))
+    return acc
+
+
+MISS = {"reported_value": 4.8, "reported_at": "2024-05-01"}
+DATED = COMPANY.__class__(COMPANY.name, COMPANY.ticker, COMPANY.cik, 6)  # the fiscal year ends in June: Q4 FY2024 closes 2024-06-30
+
+
+def ack_requests(d=None, out=MISS):
+    return outcomes.build_ack_requests({COMPANY.cik: [d or draft()]}, {(d or draft())["draft_id"]: out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+
+
+# --- acknowledgements are looked for in every cached filing --------------------------------------------------
+
+
+def test_the_store_keeps_every_cached_filing_and_the_8k_exhibits_apart(world) -> None:
+    q, k = add_filing(world, "0021", "2024-06-10", "10-Q", ["x"]), add_filing(world, "0022", "2024-06-20", "10-K", ["y"])
+    st = store()
+    assert {m["filing_type"] for m in st.metas} == {"8-K"}  # what the outcome and withdrawal searches read
+    assert {m["filing_type"] for m in st.all_metas} == {"8-K", "10-Q", "10-K"} and {q, k} <= {m["accession"] for m in st.all_metas}
+    assert [m["filed_at"] for m in st.all_metas] == sorted(m["filed_at"] for m in st.all_metas)  # oldest first
+
+
+def test_a_filing_whose_html_is_not_in_the_cache_is_left_out_of_both_lists(world) -> None:
+    gone = add_filing(world, "0023", "2024-06-11", "10-Q", ["x"], cached=False)
+    assert gone not in {m["accession"] for m in store().all_metas} | {m["accession"] for m in store().metas}
+
+
+def test_the_outcome_search_reads_8k_exhibits_only_even_when_a_10q_reports_the_period(world) -> None:
+    """The 10-Q has a headline that names the period, so only the restriction to 8-K keeps it out."""
+    q = add_filing(world, "0021", "2024-05-15", "10-Q", ["Fourth quarter revenue of $4.9 billion."])
+    _, index, _ = requests_for(draft())
+    assert {line.accession for _, lines in index.values() for line in lines}.isdisjoint({q})
+    assert {line.accession for _, lines in index.values() for line in lines} == {"0000000123-24-000012"}
+
+
+def test_the_acknowledgement_search_reads_the_10q_and_the_10k_as_well_as_the_8k_exhibits(world) -> None:
+    q = add_filing(world, "0021", "2024-06-10", "10-Q", ["Revenue for the fourth quarter of fiscal 2024 was $4.8 billion, below our guidance."])
+    k = add_filing(world, "0022", "2024-06-20", "10-K", ["Fourth quarter revenue of $4.8 billion was below the low end of our guidance range."])
+    reqs, index = ack_requests()
+    lines = index["k-D1"][1]
+    assert [l.accession for l in lines] == [q, k, "0000000123-24-000013"]  # oldest first, across the three forms
+    assert [l.filed_at for l in lines] == ["2024-06-10", "2024-06-20", "2024-08-01"]
+    assert all(f"[{n}] filed" in reqs[0].user for n in (1, 2, 3))
+
+
+def test_a_confirmed_10q_line_is_the_acknowledgement_and_the_evidence_is_that_10q(world) -> None:
+    q = add_filing(world, "0021", "2024-06-10", "10-Q", ["Revenue for the fourth quarter of fiscal 2024 was $4.8 billion, below our guidance."])
+    _, index = ack_requests()
+    res = {"k-D1": llm.Result("k-D1", "succeeded", json.dumps({"indices": [1, 2]}), 1, 1, None, "b")}
+    found, rejects = outcomes.derive_acknowledgements(index, res, {COMPANY.cik: store()})
+    ev = found["D1"]["evidence"]
+    assert found["D1"]["acknowledged_at"] == "2024-06-10" and rejects == []
+    assert (ev["filing_type"], ev["accession_number"]) == ("10-Q", q) and ev["source_url"].endswith("/10-q.htm")
+    assert ev["excerpt"] == "Revenue for the fourth quarter of fiscal 2024 was $4.8 billion, below our guidance."
+
+
+def test_a_10k_line_is_the_acknowledgement_when_it_is_the_one_confirmed(world) -> None:
+    k = add_filing(world, "0022", "2024-06-20", "10-K", ["Fourth quarter revenue of $4.8 billion was below the low end of our guidance range."])
+    _, index = ack_requests()
+    (n,) = [i for i, l in enumerate(index["k-D1"][1], 1) if l.accession == k]
+    res = {"k-D1": llm.Result("k-D1", "succeeded", json.dumps({"indices": [n]}), 1, 1, None, "b")}
+    found, _ = outcomes.derive_acknowledgements(index, res, {COMPANY.cik: store()})
+    assert (found["D1"]["acknowledged_at"], found["D1"]["evidence"]["filing_type"]) == ("2024-06-20", "10-K")
+
+
+def test_only_filings_after_the_outcome_and_within_the_window_are_read_for_an_acknowledgement(world) -> None:
+    before = add_filing(world, "0021", "2024-04-20", "10-Q", ["Revenue of $4.8 billion for the quarter was below our guidance."])
+    inside = add_filing(world, "0022", "2025-06-01", "10-K", ["Revenue of $4.8 billion for the quarter was below our guidance."])  # 396 days after
+    beyond = add_filing(world, "0023", "2025-06-20", "10-K", ["Revenue of $4.8 billion for the quarter was below our guidance."])  # 415 days after
+    accessions = {l.accession for l in ack_requests()[1]["k-D1"][1]}
+    assert inside in accessions and before not in accessions and beyond not in accessions
+
+
+def test_the_ack_step_reads_a_10q_end_to_end_and_the_outcome_step_still_does_not(world, config_path, monkeypatch) -> None:
+    """The only line that admits the miss is in a 10-Q. Without the 10-Q there is no acknowledgement to find."""
+    # The fixture's own 8-K that admits the miss (2024-08-01) is rewritten so that it no longer does.
+    (world / "raw" / COMPANY.cik / "0000000123-24-000013.html").write_bytes(b"<html><body><p>Example Corp Announces Financial Results for First Quarter Fiscal 2025</p><p>First quarter revenue of $5.3 billion.</p></body></html>")
+    add_filing(world, "0021", "2024-06-10", "10-Q", ["Revenue for the fourth quarter of fiscal 2024 was $4.8 billion, below our guidance."])
+    seed_drafts(world, draft())
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    assert outcomes.main(["--config", str(config_path), "--submit"]) == 0
+    (row,) = read_outcomes(world)
+    assert row["outcome"]["evidence"]["filing_type"] == "8-K"  # the outcome came from an 8-K exhibit
+    assert row["acknowledgement"]["evidence"]["filing_type"] == "10-Q" and row["acknowledgement"]["acknowledged_at"] == "2024-06-10"
+
+
+# --- withdrawals ---------------------------------------------------------------------------------------------
+
+PHRASES = re.compile("|".join(f"(?:{p})" for p in OCFG["withdrawal_phrases"]), re.IGNORECASE)
+SUBJECTS = re.compile(OCFG["withdrawal_subjects"], re.IGNORECASE)
+
+
+@pytest.mark.parametrize("sentence", [
+    "The Company is withdrawing its fiscal 2024 guidance.", "Target has withdrawn its outlook for the year.", "NVIDIA withdrew its forecast.",
+    "We are suspending our full-year outlook.", "The Company is suspending guidance until further notice.", "Suspension of guidance reflects the uncertainty.",
+    "The company is no longer providing financial guidance.", "We will no longer provide an outlook for the second quarter.",
+])
+def test_a_sentence_is_read_when_it_says_withdraw_suspend_or_no_longer_providing_about_guidance(sentence) -> None:
+    assert PHRASES.search(sentence) and SUBJECTS.search(sentence)
+
+
+@pytest.mark.parametrize("sentence", [
+    "The Company is suspending its quarterly dividend.", "It suspended operations at two plants.", "The Company reaffirmed its guidance.",
+    "We are raising our outlook.", "Withdrawal of the offer is expected.", "The Board authorized a share repurchase program.",
+])
+def test_a_sentence_about_something_else_or_about_guidance_without_a_withdrawal_is_not_read(sentence) -> None:
+    assert not (PHRASES.search(sentence) and SUBJECTS.search(sentence))
+
+
+def withdrawal_world(world):
+    """Guidance stated 2024-02-01 for Q4 FY2024, which closes 2024-06-30 for a June year end."""
+    inside = add_filing(world, "0014", "2024-04-20", "8-K", ["The Company is withdrawing its fiscal 2024 guidance.", "The Company is suspending its quarterly dividend.",
+                                                            "We are no longer providing an outlook for the fourth quarter."], title="Example Corp Update")
+    return inside
+
+
+def withdrawal_requests(d=None, company=DATED):
+    d = d or draft()
+    return outcomes.build_withdrawal_requests({COMPANY.cik: [d]}, {COMPANY.cik: company}, {COMPANY.cik: store()}, OCFG, today=TODAY)
+
+
+def test_only_8k_exhibits_filed_after_the_guidance_and_by_the_close_of_the_period_are_searched(world) -> None:
+    inside = withdrawal_world(world)
+    add_filing(world, "0015", "2024-07-10", "8-K", ["The Company is withdrawing its guidance."], title="Example Corp Update")  # after the close
+    add_filing(world, "0016", "2024-04-25", "10-Q", ["The Company is withdrawing its guidance."])  # not an 8-K exhibit
+    add_filing(world, "0017", "2024-02-01", "8-K", ["The Company is withdrawing its guidance."], title="Example Corp Update")  # the day it was stated
+    add_filing(world, "0018", "2024-06-30", "8-K", ["The Company is suspending its guidance."], title="Example Corp Update")  # the last day of the period
+    reqs, index = withdrawal_requests()
+    (cid,) = index
+    lines = index[cid][1]
+    assert cid == "w-D1" and [(l.accession, l.sentence) for l in lines] == [
+        (inside, "The Company is withdrawing its fiscal 2024 guidance."), (inside, "We are no longer providing an outlook for the fourth quarter."),
+        ("0000000123-24-000018", "The Company is suspending its guidance.")]
+    assert index[cid][2] == date(2024, 6, 30)
+
+
+def test_the_window_closes_with_the_period_and_not_with_today(world) -> None:
+    add_filing(world, "0015", "2024-07-10", "8-K", ["The Company is withdrawing its guidance."], title="Example Corp Update")
+    assert withdrawal_requests(draft())[1] == {}  # Q4 FY2024 closed on 2024-06-30
+    _, index = withdrawal_requests(draft("D5", period="Q1 FY2025"))  # closes 2024-09-30
+    assert [l.filed_at for l in index["w-D5"][1]] == ["2024-07-10"]
+
+
+def test_a_draft_that_cannot_be_dated_is_not_searched(world) -> None:
+    withdrawal_world(world)
+    assert withdrawal_requests(company=COMPANY)[0] == []  # no fiscal calendar
+    assert withdrawal_requests(draft("D6", period="Q4 FY2030"), company=DATED)[1] != {}  # (dated, so searched)
+    d = draft("D7")
+    d["assumption"] = {**d["assumption"], "target_period": "second half"}
+    assert withdrawal_requests(d)[0] == []  # a period that is not understood
+
+
+def test_a_draft_with_no_candidate_sentence_gets_no_request(world) -> None:
+    assert withdrawal_requests()[0] == []  # the fixture's filings say nothing of the kind
+
+
+def test_the_request_shows_the_guidance_the_close_and_the_numbered_sentences(world) -> None:
+    withdrawal_world(world)
+    (req,), _ = withdrawal_requests()
+    assert req.system == outcomes.WITHDRAWAL_SYSTEM and req.schema == outcomes.ACK_SCHEMA and req.max_tokens == outcomes.MAX_TOKENS
+    user = req.user
+    assert "guided revenue for Q4 FY2024 to 5 to 6 USD billions (stated 2024-02-01). The period ends 2024-06-30." in user
+    assert "[1] filed 2024-04-20" in user and "LINE: The Company is withdrawing its fiscal 2024 guidance." in user
+    assert "LINE: The Company is suspending its quarterly dividend." not in user  # it is only the context before the next line
+
+
+def test_the_prompt_says_what_a_withdrawal_is_and_is_not() -> None:
+    text = outcomes.WITHDRAWAL_SYSTEM
+    for rule in ["Suspending a dividend, a share repurchase program, an operation or a service does not count",
+                 "Withdrawing guidance for another metric, or only for another period, does not count",
+                 "Raising, lowering, updating or reaffirming guidance is not withdrawing it",
+                 "may withdraw or update guidance in future"]:
+        assert rule in text
+
+
+def test_the_earliest_confirmed_sentence_is_the_withdrawal_and_the_evidence_is_verbatim(world) -> None:
+    inside = withdrawal_world(world)
+    _, index = withdrawal_requests()
+    res = {"w-D1": llm.Result("w-D1", "succeeded", json.dumps({"indices": [2, 1]}), 1, 1, None, "b")}
+    found, rejects = outcomes.derive_withdrawals(index, res, {COMPANY.cik: store()})
+    w = found["D1"]
+    assert (w["withdrawn_at"], w["period_close"]) == ("2024-04-20", "2024-06-30") and rejects == []
+    assert w["evidence"]["excerpt"] == "The Company is withdrawing its fiscal 2024 guidance."
+    assert (w["evidence"]["filing_type"], w["evidence"]["accession_number"]) == ("8-K", inside)
+
+
+@pytest.mark.parametrize("payload", [{"indices": []}, {"indices": [9]}, {"indices": [0]}, {"indices": ["1"]}])
+def test_an_empty_or_out_of_range_answer_is_no_withdrawal(world, payload) -> None:
+    withdrawal_world(world)
+    _, index = withdrawal_requests()
+    res = {"w-D1": llm.Result("w-D1", "succeeded", json.dumps(payload), 1, 1, None, "b")}
+    assert outcomes.derive_withdrawals(index, res, {COMPANY.cik: store()})[0] == {}
+
+
+def test_an_answer_that_does_not_parse_is_rejected_and_an_unanswered_request_is_no_withdrawal(world) -> None:
+    withdrawal_world(world)
+    _, index = withdrawal_requests()
+    bad = {"w-D1": llm.Result("w-D1", "succeeded", "yes", 1, 1, None, "b")}
+    found, rejects = outcomes.derive_withdrawals(index, bad, {COMPANY.cik: store()})
+    assert found == {} and "did not parse" in rejects[0]["reason"]
+    failed = {"w-D1": llm.Result("w-D1", "errored", None, 0, 0, "overloaded", "b")}
+    assert outcomes.derive_withdrawals(index, failed, {COMPANY.cik: store()}) == ({}, []) == outcomes.derive_withdrawals(index, {}, {COMPANY.cik: store()})
+
+
+def test_a_sentence_dated_after_the_close_is_never_a_withdrawal_whatever_the_model_says(world) -> None:
+    """The window already keeps these out. This is the rubric's own test, applied to what comes back."""
+    withdrawal_world(world)
+    _, index = withdrawal_requests()
+    d, lines, close = index["w-D1"]
+    late = outcomes.Line(lines[0].accession, "2024-07-01", lines[0].sentence, lines[0].char_start, [], None, None, 0)
+    res = {"w-D1": llm.Result("w-D1", "succeeded", json.dumps({"indices": [1]}), 1, 1, None, "b")}
+    assert outcomes.derive_withdrawals({"w-D1": (d, [late], close)}, res, {COMPANY.cik: store()})[0] == {}
+
+
+# --- the withdrawal stage through main -----------------------------------------------------------------------
+
+
+def test_submit_runs_the_withdrawal_stage_and_puts_the_withdrawal_on_the_row(world, config_path, monkeypatch, capsys) -> None:
+    withdrawal_world(world)
+    d4 = draft("D4", period="Q1 FY2024")  # closed before the guidance was stated: never searched
+    seed_drafts(world, draft(), draft("D3", low=4.0, high=5.0), d4)
+    client = fakes.FakeAnthropic(respond=respond)
+    monkeypatch.setattr(llm, "make_client", lambda: client)
+    assert outcomes.main(["--config", str(config_path), "--submit"]) == 0
+    rows = {r["draft_id"]: r for r in read_outcomes(world)}
+    assert rows["D1"]["withdrawal"]["withdrawn_at"] == "2024-04-20" and rows["D3"]["withdrawal"]["period_close"] == "2024-06-30"
+    assert rows["D4"]["withdrawal"] is None
+    assert set(llm.RawArchive("04_withdrawals").load()) == {"w-D1", "w-D3"}  # D4 was never sent
+    out = capsys.readouterr().out
+    assert "04_withdrawals: 2 requests" in out and "budget $10.00" in out  # the cost gate is printed before the stage
+    assert "EXMP: 3 drafts" in out and "2 withdrawn" in out
+
+
+def test_the_withdrawal_stage_can_be_run_alone(world, config_path, monkeypatch) -> None:
+    withdrawal_world(world)
+    seed_drafts(world, draft())
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    assert outcomes.main(["--config", str(config_path), "--stage", "withdrawal", "--submit"]) == 0
+    assert {e["step"] for e in llm.Ledger().entries()} == {"04_withdrawals"}
+    (row,) = read_outcomes(world)
+    assert row["withdrawal"] is not None and row["outcome"] is None
+
+
+def test_a_rerun_sends_no_withdrawal_request_twice(world, config_path, monkeypatch) -> None:
+    withdrawal_world(world)
+    seed_drafts(world, draft())
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    outcomes.main(["--config", str(config_path), "--submit"])
+    again = fakes.FakeAnthropic(respond=respond)
+    monkeypatch.setattr(llm, "make_client", lambda: again)
+    assert outcomes.main(["--config", str(config_path), "--submit"]) == 0
+    assert again.messages.create_calls == [] and again.messages.batches.created == []
+    assert read_outcomes(world)[0]["withdrawal"] is not None
+
+
+def test_every_withdrawal_pattern_in_the_config_compiles_and_is_used(world) -> None:
+    assert len(OCFG["withdrawal_phrases"]) >= 3 and all(re.compile(p) for p in OCFG["withdrawal_phrases"]) and re.compile(OCFG["withdrawal_subjects"])
+
+
+# --- a batch that has not ended, a dry run, a re-run: nothing is lost or overwritten -------------------------
+
+
+def outcomes_snapshot(world):
+    folder = world / "outcomes"
+    return {p.name: p.read_bytes() for p in sorted(folder.glob("*"))} if folder.exists() else {}
+
+
+def two_drafts(world):
+    seed_drafts(world, draft(), draft("D3", low=4.0, high=5.0))
+
+
+def test_a_batch_that_has_not_ended_writes_nothing_to_data_outcomes_and_exits_5(world, config_path, monkeypatch, capsys) -> None:
+    two_drafts(world)
+    client = fakes.FakeAnthropic(respond=respond, batch_ready=False)
+    monkeypatch.setattr(llm, "make_client", lambda: client)
+    assert outcomes.main(["--config", str(config_path), "--submit", "--wait-minutes", "0"]) == 5
+    assert not (world / "outcomes").exists()
+    err = capsys.readouterr().err
+    assert "has not ended, so nothing was written to data/outcomes/" in err and "04_outcomes" in err
+    assert llm.RawArchive("04_outcomes").state_path.exists()
+
+
+def test_a_pending_batch_leaves_complete_outcomes_byte_for_byte_alone(world, config_path, monkeypatch) -> None:
+    two_drafts(world)
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    outcomes.main(["--config", str(config_path), "--submit"])
+    before = outcomes_snapshot(world)
+    assert before[f"{COMPANY.cik}.jsonl"]
+    monkeypatch.setattr(outcomes, "OUTCOME_SYSTEM", outcomes.OUTCOME_SYSTEM + "\n- Be careful.")  # every answer is stale
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond, batch_ready=False))
+    assert outcomes.main(["--config", str(config_path), "--submit", "--wait-minutes", "0"]) == 5
+    assert outcomes_snapshot(world) == before
+
+
+def test_resuming_a_pending_batch_writes_every_outcome_and_not_just_the_batch(world, config_path, monkeypatch) -> None:
+    two_drafts(world)
+    client = fakes.FakeAnthropic(respond=respond, batch_ready=False)
+    monkeypatch.setattr(llm, "make_client", lambda: client)
+    assert outcomes.main(["--config", str(config_path), "--submit", "--wait-minutes", "0"]) == 5
+    client.batch_ready = True
+    assert outcomes.main(["--config", str(config_path), "--submit", "--wait-minutes", "0"]) == 0
+    rows = {r["draft_id"]: r for r in read_outcomes(world)}
+    assert rows["D1"]["outcome"]["reported_value"] == 4.8 and rows["D3"]["outcome"]["reported_value"] == 4.8  # D1 was the canary
+    assert len(client.messages.batches.created) >= 1 and all(len(b) == 1 for b in client.messages.batches.created[:1])
+
+
+def test_rerunning_after_a_failed_request_keeps_the_outcomes_the_first_run_found(world, config_path, monkeypatch) -> None:
+    two_drafts(world)
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond, fail_ids=("o-D3",)))
+    assert outcomes.main(["--config", str(config_path), "--submit"]) == 0
+    rows = {r["draft_id"]: r for r in read_outcomes(world)}
+    assert rows["D1"]["outcome"] is not None and rows["D3"]["outcome"] is None
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    assert outcomes.main(["--config", str(config_path), "--submit"]) == 0
+    rows = {r["draft_id"]: r for r in read_outcomes(world)}
+    assert rows["D1"]["outcome"] is not None and rows["D3"]["outcome"] is not None  # D1 used to come back empty: the re-run only sent D3
+
+
+def test_a_dry_run_leaves_existing_outcomes_byte_for_byte_alone(world, config_path, monkeypatch) -> None:
+    two_drafts(world)
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    outcomes.main(["--config", str(config_path), "--submit"])
+    before = outcomes_snapshot(world)
+    monkeypatch.setattr(outcomes, "OUTCOME_SYSTEM", outcomes.OUTCOME_SYSTEM + "\n- Be careful.")  # the archived answers no longer answer these requests
+    assert outcomes.main(["--config", str(config_path)]) == 0
+    assert outcomes_snapshot(world) == before
+
+
+def test_stopping_for_a_missing_credential_or_the_budget_writes_nothing(world, config_path, monkeypatch) -> None:
+    two_drafts(world)
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(authenticated=False))
+    assert outcomes.main(["--config", str(config_path), "--submit"]) == 3 and not (world / "outcomes").exists()

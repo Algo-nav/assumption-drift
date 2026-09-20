@@ -29,7 +29,11 @@ an unapproved row is never published.
 
 Every row is `open`: the rubric's word for a draft nobody has reviewed. `aid_proposed_status`
 is what `rubric.resolve` says from the numbers alone, so a reviewer can see the direction
-of travel. It never proposes `withdrawn`: no step looks for withdrawn guidance.
+of travel. It proposes `withdrawn` when 04_outcomes found an 8-K exhibit in which the company
+withdrew, suspended or stopped providing guidance covering the row's metric and period, dated
+on or before the day the period closed (`rubric.withdrawn_before_close`), and then
+`aid_withdrawal_note` carries the filing date, its source and the sentence, to check by hand.
+A withdrawn row is still a draft: the status field is `open`, and a person decides.
 
 This script never overwrites a review file. Rows already in a CSV are kept exactly as they
 are, hand edits and all, and only drafts whose record_id is not there yet are appended.
@@ -61,7 +65,7 @@ REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
 FLAG_COLUMNS = ["conflict", "empty_block"]
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-               "aid_flag_note"]
+               "aid_flag_note", "aid_withdrawal_note"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -164,13 +168,28 @@ def build_record(draft: dict[str, Any], outcome_row: dict[str, Any] | None, toda
     )
 
 
-def proposed_status(record: ResearchRecord) -> str:
-    """What the rubric says from the numbers alone, as if the row were reviewed."""
-    return rubric.resolve_record(record, reviewed=True, withdrawn=False)
+def proposed_status(record: ResearchRecord, *, withdrawn: bool = False) -> str:
+    """What the rubric says from the numbers alone, as if the row were reviewed. `withdrawn` is a fact from a later
+    filing, not from the numbers, and the rubric gives it precedence."""
+    return rubric.resolve_record(record, reviewed=True, withdrawn=withdrawn)
+
+
+def withdrawal_of(outcome_row: dict[str, Any] | None) -> dict[str, Any] | None:
+    """The withdrawal 04_outcomes found, if it was dated on or before the day the period closed. The rubric's own date
+    test is applied again here, so a withdrawal that is not one under the rubric is never proposed."""
+    found = (outcome_row or {}).get("withdrawal")
+    if not found:
+        return None
+    try:
+        before_close = rubric.withdrawn_before_close(date.fromisoformat(found["withdrawn_at"]), date.fromisoformat(found["period_close"]))
+    except (KeyError, TypeError, ValueError):  # a missing key, a null, or a string that is not a date
+        return None
+    return found if before_close else None
 
 
 def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: date) -> dict[str, str]:
     record = build_record(draft, outcome_row, today)
+    withdrawal = withdrawal_of(outcome_row)
     row = {c: "" for c in COLUMNS}
     # A null nested model (no outcome, no acknowledgement) walks to a single cell named after its
     # parent, which is not a column. Its real columns are the sub-fields, already blank.
@@ -181,12 +200,14 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         reviewer_note="",
         conflict="true" if draft.get("conflict") else "false",
         empty_block="false",
-        aid_proposed_status=proposed_status(record),
+        aid_proposed_status=proposed_status(record, withdrawn=withdrawal is not None),
         aid_capture_method=draft.get("capture_method") or "",
         aid_heading=draft.get("heading") or "",
         aid_lead_in=draft.get("lead_in") or "",
         aid_table_header=draft.get("table_header") or "",
         aid_outcome_note="" if record.outcome else (outcome_row or {}).get("outcome_reason") or "outcome search not run",
+        aid_withdrawal_note=(f"filed {withdrawal['withdrawn_at']}, before the period closed on {withdrawal['period_close']} "
+                             f"({withdrawal['evidence']['source_url']}): {withdrawal['evidence']['excerpt']}") if withdrawal else "",
     )
     return row
 

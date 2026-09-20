@@ -871,3 +871,23 @@ def test_resuming_a_pending_batch_writes_the_drafts_of_every_request_and_not_jus
     client.batch_ready = True
     assert structure.main(["--config", str(config_path), "--submit", "--wait-minutes", "0"]) == 0
     assert drafted_figures(world) == [65.0, 70.0, 75.0]  # the canary's draft (65.0) is in the archive, not in the batch
+
+
+# --- a request answers with a list of zero or more assumptions -------------------------------------------------
+
+
+def test_a_request_answers_with_a_list_of_zero_or_more_assumptions(world) -> None:
+    """The model's answer is {"items": [...]}: an empty list for a sentence that is not guidance (not a `null`), one item, or one per metric."""
+    for block in (False, True):
+        top = structure.item_schema(METRICS, block=block)
+        assert top["required"] == ["items"] and top["properties"]["items"]["type"] == "array"  # a list, and it is always there
+        assert "minItems" not in top["properties"]["items"]  # so it may be empty
+    s = "Revenue is expected to be $65.0 billion. Gross margin is expected to be 74.0%. Tax rate is expected to be 17.0%."
+    write_candidates(world, [candidate(10, s)])
+    _, index, _ = structure.build_requests([COMPANY], {"8-K"})
+    cid = structure.custom_id(candidate(10, s))
+    gm = item("gross margin GAAP", "percent", "Q4 FY2026", 74.0, 74.0)
+    tax = item("tax rate", "percent", "Q4 FY2026", 17.0, 17.0)
+    for items, expected in (([], 0), ([item()], 1), ([item(), gm, tax], 3)):
+        drafts, rejects, _ = structure.derive_drafts(index, {cid: result(cid, *items)}, METRICS)
+        assert len(drafts[COMPANY.cik]) == expected and rejects[COMPANY.cik] == []
