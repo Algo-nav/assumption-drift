@@ -26,6 +26,11 @@ an unapproved row is never published.
                  what the rubric would call the row, how the line was captured, the heading,
                  lead-in and table header row the period was inferred from, and why an
                  outcome is missing.
+  aid_verify     a second machine opinion, written by pipeline/03b_verify.py, not by this script: "yes" or
+                 "no" for whether the excerpt states exactly the row's metric, numbers, unit and period, with
+                 aid_verify_reason saying why in one line. Blank until that script has run on the row. It is
+                 a prompt to look closer, never a decision: it does not touch `approved` or any other
+                 reviewer column.
 
 Every row is `open`: the rubric's word for a draft nobody has reviewed. `aid_proposed_status`
 is what `rubric.resolve` says from the numbers alone, so a reviewer can see the direction
@@ -65,7 +70,7 @@ REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
 FLAG_COLUMNS = ["conflict", "empty_block"]
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-               "aid_flag_note", "aid_withdrawal_note"]
+               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason"]
 
 
 # --- columns ---------------------------------------------------------------

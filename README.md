@@ -28,6 +28,9 @@ against the real one: it needs an Anthropic API key (see below).
 .venv/bin/python -m pipeline.03_structure            # Haiku: candidates -> draft assumptions (8-K only)
 .venv/bin/python -m pipeline.04_outcomes             # Haiku: later outcomes and acknowledgements
 .venv/bin/python -m pipeline.05_review               # data/review/{cik}.csv for a human to check
+.venv/bin/python -m pipeline.03b_verify              # Haiku: a second opinion on each review row, written back to the CSV
+
+.venv/bin/rr review data/review/{cik}.csv            # review the queue one row at a time in the terminal
 ```
 
 Companies, date range and the SEC User-Agent live in `pipeline/config.yaml`. SEC requests

@@ -37,14 +37,14 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 55
+    assert len(cols) == len(set(cols)) == 57
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-13:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
+    assert cols[-15:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
                           "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note",
-                          "aid_withdrawal_note"]
-    assert set(review.schema_columns()) == set(cols[:-13])
+                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason"]
+    assert set(review.schema_columns()) == set(cols[:-15])
 
 
 # --- the words code writes -------------------------------------------------

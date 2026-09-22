@@ -17,7 +17,9 @@ dependencies = ["pydantic>=2.7"]
 pipeline = ["requests>=2.31", "pyyaml>=6", "anthropic>=1"]
 dev = ["pytest>=8", "requests>=2.31", "pyyaml>=6", "anthropic>=1"]
 
-# The `rr` console script arrives with research_record/cli.py in Phase 3.
+[project.scripts]
+# `rr validate` and `rr stats` (SCOPE.md, Phase 3) are not built yet; only `rr review` exists so far.
+rr = "research_record.cli:main"
 
 [tool.setuptools]
 packages = ["research_record"]
