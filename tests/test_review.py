@@ -37,14 +37,14 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 57
+    assert len(cols) == len(set(cols)) == 58
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-15:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
+    assert cols[-16:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
                           "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note",
-                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason"]
-    assert set(review.schema_columns()) == set(cols[:-15])
+                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class"]
+    assert set(review.schema_columns()) == set(cols[:-16])
 
 
 # --- the words code writes -------------------------------------------------
@@ -266,6 +266,14 @@ def test_the_table_header_row_is_shown_as_an_aid_and_is_not_a_schema_column(part
     assert review.build_row(draft, outcome_row, TODAY)["aid_table_header"] == ""
     assert "conflict" not in review.schema_columns() and "aid_table_header" not in review.schema_columns()
     assert "conflict" not in ResearchRecord.model_fields  # never a field of the record itself
+
+
+def test_a_parens_sign_correction_is_shown_as_the_flag_note_and_blank_when_there_is_none(parts) -> None:
+    draft, outcome_row, _ = parts
+    note = "'tax rate' is a rate: a parenthesised figure in the evidence was read as positive, not negative"
+    assert review.build_row({**draft, "parens_note": note}, outcome_row, TODAY)["aid_flag_note"] == note
+    assert review.build_row(draft, outcome_row, TODAY)["aid_flag_note"] == ""
+    assert "aid_flag_note" not in review.schema_columns()
 
 
 # --- outlook blocks that produced no draft (third pilot review) --------------------------------

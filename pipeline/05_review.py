@@ -25,12 +25,16 @@ an unapproved row is never published.
   aid_*          context to help the reviewer. Not schema fields, and ignored downstream:
                  what the rubric would call the row, how the line was captured, the heading,
                  lead-in and table header row the period was inferred from, and why an
-                 outcome is missing.
-  aid_verify     a second machine opinion, written by pipeline/03b_verify.py, not by this script: "yes" or
-                 "no" for whether the excerpt states exactly the row's metric, numbers, unit and period, with
-                 aid_verify_reason saying why in one line. Blank until that script has run on the row. It is
-                 a prompt to look closer, never a decision: it does not touch `approved` or any other
-                 reviewer column.
+                 outcome is missing. On an ordinary draft row `aid_flag_note` is blank unless
+                 03_structure's parentheses guard (fix_parens_sign) changed a rate metric's sign, in
+                 which case it says so: reused from the empty-block flag below, since the two never
+                 collide (a row is one or the other).
+  aid_verify        a second machine opinion, written by pipeline/03b_verify.py, not by this script: "yes" or
+                    "no" for whether the excerpt states exactly the row's metric, numbers, unit and period, with
+                    aid_verify_reason saying why in one line and, on a "no", aid_verify_class saying what kind of
+                    mismatch it is (wrong_metric, wrong_value, wrong_period, wrong_sign, not_guidance, other).
+                    Blank until that script has run on the row. It is a prompt to look closer, never a decision:
+                    it does not touch `approved` or any other reviewer column.
 
 Every row is `open`: the rubric's word for a draft nobody has reviewed. `aid_proposed_status`
 is what `rubric.resolve` says from the numbers alone, so a reviewer can see the direction
@@ -70,7 +74,7 @@ REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
 FLAG_COLUMNS = ["conflict", "empty_block"]
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason"]
+               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -211,6 +215,7 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         aid_lead_in=draft.get("lead_in") or "",
         aid_table_header=draft.get("table_header") or "",
         aid_outcome_note="" if record.outcome else (outcome_row or {}).get("outcome_reason") or "outcome search not run",
+        aid_flag_note=draft.get("parens_note") or "",
         aid_withdrawal_note=(f"filed {withdrawal['withdrawn_at']}, before the period closed on {withdrawal['period_close']} "
                              f"({withdrawal['evidence']['source_url']}): {withdrawal['evidence']['excerpt']}") if withdrawal else "",
     )

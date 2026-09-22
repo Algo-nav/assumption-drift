@@ -87,7 +87,7 @@ from pipeline.common import (
     stable_ulid,
 )
 from research_record.schema import Assumption, Evidence
-from research_record.text import html_to_text
+from research_record.text import html_to_text, sentence_spans
 
 STEP = "03_structure"
 MAX_TOKENS_SENTENCE = 700
@@ -495,6 +495,37 @@ def check_unit_kind(metric: str, unit: str, kinds: dict[str, str]) -> None:
         raise ValueError(f"{metric!r} is measured in {want}, but the unit is {unit!r} ({got or 'unknown'})")
 
 
+# "grow"/"grows"/"growing"/"growth" in one group; "increase of" and "decline of" name a change directly; "up"/
+# "down" followed by a number and a percent sign name one implicitly ("revenue up 12 percent"). None of these
+# say what the metric will BE, only how it will move.
+_CHANGE_WORDS = re.compile(
+    r"\bgrow(?:s|ing|th)?\b|\bincrease of\b|\bdecline of\b"
+    r"|\b(?:up|down)\s+(?:approximately\s+|about\s+|roughly\s+)?[\d.,]+\s*(?:%|percent|per\s*cent)\b",
+    re.IGNORECASE,
+)
+
+
+def check_not_a_change(metric: str, values: tuple[float | None, float | None], evidence: str, kinds: dict[str, str]) -> None:
+    """A dollar metric's guidance has to be a level, not a change in one: "operating income is expected to grow
+    more than $1 billion" says how much MORE, not what operating income will be, so it is not a level the rubric
+    can resolve a reported dollar figure against. A percent metric is unaffected: "comparable sales growth of 2
+    to 3 percent" IS the metric, not a change in it, so growth words there are not a change-not-level problem.
+
+    Scoped to the sentence that actually prints one of `values` (the item's own value_low/value_high), not the
+    whole excerpt: a section bullet often runs on past the figure into colour about a different subject ("Gaming
+    ... revenue are expected to decline sequentially ... offset by ... growth in Data Center"), and that must
+    not disqualify a clean, unrelated dollar figure stated earlier in the same bullet."""
+    if kinds.get(metric) != "dollars":
+        return
+    printed = {round(abs(v), 6) for v in values if v is not None}
+    if not printed:
+        return
+    for start, end in sentence_spans(evidence):
+        sentence = evidence[start:end]
+        if numbers_in(sentence) & printed and _CHANGE_WORDS.search(sentence):
+            raise ValueError(f"{metric!r} is a dollar level, but the evidence describes a change (growth, an increase or a decrease), not a level")
+
+
 _NUMBER_TOKEN = re.compile(r"\d[\d,]*(?:\.\d+)?")
 # A footnote marker stuck to a word or another marker: "margin(1)", "range(1)(2)". "($0.03)" and "(200)" are values.
 _FOOTNOTE = re.compile(r"(?<=[A-Za-z)])\(\d{1,2}\)")
@@ -520,6 +551,34 @@ def check_numbers_in_evidence(item: dict[str, Any], evidence: str) -> None:
         value = item[key]
         if value is not None and round(abs(value), 6) not in printed:
             raise ValueError(f"{key} {value:g} is not in the evidence text")
+
+
+_PAREN_NUMBER = re.compile(r"\(\s*[^()]*\d[^()]*\)")
+_PARENS_CAN_BE_NEGATIVE = re.compile(r"\bnegative\b|\bbenefit\b|\bloss\b", re.IGNORECASE)
+
+
+def fix_parens_sign(metric: str, low: float | None, high: float | None, evidence: str, kinds: dict[str, str]) -> tuple[float | None, float | None, str | None]:
+    """Parentheses are accounting notation for a negative number, but on a rate (a margin, a tax rate,
+    comparable sales) a company also prints one around a figure that is unusual or worth calling out, with no
+    loss meant by it: a GAAP tax provision of "(146%)" is a rate over 100%, not a rate of -146%. Flip such a
+    metric's negative value back to positive unless the evidence itself says negative, benefit or loss. EPS and
+    other income are dollar amounts where a loss is a common, real thing to guide to, so their parentheses are
+    always left negative. What decides which rule applies is the metric's own kind, from config.yaml's
+    metric_kinds ("percent" or not), never a hardcoded list of metric names that could drift out of sync with it.
+
+    Returns (low, high, note): note says the rule fired, or is None if nothing changed."""
+    if kinds.get(metric) != "percent":
+        return low, high, None
+    if not ((low is not None and low < 0) or (high is not None and high < 0)):
+        return low, high, None
+    if not _PAREN_NUMBER.search(evidence) or _PARENS_CAN_BE_NEGATIVE.search(evidence):
+        return low, high, None
+    flipped = sorted(abs(v) for v in (low, high) if v is not None)
+    new_low = flipped[0] if low is not None else None
+    new_high = flipped[-1] if high is not None else None
+    note = (f"{metric!r} is a rate: a parenthesised figure in the evidence was read as positive, not negative, "
+            f"because the evidence has no 'negative', 'benefit' or 'loss' wording")
+    return new_low, new_high, note
 
 
 # Words that make a figure a floor and not a point: "$1.30+", "at least $1.30", "$1.30 or more", "$1.30 or better".
@@ -556,8 +615,8 @@ def with_one_sided_low(item: dict[str, Any], evidence: str) -> dict[str, Any]:
 
 
 _HALF_YEAR = re.compile(
-    r"\b(?:first|second|1st|2nd)[- ]half\b|\b[12]H\b|\bH[12]\b|\bsix[- ]months?\b|\bhalf[- ]year\b"
-    r"|\b(?:first|last|final) two quarters\b",
+    r"\b(?:first|second|back|1st|2nd)[- ]half\b|\b[12]H\b|\bH[12]\b|\bsix[- ]months?\b|\bhalf[- ]year\b"
+    r"|\b(?:first|last|final) two quarters\b|\bremainder of the year\b",
     re.IGNORECASE,
 )
 _FULL_YEAR = re.compile(r"\bfull[- ]year\b|\bfor the (?:full |fiscal )?year\b|\bfiscal year\b|\bannual\b|\byear ended\b", re.IGNORECASE)
@@ -636,6 +695,53 @@ def evidence_text(candidate: dict[str, Any], item: dict[str, Any]) -> str:
     if len(text) > EXCERPT_LIMIT:
         raise ValueError(f"the evidence is {len(text)} chars, over the {EXCERPT_LIMIT} char excerpt limit")
     return text
+
+
+# Words that describe what a number is measured in, not what it IS: stripping them out of an excerpt should
+# leave nothing behind for a real label. "$915 million" reduces to nothing; "Operating expenses $915 million"
+# still has a label once "million" is gone.
+_BARE_UNIT_WORDS = re.compile(
+    r"\b(?:usd|million|billion|thousand|percent|per\s*cent|bps|basis\s*points?|per\s+share|units?)\b",
+    re.IGNORECASE,
+)
+_ANY_LETTER = re.compile(r"[A-Za-z]")
+# Words a section heading uses to scope a period or say "this is guidance", not to name a metric: "Updated Q4
+# Fiscal 2019 Guidance" is entirely these, and names nothing. "GAAP diluted earnings per share guidance" is not:
+# "diluted earnings per share" survives.
+_GENERIC_HEADING_WORDS = re.compile(
+    r"\b(?:guidance|outlook|financial|updated|previous|prior|current|full[- ]?year|annual|fiscal|quarter(?:ly)?|"
+    r"q[1-4]|for|the|of|and)\b|\b(?:first|second|third|fourth)\b|\b20\d\d\b|\bfy\s?\d{2,4}\b",
+    re.IGNORECASE,
+)
+
+
+def heading_names_a_metric(heading: str | None) -> bool:
+    """True when the section heading, its generic scaffolding stripped out, still says what the numbers under
+    it are: "GAAP diluted earnings per share guidance" does, "Full Year FY31 Guidance" does not."""
+    return bool(heading) and bool(_ANY_LETTER.search(_GENERIC_HEADING_WORDS.sub("", heading)))
+
+
+def is_bare_value(excerpt: str, heading: str | None = None) -> bool:
+    """True when `excerpt`, its unit words stripped out, has no letters left, AND the section heading (if any)
+    does not name the metric on its own. "62.3%, plus or minus 50 bps" is not bare: "plus or minus" is still
+    there once "bps" is gone. "$1.95 - $2.35 $8.60 - $9.60" under the heading "GAAP diluted earnings per share
+    guidance" is not bare either: the heading alone already says what the numbers are."""
+    if _ANY_LETTER.search(_BARE_UNIT_WORDS.sub("", excerpt)):
+        return False
+    return not heading_names_a_metric(heading)
+
+
+def check_not_bare_value(excerpt: str, heading: str | None = None) -> None:
+    """Section evidence is the label line plus the value line, never a bare value line: a pilot review found
+    section items whose model-pointed line_first/line_last landed on the figure alone, in a table where no
+    label line was ever a safe guess (a previous/updated, GAAP/non-GAAP table with several candidate label
+    lines above it, any of which could be wrongly paired). A heading that already names the metric on its own
+    ("GAAP diluted earnings per share guidance" over a bare value row) is not this problem and is not rejected;
+    a heading that only scopes a period ("Updated Q4 Fiscal 2019 Guidance") is no label at all. Applies to
+    every draft, not just section ones, though a sentence capture is never bare in practice: it is always the
+    whole flagged sentence."""
+    if is_bare_value(excerpt, heading):
+        raise ValueError("the excerpt is a bare value: a number and a unit, with nothing saying what it is, and the heading does not name the metric either")
 
 
 def evidence_for(company: Company, candidate: dict[str, Any], excerpt: str) -> Evidence:
@@ -778,11 +884,14 @@ def derive_drafts(
                 if metric not in metrics:
                     raise ValueError(f"metric {metric!r} is not in the metrics list")
                 excerpt = evidence_text(cand, item)
+                check_not_bare_value(excerpt, cand.get("heading"))
                 check_period(period, excerpt)
                 metric = with_heading_basis(metric, cand, excerpt, metrics)
                 check_unit_kind(metric, item["unit"], kinds)
+                check_not_a_change(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
                 stated = with_one_sided_low(item, excerpt)
                 low, high = resolve_range(stated)
+                low, high, parens_note = fix_parens_sign(metric, low, high, excerpt, kinds)
                 check_range_language(stated, excerpt)
                 check_numbers_in_evidence(stated, excerpt)
                 check_not_past_tense(excerpt)
@@ -801,6 +910,7 @@ def derive_drafts(
                 "custom_id": cid, "capture_method": cand["capture_method"], "char_start": cand["char_start"],
                 "heading": cand.get("heading"), "lead_in": cand.get("lead_in"), "table_header": cand.get("table_header"),
                 "item_index": n, "conflict": False, "assumption": assumption.model_dump(mode="json"),
+                "parens_note": parens_note,
             }
             if is_block(cand):
                 record["evidence_lines"] = [item["line_first"], item["line_last"]]

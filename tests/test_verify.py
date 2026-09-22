@@ -14,8 +14,8 @@ from pipeline import common, llm
 verify = importlib.import_module("pipeline.03b_verify")
 review = importlib.import_module("pipeline.05_review")
 
-COMPANY = common.Company("Example Corp", "EXMP", "0000000123")
-OTHER = common.Company("Other Corp", "OTHR", "0000000456")
+COMPANY = common.Company("Example Corp", "EXMP", "0000000123", fiscal_year_end_month=1)
+OTHER = common.Company("Other Corp", "OTHR", "0000000456", fiscal_year_end_month=1)
 
 
 def row(record_id="R1", metric="revenue", low="5.0", high="6.0", unit="USD billions", period="Q4 FY2026",
@@ -69,13 +69,53 @@ def test_custom_id_is_the_record_id_prefixed() -> None:
     assert verify.custom_id(row(record_id="01HZY8Q9XMR3T7VBN2CDEFGHJK")) == "v-01HZY8Q9XMR3T7VBN2CDEFGHJK"
 
 
-def test_the_prompt_carries_only_the_metric_numbers_unit_period_and_excerpt() -> None:
-    user = verify.build_prompt(row())
+# --- the fiscal calendar fact (fix 6) ------------------------------------------
+
+
+def test_fiscal_note_states_the_calendar_and_which_year_the_label_names() -> None:
+    ends = common.Company("Example Corp", "EXMP", "0000000123", fiscal_year_end_month=1, fiscal_year_named_for="end")
+    note = verify.fiscal_note(ends)
+    assert "Example Corp" in note and "month 1" in note and "ENDS in" in note
+    starts = common.Company("Target Corporation", "TGT", "0000027419", fiscal_year_end_month=1, fiscal_year_named_for="start")
+    assert "STARTS in" in verify.fiscal_note(starts)
+
+
+def test_fiscal_note_says_so_when_the_calendar_is_not_known() -> None:
+    unknown = common.Company("Unknown Co", "UNK", "0000000000")
+    assert "not known" in verify.fiscal_note(unknown)
+
+
+# --- the prompt: what it carries (fixes 5, 6, 7) -------------------------------
+
+
+def test_the_prompt_carries_the_metric_numbers_unit_period_excerpt_and_fiscal_calendar() -> None:
+    user = verify.build_prompt(row(), COMPANY)
     assert "revenue" in user and "$5 billion to $6 billion" in user and "USD billions" in user
     assert "Q4 FY2026" in user and "Revenue is expected to be $5.0 billion to $6.0 billion." in user
-    # nothing else about the row leaks into what the model sees
-    for leak in (COMPANY.name, COMPANY.ticker, COMPANY.cik, "sentence"):
+    assert "fiscal year ends in month 1" in user
+    # nothing about the row's identity or how it was captured leaks into what the model sees
+    for leak in (COMPANY.ticker, COMPANY.cik, "sentence"):
         assert leak not in user
+
+
+def test_the_prompt_carries_heading_lead_in_and_table_header_only_when_the_row_has_them() -> None:
+    bare = verify.build_prompt(row(), COMPANY)
+    assert "Section heading:" not in bare and "Lead-in line:" not in bare and "Table header:" not in bare
+    full = verify.build_prompt(
+        row(aid_heading="Updated Q4 Fiscal 2019 Guidance", aid_lead_in="Our outlook is as follows:",
+            aid_table_header="Q1 2027 | Full Year 2027"),
+        COMPANY,
+    )
+    assert "Section heading: Updated Q4 Fiscal 2019 Guidance" in full
+    assert "Lead-in line: Our outlook is as follows:" in full
+    assert "Table header: Q1 2027 | Full Year 2027" in full
+
+
+def test_the_system_prompt_states_the_pm_rule_and_the_named_equivalences() -> None:
+    assert "[P-X, P+X]" in verify.VERIFY_SYSTEM
+    assert "$21B" in verify.VERIFY_SYSTEM and "$21.0B" in verify.VERIFY_SYSTEM
+    assert "non-GAAP" in verify.VERIFY_SYSTEM and "Adjusted" in verify.VERIFY_SYSTEM
+    assert "decline of 3 to 5 percent" in verify.VERIFY_SYSTEM and "-5% to -3%" in verify.VERIFY_SYSTEM
 
 
 def test_build_requests_covers_every_company_and_skips_what_is_not_verifiable(world) -> None:
@@ -91,19 +131,22 @@ def test_no_review_file_means_no_requests(world) -> None:
     assert requests == [] and index == {}
 
 
-# --- turning model output into a verdict, pure -------------------------------
+# --- turning model output into a verdict, pure (fix 8: aid_verify_class) ------
 
 
-def result(cid, ok=True, verified=True, reason="matches") -> llm.Result:
-    text = json.dumps({"verified": verified, "reason": reason}) if ok else None
+def result(cid, ok=True, verified=True, reason="matches", klass="other") -> llm.Result:
+    text = json.dumps({"verified": verified, "reason": reason, "class": klass}) if ok else None
     return llm.Result(cid, "succeeded" if ok else "errored", text, 10, 10, None if ok else "overloaded_error", "b")
 
 
-def test_derive_verdicts_reads_yes_and_no() -> None:
+def test_derive_verdicts_reads_yes_and_no_with_a_class_only_on_no() -> None:
     index = {"v-R1": (COMPANY, "R1"), "v-R2": (COMPANY, "R2")}
-    results = {"v-R1": result("v-R1", verified=True, reason="the excerpt says it"), "v-R2": result("v-R2", verified=False, reason="wrong metric")}
+    results = {
+        "v-R1": result("v-R1", verified=True, reason="the excerpt says it", klass="other"),
+        "v-R2": result("v-R2", verified=False, reason="wrong metric", klass="wrong_metric"),
+    }
     verdicts = verify.derive_verdicts(index, results)
-    assert verdicts == {"R1": ("yes", "the excerpt says it"), "R2": ("no", "wrong metric")}
+    assert verdicts == {"R1": ("yes", "the excerpt says it", ""), "R2": ("no", "wrong metric", "wrong_metric")}
 
 
 def test_derive_verdicts_skips_missing_failed_and_unparseable_answers() -> None:
@@ -111,6 +154,18 @@ def test_derive_verdicts_skips_missing_failed_and_unparseable_answers() -> None:
     results = {"v-R1": result("v-R1", ok=False), "v-R2": llm.Result("v-R2", "succeeded", "not json", 1, 1, None, "b")}
     # v-R3 has no result at all: never sent, or the batch has not answered it yet
     assert verify.derive_verdicts(index, results) == {}
+
+
+def test_an_answer_missing_the_class_field_is_skipped() -> None:
+    index = {"v-R1": (COMPANY, "R1")}
+    bad = llm.Result("v-R1", "succeeded", json.dumps({"verified": False, "reason": "x"}), 1, 1, None, "b")
+    assert verify.derive_verdicts(index, {"v-R1": bad}) == {}
+
+
+def test_an_invalid_class_value_falls_back_to_blank() -> None:
+    index = {"v-R1": (COMPANY, "R1")}
+    bad = llm.Result("v-R1", "succeeded", json.dumps({"verified": False, "reason": "x", "class": "not_a_real_class"}), 1, 1, None, "b")
+    assert verify.derive_verdicts(index, {"v-R1": bad})["R1"] == ("no", "x", "")
 
 
 def test_a_long_reason_is_cut_to_the_limit() -> None:
@@ -122,17 +177,17 @@ def test_a_long_reason_is_cut_to_the_limit() -> None:
 # --- writing back: preserve edits, then sort ----------------------------------
 
 
-def test_apply_verdicts_only_changes_the_two_aid_columns() -> None:
+def test_apply_verdicts_only_changes_the_three_verify_columns() -> None:
     r = row(approved="true", reviewer_note="checked on EDGAR", **{"assumption.target_high": "6100.0"})
-    updated = verify.apply_verdicts([r], {"R1": ("no", "wrong period")})[0]
-    assert (updated["aid_verify"], updated["aid_verify_reason"]) == ("no", "wrong period")
+    updated = verify.apply_verdicts([r], {"R1": ("no", "wrong period", "wrong_period")})[0]
+    assert (updated["aid_verify"], updated["aid_verify_reason"], updated["aid_verify_class"]) == ("no", "wrong period", "wrong_period")
     for key, value in r.items():
-        if key not in ("aid_verify", "aid_verify_reason"):
+        if key not in ("aid_verify", "aid_verify_reason", "aid_verify_class"):
             assert updated[key] == value
 
 
 def test_a_row_with_no_verdict_keeps_what_it_already_had() -> None:
-    r = row(aid_verify="yes", aid_verify_reason="checked last time")
+    r = row(aid_verify="yes", aid_verify_reason="checked last time", aid_verify_class="")
     assert verify.apply_verdicts([r], {})[0] == r
 
 
@@ -152,7 +207,7 @@ def test_sort_rows_puts_no_first_then_section_then_the_rest_and_keeps_ties_in_or
 @pytest.fixture
 def config_path(world):
     cfg = common.load_config()
-    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik}]
+    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik, "fiscal_year_end_month": 1}]
     path = world / "config.yaml"
     path.write_text(yaml.safe_dump(cfg))
     return path
@@ -161,7 +216,11 @@ def config_path(world):
 def respond(params: dict) -> str:
     user = params["messages"][0]["content"]
     verified = "BAD-EXCERPT" not in user
-    return json.dumps({"verified": verified, "reason": "matches" if verified else "names a different metric"})
+    return json.dumps({
+        "verified": verified,
+        "reason": "matches" if verified else "names a different metric",
+        "class": "other" if verified else "wrong_metric",
+    })
 
 
 def test_a_dry_run_only_counts_tokens_and_writes_nothing(world, config_path, monkeypatch, capsys) -> None:
@@ -191,6 +250,15 @@ def test_submit_writes_verdicts_and_preserves_every_human_edit(world, config_pat
     assert (on_disk["R2"]["approved"], on_disk["R2"]["reviewer_note"], on_disk["R2"]["assumption.target_high"]) == ("true", "looks right to me", "6100.0")
     steps = {e["step"] for e in llm.Ledger().entries()}
     assert steps == {"03b_verify"}  # the same ledger every step uses
+
+
+def test_a_no_verdict_carries_its_class_and_a_yes_verdict_leaves_it_blank(world, config_path, monkeypatch) -> None:
+    seed(world, COMPANY, [row("R1"), row("R2", excerpt="BAD-EXCERPT: gross margin is expected to be 75%.")])
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    assert verify.main(["--config", str(config_path), "--submit"]) == 0
+    on_disk = {r["record_id"]: r for r in read_csv(world, COMPANY)}
+    assert (on_disk["R1"]["aid_verify"], on_disk["R1"]["aid_verify_class"]) == ("yes", "")
+    assert (on_disk["R2"]["aid_verify"], on_disk["R2"]["aid_verify_class"]) == ("no", "wrong_metric")
 
 
 def test_the_rows_come_back_sorted_no_first(world, config_path, monkeypatch) -> None:

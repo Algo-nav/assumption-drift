@@ -28,6 +28,7 @@ NVIDIA = common.Company("NVIDIA Corporation", "NVDA", "0001045810")
 ACC = "0000000123-24-000001"
 FILE_URL = "https://www.sec.gov/Archives/edgar/data/123/000000012324000001/release.htm"
 METRICS = common.load_config()["metrics"]
+METRIC_KINDS = common.load_config()["metric_kinds"]
 
 PILOT = json.loads((Path(__file__).parent / "fixtures" / "pilot_nvidia.json").read_text(encoding="utf-8"))
 PILOT_DRAFTS = PILOT["drafts"]
@@ -891,3 +892,200 @@ def test_a_request_answers_with_a_list_of_zero_or_more_assumptions(world) -> Non
     for items, expected in (([], 0), ([item()], 1), ([item(), gm, tax], 3)):
         drafts, rejects, _ = structure.derive_drafts(index, {cid: result(cid, *items)}, METRICS)
         assert len(drafts[COMPANY.cik]) == expected and rejects[COMPANY.cik] == []
+
+
+# --- second pilot review: bare value lines, half years, growth vs level, parentheses -------------------
+
+
+@pytest.mark.parametrize(
+    "excerpt, bare",
+    [
+        ("$915 million", True),
+        ("$755 million", True),
+        ("25 million", True),
+        ("62.3%", True),
+        ("8%, plus or minus 1%", False),  # "plus or minus" is not a unit word
+        ("Operating expenses - GAAP\n$915 million", False),  # the label line is there
+        ("Revenue is expected to be $65.0 billion.", False),
+    ],
+)
+def test_is_bare_value(excerpt, bare) -> None:
+    assert structure.is_bare_value(excerpt) is bare
+
+
+def test_check_not_bare_value_rejects_a_number_with_nothing_saying_what_it_is() -> None:
+    with pytest.raises(ValueError, match="bare value"):
+        structure.check_not_bare_value("$915 million")
+    structure.check_not_bare_value("Operating expenses - GAAP\n$915 million")  # does not raise
+
+
+@pytest.mark.parametrize(
+    "heading, names_a_metric",
+    [
+        ("Updated Q4 Fiscal 2019 Guidance", False),
+        ("Full Year FY31 Guidance", False),
+        ("Q4 FY26 Guidance", False),
+        ("Guidance", False),
+        ("GAAP diluted earnings per share guidance", True),
+        ("Adjusted diluted earnings per share guidance", True),
+        (None, False),
+    ],
+)
+def test_heading_names_a_metric(heading, names_a_metric) -> None:
+    assert structure.heading_names_a_metric(heading) is names_a_metric
+
+
+def test_a_bare_value_row_is_not_rejected_when_the_heading_alone_names_the_metric() -> None:
+    """From tests/fixtures/pilot_run2.json, candidate b-0000027419-000002741924000126-15105 (Target, EPS GAAP,
+    FY2024): Target's EPS table has no label line of its own, only footnote rows below the numbers ("Estimated
+    adjustments", "Other (a)") -- the section heading "GAAP diluted earnings per share guidance" is the only
+    label, and it already names the metric completely. Rejecting this as bare would undo the dedupe fix that
+    lets this exact row surface from its own table instead of a shadowing sentence draft."""
+    excerpt = "$1.95 - $2.35 $8.60 - $9.60"
+    with pytest.raises(ValueError, match="bare value"):
+        structure.check_not_bare_value(excerpt)  # no heading given: still bare
+    structure.check_not_bare_value(excerpt, "GAAP diluted earnings per share guidance")  # does not raise
+    assert structure.is_bare_value(excerpt, "Updated Q4 Fiscal 2019 Guidance") is True  # a period-only heading is no label
+
+
+def test_the_nvda_bare_value_pilot_finding_is_now_rejected(world) -> None:
+    """From data/review/0001045810.csv, draft 01D28W2W00GA9TCEG6AGFXF34T (NVDA, operating expenses GAAP, Q4
+    FY2019): the model pointed line_first=line_last at "$915 million" alone; its label sits four lines above in
+    a previous/updated, GAAP/non-GAAP table too tangled to safely re-pair by grabbing the nearest line, so it
+    is rejected rather than paired with the wrong label."""
+    lines = ["Revenue", "$2.70 billion, plus or minus 2%", "$2.20 billion, plus or minus 2%", "Gross margin - GAAP",
+             "Gross margin - non-GAAP", "62.3%, plus or minus 50 bps", "62.5%, plus or minus 50 bps",
+             "55.0%, plus or minus 100 bps", "56.0%, plus or minus 100 bps", "Operating expenses - GAAP",
+             "Operating expenses - non-GAAP", "$930 million", "$755 million", "$915 million", "$755 million"]
+    block = candidate(10, "\n".join(lines), method="section", heading="Updated Q4 Fiscal 2019 Guidance")
+    write_candidates(world, [block])
+    _, index, _ = structure.build_requests([COMPANY], {"8-K"})
+    bid = structure.custom_id(block)
+    res = {bid: result(bid, item("operating expenses GAAP", "USD millions", "Q4 FY2019", 915.0, 915.0, lines=(14, 14)))}
+    drafts, rejects, _ = structure.derive_drafts(index, res)
+    assert drafts[COMPANY.cik] == []
+    assert "bare value" in rejects[COMPANY.cik][0]["reason"]
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    ["in the back half of the year", "in the second half of the year", "in the first half", "for 1H", "for H2",
+     "for the remainder of the year"],
+)
+def test_half_year_phrases_are_recognised(sentence) -> None:
+    assert structure._HALF_YEAR.search(sentence)
+
+
+def test_a_full_year_period_is_rejected_when_the_evidence_names_the_back_half_or_the_remainder_of_the_year() -> None:
+    with pytest.raises(ValueError, match="half-year"):
+        structure.check_period("FY2022", "an operating margin rate in a range around 6% in the back half of the year.")
+    with pytest.raises(ValueError, match="half-year"):
+        structure.check_period("FY2022", "guidance for the remainder of the year is unchanged.")
+
+
+def test_a_half_year_qualifier_is_not_caught_when_the_same_excerpt_also_names_a_different_metrics_full_year() -> None:
+    """From data/review/0000027419.csv, draft 01GAMHK300HZSHX7542M97T27R (Target, operating margin GAAP FY2022):
+    the sentence conflates two metrics, "full-year revenue growth" and an operating margin "in the back half of
+    the year". check_period's full-year override reads the whole sentence, so full-year language for revenue
+    still lets the half-year-qualified margin claim through. Scoping the override to just the metric's own
+    clause is a bigger change than the phrase list this fix adds; recorded here as the known edge it leaves
+    open, not a regression."""
+    evidence = ("While the Company is planning cautiously for the remainder of the year, current trends support the "
+                "company's prior guidance for full-year revenue growth in the low- to mid-single digit range, and an "
+                "operating margin rate in a range around 6% in the back half of the year.")
+    structure.check_period("FY2022", evidence)  # does not raise
+
+
+@pytest.mark.parametrize(
+    "evidence",
+    ["revenue growth of 9 to 10 percent", "an increase of $50 million", "a decline of $10 million",
+     "revenue up 12 percent", "revenue down 5 percent", "operating income is expected to grow more than $1 billion"],
+)
+def test_change_words_are_recognised(evidence) -> None:
+    assert structure._CHANGE_WORDS.search(evidence)
+
+
+def test_growth_language_on_a_dollar_metric_is_rejected_as_a_change_not_a_level() -> None:
+    """From data/review/0000027419.csv, draft 01GTAN380019H5W4JFCY1MJWH7 (Target, operating income FY2023):
+    "expected to grow more than $1 billion" was captured as a $1 billion floor, but it states how much MORE
+    operating income will be, not what it will BE."""
+    evidence = ("Operating income is expected to grow more than $1 billion, and GAAP EPS and adjusted EPS are both "
+                "expected to range from $7.75 to $8.75.")
+    with pytest.raises(ValueError, match="change"):
+        structure.check_not_a_change("operating income", (1.0, None), evidence, METRIC_KINDS)
+
+
+def test_growth_language_on_a_percent_metric_is_unaffected() -> None:
+    structure.check_not_a_change("comparable sales", (2.0, 3.0), "the Company expects comparable sales growth of 2 to 3 percent", METRIC_KINDS)  # does not raise
+
+
+def test_growth_language_about_a_different_sentences_subject_does_not_disqualify_this_items_own_clean_figure() -> None:
+    """From tests/fixtures/pilot_run2.json, candidate b-0001045810-000104581022000136-2785 (NVIDIA, revenue Q3
+    FY2023): the outlook bullet states a clean absolute revenue figure, then runs on into colour about specific
+    segments ("Gaming ... revenue are expected to decline sequentially ... offset by ... growth in Data Center").
+    That colour is about a different subject and a different number, not this item's own $5.90 billion, so it
+    must not disqualify it."""
+    evidence = (
+        "Revenue is expected to be $5.90 billion, plus or minus 2%. Gaming and Professional Visualization revenue "
+        "are expected to decline sequentially, as OEMs and channel partners reduce inventory levels to align with "
+        "current levels of demand and prepare for NVIDIA's new product generation. The company expects that "
+        "decline to be partially offset by sequential growth in Data Center and Automotive."
+    )
+    structure.check_not_a_change("revenue", (5.90, 5.90), evidence, METRIC_KINDS)  # does not raise
+
+
+def test_growth_language_in_the_same_sentence_as_a_different_number_does_not_disqualify_this_one() -> None:
+    evidence = "Operating income is expected to be $5 billion. Free cash flow is expected to grow to $2 billion."
+    structure.check_not_a_change("operating income", (5.0, 5.0), evidence, METRIC_KINDS)  # does not raise: "grow" is about the other sentence's number
+
+
+def test_the_target_operating_income_growth_draft_is_now_rejected(world) -> None:
+    s = ("Operating income is expected to grow more than $1 billion, and GAAP EPS and adjusted EPS are both "
+         "expected to range from $7.75 to $8.75.")
+    (drafts, rejects, _), _ = derive(world, [candidate(10, s)], {cid(10): result(cid(10), item("operating income", "USD billions", "FY2027", 1.0, None))})
+    assert drafts[COMPANY.cik] == []
+    assert "change" in rejects[COMPANY.cik][0]["reason"]
+
+
+def test_parens_on_a_rate_metric_are_read_as_positive_without_negative_benefit_or_loss_wording() -> None:
+    """From data/review/0001108524.csv, drafts 01EGHEM50045QREN430XTJJX0B (CRM, tax rate, Q3 FY2021) and
+    01EGHEM500AFFS91Z45D9TTDXW (FY2021): the model read "(20%)" and "(146%)" as -20 and -146, but the excerpt
+    never says negative, benefit or loss: Salesforce's tax provision was unusually large that year, not negative."""
+    evidence = ("(1) The company's GAAP tax provision is expected to be approximately (20%) for the three months "
+                "ended October 31, 2020, and approximately (146%) for the year ended January 31, 2021.")
+    low, high, note = structure.fix_parens_sign("tax rate", -20.0, -20.0, evidence, METRIC_KINDS)
+    assert (low, high) == (20.0, 20.0) and note is not None and "positive" in note
+    low, high, note = structure.fix_parens_sign("tax rate", -146.0, -146.0, evidence, METRIC_KINDS)
+    assert (low, high) == (146.0, 146.0) and note is not None
+
+
+@pytest.mark.parametrize("word", ["negative", "benefit", "loss"])
+def test_parens_stay_negative_on_a_rate_metric_when_the_evidence_says_so(word) -> None:
+    evidence = f"The tax rate is expected to be approximately (20%), reflecting a discrete tax {word}."
+    assert structure.fix_parens_sign("tax rate", -20.0, -20.0, evidence, METRIC_KINDS) == (-20.0, -20.0, None)
+
+
+def test_parens_stay_negative_on_eps_and_other_income() -> None:
+    for metric in ("EPS GAAP", "other income and expense"):
+        result_ = structure.fix_parens_sign(metric, -0.44, -0.42, "GAAP earnings (loss) per share ($0.44) - ($0.42)", METRIC_KINDS)
+        assert result_ == (-0.44, -0.42, None)
+
+
+def test_fix_parens_sign_does_nothing_without_a_negative_value_or_without_parentheses() -> None:
+    assert structure.fix_parens_sign("tax rate", 20.0, 20.0, "(approximately 20%)", METRIC_KINDS) == (20.0, 20.0, None)
+    assert structure.fix_parens_sign("tax rate", -20.0, -20.0, "approximately -20%, no parens here", METRIC_KINDS) == (-20.0, -20.0, None)
+
+
+def test_the_crm_tax_rate_parens_draft_is_corrected_and_the_rule_is_logged(world) -> None:
+    s = ("(1) The company's GAAP tax provision is expected to be approximately (20%) for the three months ended "
+         "October 31, 2020, and approximately (146%) for the year ended January 31, 2021.")
+    (drafts, rejects, _), _ = derive(world, [candidate(10, s)], {cid(10): result(cid(10), item("tax rate", "percent", "Q3 FY2021", -20.0, -20.0))})
+    (draft,) = drafts[COMPANY.cik]
+    assert (draft["assumption"]["target_low"], draft["assumption"]["target_high"]) == (20.0, 20.0)
+    assert draft["parens_note"] is not None and "positive" in draft["parens_note"]
+    assert rejects[COMPANY.cik] == []
+
+
+def test_a_draft_with_no_parens_correction_carries_no_note(world) -> None:
+    (drafts, _, _), _ = derive(world, [candidate(10, "Revenue is expected to be $65.0 billion.")], {cid(10): result(cid(10), item(low=65.0, high=65.0))})
+    assert drafts[COMPANY.cik][0]["parens_note"] is None
