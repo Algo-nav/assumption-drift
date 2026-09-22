@@ -473,6 +473,17 @@ def resolve_range(item: dict[str, Any]) -> tuple[float | None, float | None]:
     return (None if low is None else _round(low)), (None if high is None else _round(high))
 
 
+def with_absolute_percent_spread(metric: str, item: dict[str, Any], kinds: dict[str, str]) -> dict[str, Any]:
+    """A percent metric's own spread is always absolute, whatever the model called it: "8 percent, plus or
+    minus 1 percent" is 7 to 9 percentage points, never 8 relative to itself (7.92 to 8.08, a pilot review
+    found the model give this inconsistently, the identical phrasing correctly "absolute" elsewhere in the same
+    filing). Relative % ("$108.0 billion, plus or minus 2%") only makes sense on a dollar metric, where the
+    percent is of the dollar figure; a percent metric has nothing else for its own percent to be relative to."""
+    if kinds.get(metric) == "percent" and item.get("plus_minus_kind") == "percent":
+        return {**item, "plus_minus_kind": "absolute"}
+    return item
+
+
 def check_range_language(item: dict[str, Any], evidence: str) -> None:
     """A range must be in the words. Whatever the model was told, two separate figures ("$755 million" and
     "$915 million") never become 755 to 915, and a plus or minus needs plus or minus in the evidence."""
@@ -524,6 +535,49 @@ def check_not_a_change(metric: str, values: tuple[float | None, float | None], e
         sentence = evidence[start:end]
         if numbers_in(sentence) & printed and _CHANGE_WORDS.search(sentence):
             raise ValueError(f"{metric!r} is a dollar level, but the evidence describes a change (growth, an increase or a decrease), not a level")
+
+
+# "higher/lower than", "above"/"below", "compared to" and "versus"/"vs" all set the figure against a prior
+# period rather than stating it outright: "20 basis points higher than the 4.6 percent rate in 2025" never says
+# what the new rate itself is.
+_RELATIVE_TO_PRIOR = re.compile(
+    r"\b(?:higher|lower)\s+than\b|\babove\b|\bbelow\b|\bcompared to\b|\bversus\b|\bvs\.?\b",
+    re.IGNORECASE,
+)
+_PERCENT_SIGN_NUMBER = re.compile(r"[\d.,]+\s*(?:%|percent\b|per\s*cent\b)", re.IGNORECASE)
+
+
+def _percent_figures_printed(text: str) -> set[float]:
+    """Numbers printed with a percent sign or the word "percent"/"per cent" right after them: an absolute rate,
+    as opposed to a bare basis-point or point delta ("20 basis points higher") that names no rate of its own."""
+    found: set[float] = set()
+    for match in _PERCENT_SIGN_NUMBER.finditer(text):
+        number = _NUMBER_TOKEN.search(match.group())
+        if number:
+            try:
+                found.add(round(float(number.group().replace(",", "")), 6))
+            except ValueError:
+                continue
+    return found
+
+
+def check_not_relative_to_prior_period(metric: str, values: tuple[float | None, float | None], evidence: str, kinds: dict[str, str]) -> None:
+    """A percent metric's guidance has to state its own level, not just how it compares to a prior period's:
+    "Full-year 2026 operating income margin rate approximately 20 basis points higher than the 4.6 percent ...
+    rate in 2025" never says what the new rate itself is, only the size of the move and the OLD rate. Rejected
+    unless the item's own figure is also printed as an explicit percent somewhere in the same sentence: "operating
+    margin of 21%, compared to 19% last year" states its own level too, so the comparison wording is just colour.
+    Scoped to the sentence that prints the item's own number, the same as check_not_a_change."""
+    if kinds.get(metric) != "percent":
+        return
+    printed = {round(v, 6) for v in values if v is not None}
+    if not printed:
+        return
+    for start, end in sentence_spans(evidence):
+        sentence = evidence[start:end]
+        if numbers_in(sentence) & printed and _RELATIVE_TO_PRIOR.search(sentence):
+            if not (_percent_figures_printed(sentence) & printed):
+                raise ValueError(f"{metric!r} is stated relative to a prior period, and its own absolute figure is not printed")
 
 
 _NUMBER_TOKEN = re.compile(r"\d[\d,]*(?:\.\d+)?")
@@ -889,7 +943,9 @@ def derive_drafts(
                 metric = with_heading_basis(metric, cand, excerpt, metrics)
                 check_unit_kind(metric, item["unit"], kinds)
                 check_not_a_change(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
+                check_not_relative_to_prior_period(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
                 stated = with_one_sided_low(item, excerpt)
+                stated = with_absolute_percent_spread(metric, stated, kinds)
                 low, high = resolve_range(stated)
                 low, high, parens_note = fix_parens_sign(metric, low, high, excerpt, kinds)
                 check_range_language(stated, excerpt)

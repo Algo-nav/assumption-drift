@@ -1089,3 +1089,89 @@ def test_the_crm_tax_rate_parens_draft_is_corrected_and_the_rule_is_logged(world
 def test_a_draft_with_no_parens_correction_carries_no_note(world) -> None:
     (drafts, _, _), _ = derive(world, [candidate(10, "Revenue is expected to be $65.0 billion.")], {cid(10): result(cid(10), item(low=65.0, high=65.0))})
     assert drafts[COMPANY.cik][0]["parens_note"] is None
+
+
+# --- third pilot review: percent-metric plus-or-minus, and relative-to-prior-period language ------------
+
+
+def test_a_percent_metrics_own_spread_is_always_absolute() -> None:
+    """From data/review/0001045810.csv, draft 01EG207V00Q7XTVDP923BJVZ04 (NVDA, tax rate, Q3 FY2021): the
+    model read "8 percent, plus or minus 1 percent" as relative (7.92 to 8.08), though the identical phrasing
+    elsewhere in the same filing correctly came back absolute (7 to 9)."""
+    it = item("tax rate", "percent", "Q3 FY2021", 8.0, 8.0, pm=1.0, kind="percent")
+    fixed = structure.with_absolute_percent_spread("tax rate", it, METRIC_KINDS)
+    assert fixed["plus_minus_kind"] == "absolute"
+    assert structure.resolve_range(fixed) == (7.0, 9.0)
+
+
+def test_a_dollar_metrics_relative_spread_is_unaffected() -> None:
+    it = item("revenue", "USD billions", "Q4 FY2026", 108.0, 108.0, pm=2.0, kind="percent")
+    fixed = structure.with_absolute_percent_spread("revenue", it, METRIC_KINDS)
+    assert fixed["plus_minus_kind"] == "percent"
+    assert structure.resolve_range(fixed) == (105.84, 110.16)  # unchanged: 2% of 108, not fixed points
+
+
+def test_a_percent_metrics_already_absolute_spread_is_left_alone() -> None:
+    it = item("gross margin GAAP", "percent", "Q4 FY2026", 74.0, 74.0, pm=0.5, kind="absolute")
+    assert structure.with_absolute_percent_spread("gross margin GAAP", it, METRIC_KINDS) is it
+
+
+def test_the_nvda_tax_rate_pilot_finding_now_resolves_to_the_full_absolute_band(world) -> None:
+    s = "GAAP and non-GAAP tax rates are both expected to be 8 percent, plus or minus 1 percent, excluding any discrete items."
+    (drafts, rejects, _), _ = derive(world, [candidate(10, s)], {cid(10): result(cid(10), item("tax rate", "percent", "Q3 FY2021", 8.0, 8.0, pm=1.0, kind="percent"))})
+    (draft,) = drafts[COMPANY.cik]
+    assert (draft["assumption"]["target_low"], draft["assumption"]["target_high"]) == (7.0, 9.0)
+    assert rejects[COMPANY.cik] == []
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    ["20 basis points higher than last year", "the rate was lower than the prior quarter",
+     "well above the 2020 rate of 7.0 percent", "margin is expected to remain below last year's level",
+     "operating margin compared to the prior year", "gross margin versus last year", "margin vs. last year"],
+)
+def test_relative_to_prior_period_phrases_are_recognised(sentence) -> None:
+    assert structure._RELATIVE_TO_PRIOR.search(sentence)
+
+
+def test_a_percent_metric_stated_only_relative_to_a_prior_period_is_rejected() -> None:
+    """From data/review/0000027419.csv, drafts 01KJRFX500H24NN9APZ61TB1XC / 01KJRFX5000K2CZTGP0WVJYFZH /
+    01KS1AX7009M235XX1TGTJ1C1A (Target, operating margin GAAP/non-GAAP, FY2026): the excerpt gives the size of
+    the move (20 basis points) and last year's rate (4.6 percent), but never the new rate itself."""
+    evidence = ("Full-year 2026 operating income margin rate approximately 20 basis points higher than the "
+                "4.6 percent Adjusted operating income margin rate in 2025.")
+    with pytest.raises(ValueError, match="relative to a prior period"):
+        structure.check_not_relative_to_prior_period("operating margin GAAP", (20.0, 20.0), evidence, METRIC_KINDS)
+    with pytest.raises(ValueError, match="relative to a prior period"):
+        structure.check_not_relative_to_prior_period("operating margin GAAP", (20.0, None), "more than " + evidence, METRIC_KINDS)
+
+
+def test_relative_language_does_not_disqualify_a_metric_that_also_states_its_own_absolute_figure() -> None:
+    """From data/review/0000027419.csv, draft 01F60YR200NWN0T9F5S6S966DG (Target, operating margin GAAP,
+    FY2021): "well above the 2020 rate of 7.0 percent" is relative wording, but 7.0 percent is also the item's
+    own printed figure (its floor), so it is not rejected."""
+    evidence = ("The Company expects positive single-digit comparable sales growth in the last two quarters of "
+                "the year, and expects its full-year operating margin rate will be well above the 2020 rate of "
+                "7.0 percent, with the potential to reach 8 percent or somewhat higher.")
+    structure.check_not_relative_to_prior_period("operating margin GAAP", (7.0, None), evidence, METRIC_KINDS)  # does not raise
+
+    synthetic = "Operating margin is expected to be approximately 21%, compared to 19% in the prior year."
+    structure.check_not_relative_to_prior_period("operating margin GAAP", (21.0, 21.0), synthetic, METRIC_KINDS)  # does not raise
+
+
+def test_relative_to_prior_period_check_is_scoped_to_the_sentence_with_this_items_own_number() -> None:
+    evidence = "Tax rate is expected to be 21%. Gross margin was higher than last year."
+    structure.check_not_relative_to_prior_period("tax rate", (21.0, 21.0), evidence, METRIC_KINDS)  # does not raise: different sentence
+
+
+def test_relative_to_prior_period_check_is_unaffected_on_a_dollar_metric() -> None:
+    evidence = "Revenue is expected to be $5 billion, compared to $4 billion last year."
+    structure.check_not_relative_to_prior_period("revenue", (5.0, 5.0), evidence, METRIC_KINDS)  # does not raise: not a percent metric
+
+
+def test_the_target_operating_margin_relative_pilot_finding_is_now_rejected(world) -> None:
+    s = ("Full-year 2026 operating income margin rate approximately 20 basis points higher than the 4.6 percent "
+         "Adjusted operating income margin rate in 2025.")
+    (drafts, rejects, _), _ = derive(world, [candidate(10, s)], {cid(10): result(cid(10), item("operating margin GAAP", "basis points", "FY2026", 20.0, 20.0))})
+    assert drafts[COMPANY.cik] == []
+    assert "relative to a prior period" in rejects[COMPANY.cik][0]["reason"]
