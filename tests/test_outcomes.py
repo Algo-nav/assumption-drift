@@ -13,6 +13,7 @@ import yaml
 
 import fakes
 from pipeline import common, llm
+from research_record import rubric
 
 outcomes = importlib.import_module("pipeline.04_outcomes")
 cand = importlib.import_module("pipeline.02_candidates")
@@ -272,6 +273,130 @@ def test_no_line_found_and_no_answer_are_different_reasons(world) -> None:
     assert reasons["D1"] == "outcome search not completed"
 
 
+# --- an outcome excerpt must report a result, not still be guidance --------
+
+
+def test_excerpt_reports_a_result_is_false_for_still_forward_looking_guidance() -> None:
+    """From data/outcomes/0001108524.jsonl, draft 01D5300100XWHQJGPYDMZ2QG94 (CRM, tax rate, Q4 FY2020): the
+    outcome search had picked "(1) The Company's GAAP tax rate is expected to be approximately 72% for the
+    three months ended April 30, 2020..." -- guidance for a LATER quarter, still in the future tense -- as if
+    it reported the FY2020 actual."""
+    assert not outcomes.excerpt_reports_a_result(
+        "(1) The Company's GAAP tax rate is expected to be approximately 72% for the three months ended "
+        "April 30, 2020, and for the year ended January 31, 2021."
+    )
+
+
+def test_excerpt_reports_a_result_is_true_with_a_past_tense_verb_even_when_it_also_says_guidance() -> None:
+    """From data/outcomes/0000027419.jsonl, draft 01H0KG3A0009YTW3NZ8Q4YZRWP (TGT, EPS GAAP, Q2 FY2023): an
+    outcome excerpt is allowed to say "guidance" as long as it also reports what happened."""
+    assert outcomes.excerpt_reports_a_result(
+        "Second quarter GAAP and Adjusted EPS1 of $1.80 was more than 4 times higher than a year ago and "
+        "above the high end of the Company's guidance range, reflecting a meaningful profit recovery."
+    )
+
+
+def test_excerpt_reports_a_result_is_true_without_any_forward_looking_word() -> None:
+    assert outcomes.excerpt_reports_a_result("Fourth quarter revenue of $4.8 billion, up 10% from a year ago.")
+
+
+def test_an_outcome_line_that_is_still_forward_looking_is_rejected(world) -> None:
+    """The line the model points at can itself be guidance for a later period: it names the metric, the
+    period the model was asked about happens to be named too, and it has a number. Code must not trust it as
+    an outcome just because the model pointed at it."""
+    add_filing(world, "0021", "2024-05-02", "8-K",
+               ["Fourth quarter revenue is expected to be $4.8 billion."],
+               title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
+    reqs, index, _ = requests_for(draft())
+    n = line_no(index[reqs[0].custom_id][1], "Fourth quarter revenue is expected")
+    (outs, rejects, reasons), _ = outcome_for(world, {"index": n, "value": 4.8, "unit": "USD billions"})
+    assert outs == {} and "forward-looking" in rejects[0]["reason"] and reasons["D1"] == "model output rejected"
+
+
+# --- a multi-column table line needs its column confirmed by a header ------
+
+
+def test_is_ambiguous_multi_column_true_for_a_bare_dollar_table_row() -> None:
+    """From data/drafts/0001045810.jsonl (NVDA): a results table with the current, prior-quarter and
+    year-ago figures squashed onto one line, no label to say which is which."""
+    assert outcomes.is_ambiguous_multi_column("USD billions", "Revenue $4,726 $3,866 $3,014 Up 22% Up 57%")
+
+
+def test_is_ambiguous_multi_column_false_for_a_growth_rate_annotation() -> None:
+    """From data/drafts/0001108524.jsonl (CRM): "Revenue of $31.4 Billion, up 18% Y/Y, up 22% CC" has three
+    numbers, but only one is a dollar figure; the other two are percent growth rates, a different unit, and
+    are not alternate readings of the metric's own value."""
+    assert not outcomes.is_ambiguous_multi_column("USD billions", "FY23 Revenue of $31.4 Billion, up 18% Y/Y, up 22% CC")
+
+
+def test_is_ambiguous_multi_column_false_with_comparison_language() -> None:
+    """From data/drafts/0001045810.jsonl (NVDA): the opening sentence of a release ("...of $2.22 billion
+    compared with $3.21 billion a year earlier and $2.21 billion...") has three dollar figures, but says in
+    words which is which, unlike a bare table row."""
+    assert not outcomes.is_ambiguous_multi_column(
+        "USD billions",
+        "NVIDIA today reported revenue for the first quarter of $2.22 billion compared with $3.21 billion "
+        "a year earlier and $2.21 billion sequentially.",
+    )
+
+
+def test_is_ambiguous_multi_column_false_under_three_numbers() -> None:
+    assert not outcomes.is_ambiguous_multi_column("USD billions", "Fourth quarter revenue of $4.8 billion, up 10% from a year ago.")
+
+
+def test_find_result_header_reads_the_q_q_and_y_y_columns_a_guidance_header_would_reject() -> None:
+    """From data/raw/0001045810 (NVDA): a results-table header ("($ in millions...) Q3 FY21 Q2 FY21 Q3 FY20
+    Q/Q Y/Y") carries change columns that 02_candidates.find_table_header rejects a header for having, since
+    there that means a results table rather than a guidance one. Confirming an outcome's column needs the
+    opposite: a results header is exactly what is wanted, so those columns are not excluded here."""
+    lines = ["($ in millions, except earnings per share) Q3 FY21 Q2 FY21 Q3 FY20 Q/Q Y/Y",
+             "Revenue $4,726 $3,866 $3,014 Up 22% Up 57%"]
+    header = outcomes.find_result_header(lines, 1, 10)
+    assert header == lines[0] and (3, 2021) in cand.parse_periods(header)
+
+
+def test_find_result_header_returns_none_past_the_lookback_or_without_a_period() -> None:
+    assert outcomes.find_result_header(["Q3 FY21 Q2 FY21", "x", "x", "Revenue $1 $2"], 3, 1) is None
+    assert outcomes.find_result_header(["Some heading", "Revenue $1 $2 $3"], 1, 10) is None
+
+
+def test_column_confirmed_true_when_a_header_above_names_the_period(world) -> None:
+    add_filing(world, "0021", "2024-05-02", "8-K", [
+        "($ in millions, except earnings per share) Q4 FY24 Q3 FY24 Q4 FY23 Q/Q Y/Y",
+        "Revenue $4,900 $4,800 $3,000 Up 2% Up 63%",
+    ], title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
+    st = store()
+    meta = next(m for m in st.metas if m["accession"] == "0000000123-24-000021")
+    doc = st.get(meta)
+    line = outcomes.Line("0000000123-24-000021", "2024-05-02", doc.lines[2], doc.line_starts[2], [], None, None, 0)
+    assert outcomes.column_confirmed(st, meta, line, (4, 2024), "USD millions", 10)
+    assert not outcomes.column_confirmed(st, meta, line, (1, 2025), "USD millions", 10)  # a period the header does not name
+
+
+def test_column_confirmed_false_without_a_header_above_the_row(world) -> None:
+    add_filing(world, "0021", "2024-05-02", "8-K", ["Revenue $4,900 $4,800 $3,000 Up 2% Up 63%"],
+               title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
+    st = store()
+    meta = next(m for m in st.metas if m["accession"] == "0000000123-24-000021")
+    doc = st.get(meta)
+    line = outcomes.Line("0000000123-24-000021", "2024-05-02", doc.lines[1], doc.line_starts[1], [], None, None, 0)
+    assert not outcomes.column_confirmed(st, meta, line, (4, 2024), "USD millions", 10)
+
+
+def test_column_confirmed_true_when_the_line_is_not_ambiguous() -> None:
+    line = outcomes.Line("acc", "2024-05-02", "Fourth quarter revenue of $4.8 billion.", 0, [], None, None, 0)
+    assert outcomes.column_confirmed(store(), {"accession": "acc"}, line, (4, 2024), "USD billions", 10)
+
+
+def test_a_picked_multi_column_line_becomes_multi_column_unconfirmed(world) -> None:
+    add_filing(world, "0021", "2024-05-02", "8-K", ["Revenue $4,900 $4,800 $3,000 Up 2% Up 63%"],
+               title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
+    reqs, index, _ = requests_for(draft())
+    n = line_no(index[reqs[0].custom_id][1], "Revenue $4,900")
+    (outs, rejects, reasons), _ = outcome_for(world, {"index": n, "value": 4900, "unit": "USD millions"})
+    assert outs == {} and rejects == [] and reasons["D1"] == "multi-column, unconfirmed"
+
+
 # --- stage 2: acknowledgements ---------------------------------------------
 
 
@@ -312,6 +437,71 @@ def test_an_empty_or_out_of_range_answer_is_no_acknowledgement(world) -> None:
         assert outcomes.derive_acknowledgements(index, res, {COMPANY.cik: store()})[0] == {}
     bad = {"k-D1": llm.Result("k-D1", "succeeded", "yes", 1, 1, None, "b")}
     assert "did not parse" in outcomes.derive_acknowledgements(index, bad, {COMPANY.cik: store()})[1][0]["reason"]
+
+
+# --- acknowledgement vocabulary differs by direction ------------------------
+#
+# 318 missed rows and zero acknowledgements: the acknowledgement phrase list had only shortfall words
+# ("below", "short of", ...), but 243 of those 320 missed rows were beats (the reported value above the
+# high end, not below the low end) -- a beat could never be found however plainly the company said it.
+
+
+def test_a_beat_is_acknowledged_with_beat_vocabulary(world) -> None:
+    """From data/review/0000027419.csv, draft 01H0KG3A0009YTW3NZ8Q4YZRWP (TGT, EPS GAAP, Q2 FY2023): guided
+    1.3 to 1.7, reported 1.8, acknowledged in the very same 8-K with "above the high end of the Company's
+    guidance range" -- vocabulary the shortfall-only phrase list could never match."""
+    add_filing(world, "0021", "2024-05-01", "8-K", [
+        "Second quarter GAAP and Adjusted EPS1 of $1.80 was more than 4 times higher than a year ago and "
+        "above the high end of the Company's guidance range, reflecting a meaningful profit recovery from last year's inventory actions."
+    ])
+    d = draft(metric="EPS GAAP", unit="USD", low=1.3, high=1.7)
+    out = {"reported_value": 1.8, "reported_at": "2024-05-01"}
+    assert outcomes.missed(d, out) and rubric.direction(1.3, 1.7, 1.8) == "beat"
+    reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+    assert len(reqs) == 1 and "above the high end of the guided range (a beat)" in reqs[0].user
+    (cid,) = index
+    assert any("above the high end of the Company's guidance range" in l.sentence for l in index[cid][1])
+    res = {cid: llm.Result(cid, "succeeded", json.dumps({"indices": [1]}), 1, 1, None, "b")}
+    found, rejects = outcomes.derive_acknowledgements(index, res, {COMPANY.cik: store()})
+    assert found["D1"]["acknowledged_at"] == "2024-05-01" and rejects == []
+
+
+def test_a_shortfall_is_still_acknowledged_with_shortfall_vocabulary(world) -> None:
+    """The direction split must not cost the shortfall side anything it already had. (A real Target FY2020 or
+    Salesforce shortfall was checked directly against the cached filings for this: Target's FY2020 Q1 miss
+    was guidance withdrawn before the quarter closed, not a plain miss, and Salesforce's FY2020 EPS collapse
+    is reported later without referring back to the original guidance in these words. This fixture is
+    synthetic for that reason, and exercises the same code path as the beat test above.)"""
+    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter revenue of $4.8 billion did not meet the low end of our guidance range."])
+    d = draft()  # default range 5.0-6.0, a shortfall against 4.8
+    out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
+    assert rubric.direction(5.0, 6.0, 4.8) == "shortfall"
+    reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+    assert len(reqs) == 1 and "below the low end of the guided range (a shortfall)" in reqs[0].user
+    assert any("did not meet the low end of our guidance range" in l.sentence for l in index["k-D1"][1])
+
+
+def test_beat_vocabulary_does_not_leak_into_a_shortfall_search_or_the_reverse(world) -> None:
+    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter revenue of $4.8 billion exceeded expectations by a wide margin."])
+    d = draft()  # a shortfall: 4.8 is below the 5.0-6.0 range
+    out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
+    _, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+    # the fixture's own "Last quarter revenue ... was below our guidance." is still a candidate; the new,
+    # beat-worded sentence about the same period and metric is not, because this is a shortfall search
+    sentences = [l.sentence for l in index["k-D1"][1]]
+    assert "Last quarter revenue of $4.8 billion was below our guidance." in sentences
+    assert not any("exceeded expectations" in s for s in sentences)
+
+
+def test_an_acknowledgement_line_no_longer_needs_a_number_of_its_own(world) -> None:
+    """The number requirement (needed for an outcome line, which must state a value) cut real acknowledgement
+    candidates from 101 to 13 across the pilot data: most acknowledgement sentences narrate the gap without
+    repeating the figure, which is already given in the request's own guidance line."""
+    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter revenue was well below the low end of our guidance range for the period."])
+    d = draft()
+    out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
+    _, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+    assert any("well below the low end" in l.sentence for l in index["k-D1"][1])
 
 
 # --- main, end to end ------------------------------------------------------

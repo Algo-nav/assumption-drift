@@ -163,6 +163,38 @@ def test_in_range_returns_none_when_there_is_nothing_to_compare() -> None:
     assert rubric.in_range(None, None, None) is None
 
 
+# --- direction ---------------------------------------------------------------
+
+
+def test_direction_is_none_for_a_value_inside_the_range() -> None:
+    assert rubric.direction(5_000.0, 6_000.0, 5_500.0) is None
+    assert rubric.direction(5_000.0, 6_000.0, 5_000.0) is None  # inclusive endpoint
+    assert rubric.direction(5_000.0, 6_000.0, 6_000.0) is None  # inclusive endpoint
+
+
+def test_direction_above_the_high_end_is_a_beat() -> None:
+    assert rubric.direction(5_000.0, 6_000.0, 6_001.0) == "beat"
+
+
+def test_direction_below_the_low_end_is_a_shortfall() -> None:
+    assert rubric.direction(5_000.0, 6_000.0, 4_999.0) == "shortfall"
+
+
+def test_direction_for_point_guidance() -> None:
+    assert rubric.direction(100.0, 100.0, 100.51) == "beat"
+    assert rubric.direction(100.0, 100.0, 99.49) == "shortfall"
+
+
+def test_direction_for_a_one_sided_target() -> None:
+    assert rubric.direction(5_000.0, None, 4_999.0) == "shortfall"
+    assert rubric.direction(None, 6_000.0, 6_001.0) == "beat"
+
+
+def test_direction_is_none_without_a_reported_value_or_a_numeric_target() -> None:
+    assert rubric.direction(5_000.0, 6_000.0, None) is None
+    assert rubric.direction(None, None, 5_500.0) is None
+
+
 # --- day counts ------------------------------------------------------------
 
 

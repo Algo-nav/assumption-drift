@@ -1091,6 +1091,45 @@ def test_a_draft_with_no_parens_correction_carries_no_note(world) -> None:
     assert drafts[COMPANY.cik][0]["parens_note"] is None
 
 
+# --- "expense of" forces other income and expense negative ------------------
+
+
+def test_expense_of_forces_other_income_and_expense_negative() -> None:
+    """From data/drafts/0001045810.jsonl: the identical phrase "expected to be an expense of approximately
+    $55 million" came back as +55 on draft 01EG207V00AKSRWF61WMN81KJG and -55 on 01EQCAD8008K9G9KHC9XQXV8MY.
+    "an expense of $X" is a net expense whatever sign the model gave it."""
+    evidence = "GAAP and non-GAAP other income and expense are both expected to be an expense of approximately $55 million."
+    low, high, note = structure.fix_expense_of_sign("other income and expense", 55.0, 55.0, evidence)
+    assert (low, high) == (-55.0, -55.0) and note is not None and "expense" in note
+
+
+def test_expense_of_is_idempotent_when_the_model_already_gave_a_negative_value() -> None:
+    evidence = "GAAP and non-GAAP other income and expense are expected to be an expense of approximately $60 million."
+    assert structure.fix_expense_of_sign("other income and expense", -60.0, -60.0, evidence) == (-60.0, -60.0, None)
+
+
+def test_expense_of_flips_a_range_keeping_the_more_negative_end_as_the_low() -> None:
+    evidence = "Other income and expense is expected to be an expense of $50 million to $60 million."
+    low, high, note = structure.fix_expense_of_sign("other income and expense", 50.0, 60.0, evidence)
+    assert (low, high) == (-60.0, -50.0) and note is not None
+
+
+def test_expense_of_does_nothing_for_another_metric_or_without_the_phrase() -> None:
+    assert structure.fix_expense_of_sign("operating income", 55.0, 55.0, "an expense of $55 million") == (55.0, 55.0, None)
+    assert structure.fix_expense_of_sign("other income and expense", 55.0, 55.0, "approximately $55 million of expense") == (55.0, 55.0, None)
+
+
+def test_the_expense_of_draft_is_corrected_and_the_rule_is_logged(world) -> None:
+    s = "GAAP and non-GAAP other income and expense are both expected to be an expense of approximately $55 million."
+    (drafts, rejects, _), _ = derive(world, [candidate(10, s)], {
+        cid(10): result(cid(10), item("other income and expense", "USD millions", "Q3 FY2021", 55.0, 55.0))
+    })
+    (draft,) = drafts[COMPANY.cik]
+    assert (draft["assumption"]["target_low"], draft["assumption"]["target_high"]) == (-55.0, -55.0)
+    assert draft["parens_note"] is not None and "expense" in draft["parens_note"]
+    assert rejects[COMPANY.cik] == []
+
+
 # --- third pilot review: percent-metric plus-or-minus, and relative-to-prior-period language ------------
 
 

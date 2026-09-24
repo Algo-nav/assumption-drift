@@ -119,16 +119,16 @@ Rules
 """
 
 ACK_SYSTEM = """\
-You decide whether a company admitted that it fell short of its own guidance.
+You decide whether a company admitted, in its own words in a later filing, that its actual result for a metric and period came in on a stated side of its own guidance: below it (a shortfall) or above it (a beat).
 
-You are given the guidance (metric, period, the range the company guided to, and what it actually reported) and a numbered list of lines from the company's later filings, oldest first.
+You are given the guidance (metric, period, the range the company guided to, what it actually reported, and which side of that range the reported value fell on), and a numbered list of lines from the company's later filings, oldest first.
 
-Return the numbers of the lines that say, in the company's own words, that its actual result for exactly that metric and exactly that period was below, short of, lower than, or otherwise missed what it had guided or expected. Return an empty list if none do.
+Return the numbers of the lines that say, in the company's own words, that its actual result for exactly that metric and exactly that period fell on the stated side of its guidance or expectations. For a shortfall: below, short of, lower than, did not meet, or otherwise missed it. For a beat: exceeded, above the high end of, better than, or otherwise beat it. Return an empty list if none do.
 
 Rules
 - The line must be about the same metric and the same period. A miss on another metric or another period does not count.
-- It must reference the shortfall against guidance or expectations. A line that only states the result, or only gives a new outlook, does not count. A line that says guidance was revised because the result came in lower does.
-- Do not count a line that says results were above or in line with guidance.
+- It must reference the result against guidance or expectations. A line that only states the result, or only gives a new outlook, does not count. A line that says guidance was revised because the result came in on the stated side does.
+- Do not count a line that describes the other side: for a shortfall, a line saying results were above or in line with guidance does not count; for a beat, a line saying results were below or in line with guidance does not count.
 """
 
 WITHDRAWAL_SYSTEM = """\
@@ -298,8 +298,13 @@ def select_lines(
     period: tuple[int | None, int] | None,
     cfg: dict[str, Any],
     number: re.Pattern[str],
+    *,
+    require_number: bool = True,
 ) -> list[Line]:
-    """Lines in these releases that name the metric next to a number (and `extra`, if given). Best first, then in order."""
+    """Lines in these releases that name the metric next to a number (and `extra`, if given). Best first, then in
+    order. An outcome line must state a value, so `require_number` defaults on; an acknowledgement line often
+    just narrates the gap ("below our guidance") with the value itself in a sentence nearby, so the
+    acknowledgement search turns it off."""
     lowered = metric.lower()  # canonical names are mixed case: "gross margin non-GAAP"
     wants_non_gaap = "non-gaap" in lowered
     wants_gaap = "gaap" in lowered and not wants_non_gaap
@@ -309,7 +314,7 @@ def select_lines(
         doc = store.get(meta)
         for k, (start, end) in enumerate(doc.spans):
             sentence = doc.text[start:end]
-            if len(sentence) > EXCERPT_LIMIT or not number.search(sentence) or not matcher.search(sentence):
+            if len(sentence) > EXCERPT_LIMIT or (require_number and not number.search(sentence)) or not matcher.search(sentence):
                 continue
             if extra is not None and not extra.search(sentence):
                 continue
@@ -418,6 +423,65 @@ def build_outcome_requests(
     return requests, index, reasons
 
 
+_FORWARD_LOOKING_WORDS = re.compile(r"\b(?:expected|expects|guidance|outlook|anticipates)\b", re.IGNORECASE)
+_REPORTING_VERB = re.compile(
+    r"\b(?:was|were|had|did|used|delivered|reported|returned|grew|increased|decreased|declined|rose|fell|"
+    r"totaled|totalled|generated|achieved|completed|recorded|posted|reached|earned|gained|lost|exceeded|"
+    r"repurchased|paid|came in)\b",
+    re.IGNORECASE,
+)
+
+
+def excerpt_reports_a_result(excerpt: str) -> bool:
+    """False when the excerpt carries forward-looking wording (expected, expects, guidance, outlook,
+    anticipates) with no past-tense reporting verb to anchor it to something that already happened. "was
+    above the high end of the Company's guidance range" passes: it has "was". "is expected to be
+    approximately 72%" does not: nothing in it says this already happened."""
+    return not _FORWARD_LOOKING_WORDS.search(excerpt) or bool(_REPORTING_VERB.search(excerpt))
+
+
+# A table row with the current period's value squashed against prior periods' ("Revenue $4,726 $3,866
+# $3,014 Up 22% Up 57%") cannot be trusted to have had its current-period cell picked out correctly by the
+# model alone. Comparison language ("compared with $3.21 billion a year earlier") makes a sentence with
+# several same-unit numbers unambiguous despite the count, so it is not one of these rows.
+_DOLLAR_NUMBER = re.compile(r"\$\s?-?\(?\d[\d,]*(?:\.\d+)?\)?")
+_PERCENT_NUMBER = re.compile(r"-?\(?\d[\d,]*(?:\.\d+)?\)?\s?%")
+_COMPARISON_LANGUAGE = re.compile(r"compared (?:with|to)|a year (?:ago|earlier)|\bsequentially\b|\bversus\b|\bvs\.?\b", re.IGNORECASE)
+_HEADER_SENTENCE_END = (".", "!", "?")
+
+
+def is_ambiguous_multi_column(unit: str, sentence: str) -> bool:
+    """Three or more numbers of the metric's own kind (percent-signed for a percent metric, dollar-signed
+    otherwise: a dollar amount and a per-share figure both print with "$"), and nothing that says which is
+    which. A growth-rate annotation next to the value ("up 18% Y/Y") is a different unit and does not count."""
+    same_unit = _PERCENT_NUMBER if unit == "percent" else _DOLLAR_NUMBER
+    return len(same_unit.findall(sentence)) >= 3 and not _COMPARISON_LANGUAGE.search(sentence)
+
+
+def find_result_header(lines: list[str], row_index: int, lookback: int) -> str | None:
+    """The nearest line above a results-table row that names two or more periods. Unlike a guidance block's
+    header (`02_candidates.find_table_header`), a results header often carries Q/Q, Y/Y or a % change column
+    next to the period labels ("Q3 FY21 Q2 FY21 Q3 FY20 Q/Q Y/Y"), so those are not excluded here."""
+    window = range(row_index - 1, max(-1, row_index - 1 - lookback), -1)
+    for j in window:
+        periods = candidates_step.parse_periods(lines[j])
+        if len(periods) >= 2 and not lines[j].rstrip().endswith(_HEADER_SENTENCE_END):
+            return lines[j]
+    return None
+
+
+def column_confirmed(
+    store: DocStore, meta: dict[str, Any], line: Line, period: tuple[int | None, int] | None, unit: str, lookback: int
+) -> bool:
+    """True unless the picked line is an ambiguous multi-column table row with no header above it naming the
+    period asked about."""
+    if not is_ambiguous_multi_column(unit, line.sentence):
+        return True
+    doc = store.get(meta)
+    header = find_result_header(doc.lines, doc.line_of(line.char_start), lookback)
+    return bool(header and period is not None and period in candidates_step.parse_periods(header))
+
+
 def derive_outcomes(
     index: dict[str, tuple[dict[str, Any], list[Line]]],
     results: dict[str, llm.Result],
@@ -429,6 +493,7 @@ def derive_outcomes(
     rejects: list[dict[str, Any]] = []
     reasons: dict[str, str] = {}
     ratio = float(cfg["plausible_ratio"])
+    lookback = int(cfg["section_lookback_lines"])
     for cid, (d, lines) in index.items():
         res = results.get(cid)
         if res is None or not res.ok:
@@ -447,6 +512,9 @@ def derive_outcomes(
             if not 1 <= n <= len(lines) or payload["value"] is None:
                 raise ValueError(f"index {payload['index']!r} or value {payload['value']!r} is not usable")
             line = lines[n - 1]
+            if not excerpt_reports_a_result(line.sentence):
+                raise ValueError("the excerpt has forward-looking wording (expected, expects, guidance, outlook "
+                                  "or anticipates) with no past-tense reporting verb, so it does not report a result")
             a = d["assumption"]
             value = convert(float(payload["value"]), payload["unit"], a["unit"])
             mid = [x for x in (a["target_low"], a["target_high"]) if x is not None]
@@ -454,11 +522,14 @@ def derive_outcomes(
             if centre > 0 and value > 0 and not (1 / ratio <= value / centre <= ratio):
                 raise ValueError(f"reported {value:g} is {value / centre:.1f}x the guidance {centre:g}: likely a unit or row mix-up")
             meta = next(m for m in stores[d["cik"]].metas if m["accession"] == line.accession)
-            outcome = Outcome(reported_value=value, reported_at=date.fromisoformat(line.filed_at), evidence=_evidence(meta, line.sentence))
         except (ValueError, TypeError, StopIteration, ValidationError) as exc:
             rejects.append({"draft_id": d["draft_id"], "output": payload, "reason": str(exc)[:300]})
             reasons[d["draft_id"]] = "model output rejected"
             continue
+        if not column_confirmed(stores[d["cik"]], meta, line, parse_period(a["target_period"]), a["unit"], lookback):
+            reasons[d["draft_id"]] = "multi-column, unconfirmed"
+            continue
+        outcome = Outcome(reported_value=value, reported_at=date.fromisoformat(line.filed_at), evidence=_evidence(meta, line.sentence))
         outcomes[d["draft_id"]] = outcome.model_dump(mode="json")
     return outcomes, rejects, reasons
 
@@ -480,7 +551,12 @@ def build_ack_requests(
     *,
     today: date,
 ) -> tuple[list[llm.LlmRequest], dict[str, tuple[dict[str, Any], list[Line]]]]:
-    phrases = re.compile("|".join(cfg["acknowledgement_phrases"]), re.IGNORECASE)
+    # Vocabulary differs by direction: a shortfall is admitted with "below" or "short of", a beat with
+    # "exceeded" or "above the high end". Searching every row with only the shortfall words meant a beat
+    # (the more common direction here) could never be found however plainly the company said it.
+    phrase_patterns = {
+        side: re.compile("|".join(cfg["acknowledgement_phrases"][side]), re.IGNORECASE) for side in ("shortfall", "beat")
+    }
     requests: list[llm.LlmRequest] = []
     index: dict[str, tuple[dict[str, Any], list[Line]]] = {}
     for cik, drafts in drafts_by_company.items():
@@ -490,18 +566,25 @@ def build_ack_requests(
             if outcome is None or not missed(d, outcome):
                 continue
             a = d["assumption"]
+            side = rubric.direction(a["target_low"], a["target_high"], outcome["reported_value"])
+            if side is None:
+                continue
             matcher = metric_pattern(a["metric"], cfg["metric_terms"])
             if matcher is None:
                 continue
             reported = outcome["reported_at"]
             horizon = min(today, date.fromisoformat(reported) + timedelta(days=int(cfg["ack_days"]))).isoformat()
             metas = [m for m in store.all_metas if reported <= m["filed_at"] <= horizon]  # every filing: the 10-Q and 10-K too
-            lines = select_lines(store, metas, matcher, phrases, a["metric"], parse_period(a["target_period"]), cfg, number)
+            # No number is required here: the line that admits the gap often just narrates it ("below our
+            # guidance") with the value itself already given in the user message, or in a sentence just before.
+            lines = select_lines(store, metas, matcher, phrase_patterns[side], a["metric"], parse_period(a["target_period"]),
+                                  cfg, number, require_number=False)
             if not lines:
                 continue
+            side_words = "above the high end of" if side == "beat" else "below the low end of"
             user = (
                 f"Guidance: {d['company']} guided {a['metric']} for {a['target_period']} to {_range_text(a)} {a['unit']}.\n"
-                f"Actually reported: {outcome['reported_value']:g} {a['unit']}, on {reported}.\n\n"
+                f"Actually reported: {outcome['reported_value']:g} {a['unit']}, on {reported}, {side_words} the guided range (a {side}).\n\n"
                 f"Lines from the company's filings from {reported} on (oldest first):\n{render_lines(lines)}"
             )
             cid = f"k-{d['draft_id']}"

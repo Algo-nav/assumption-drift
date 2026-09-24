@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
 
 import pytest
@@ -63,3 +64,20 @@ def test_review_actually_drives_the_reviewer_end_to_end(tmp_path, monkeypatch) -
     assert cli.main(["review", str(path)]) == 0
     on_disk = list(csv.DictReader(path.open(newline="", encoding="utf-8")))
     assert on_disk[0]["approved"] == "true"
+
+
+# --- stats -------------------------------------------------------------------
+
+
+def test_stats_prints_summary_numbers(tmp_path, record_data, capsys) -> None:
+    path = tmp_path / "release.jsonl"
+    path.write_text(json.dumps(record_data(), default=str) + "\n", encoding="utf-8")
+    assert cli.main(["stats", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "rows: 1" in out and "missed by direction" in out
+
+
+def test_stats_of_a_missing_file_reports_it_and_exits_1(tmp_path, capsys) -> None:
+    missing = tmp_path / "nope.jsonl"
+    assert cli.main(["stats", str(missing)]) == 1
+    assert "rr stats" in capsys.readouterr().err

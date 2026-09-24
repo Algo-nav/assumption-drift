@@ -20,6 +20,7 @@ them: `open` from the review queue, `withdrawn` from a later filing, with
 from __future__ import annotations
 
 from datetime import date
+from typing import Literal
 
 from research_record.schema import ResearchRecord, Status
 
@@ -27,12 +28,15 @@ __all__ = [
     "POINT_TOLERANCE",
     "is_point_guidance",
     "in_range",
+    "direction",
     "resolve",
     "resolve_record",
     "withdrawn_before_close",
     "days_to_falsifiable",
     "days_to_acknowledged",
 ]
+
+Direction = Literal["beat", "shortfall"]
 
 #: Point guidance (low == high) is met within 0.5 percent of the stated value.
 POINT_TOLERANCE = 0.005
@@ -79,6 +83,27 @@ def in_range(
     if target_high is not None and reported_value > target_high + _slack(target_high):
         return False
     return True
+
+
+def direction(
+    target_low: float | None,
+    target_high: float | None,
+    reported_value: float | None,
+) -> Direction | None:
+    """Which side of the range a missed value landed on: "beat" above target_high, "shortfall" below
+    target_low. None when the value is inside the range (or there is nothing to compare): it is not a
+    property of a "missed" row alone, so a caller checks that separately if it needs to.
+
+    Not stored on the record: the schema has no direction field, so callers compute this from the numbers
+    each time, as `rr stats` does for its beat/shortfall split and `04_outcomes.py` does to pick which
+    acknowledgement vocabulary to search with."""
+    if in_range(target_low, target_high, reported_value) is not False:
+        return None
+    if target_high is not None and reported_value > target_high + _slack(target_high):  # type: ignore[operator]
+        return "beat"
+    if target_low is not None and reported_value < target_low - _slack(target_low):  # type: ignore[operator]
+        return "shortfall"
+    return None
 
 
 def withdrawn_before_close(withdrawn_at: date | None, period_end: date | None) -> bool:

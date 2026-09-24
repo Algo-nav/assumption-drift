@@ -635,6 +635,29 @@ def fix_parens_sign(metric: str, low: float | None, high: float | None, evidence
     return new_low, new_high, note
 
 
+_EXPENSE_OF = re.compile(r"\bexpense of\b", re.IGNORECASE)
+
+
+def fix_expense_of_sign(metric: str, low: float | None, high: float | None, evidence: str) -> tuple[float | None, float | None, str | None]:
+    """"Other income and expense" is a net dollar figure: positive is net income, negative is net expense.
+    Evidence that says "an expense of $X million" is guiding to a net expense, whatever sign the model gave
+    the number: the model reads "expense of" inconsistently, printing the same phrasing as positive on one
+    draft and negative on another. Force it negative by code instead. Only this one metric is touched: EPS
+    and operating income are guided to a loss in their own right and are not read this way.
+
+    Returns (low, high, note): note says the rule fired, or is None if nothing changed."""
+    if metric != "other income and expense" or not _EXPENSE_OF.search(evidence):
+        return low, high, None
+    if (low is None or low <= 0) and (high is None or high <= 0):
+        return low, high, None  # already negative (or absent): nothing to flip
+    flipped = sorted(-abs(v) for v in (low, high) if v is not None)
+    new_low = flipped[0] if low is not None else None
+    new_high = flipped[-1] if high is not None else None
+    note = ("'other income and expense' evidence says 'expense of': the figure was read as a net expense "
+            "(negative), whatever sign the model gave it")
+    return new_low, new_high, note
+
+
 # Words that make a figure a floor and not a point: "$1.30+", "at least $1.30", "$1.30 or more", "$1.30 or better".
 # A "+" that is part of "+/-" or a signed change ("+2%") is not one.
 _LOW_AFTER = re.compile(
@@ -948,6 +971,8 @@ def derive_drafts(
                 stated = with_absolute_percent_spread(metric, stated, kinds)
                 low, high = resolve_range(stated)
                 low, high, parens_note = fix_parens_sign(metric, low, high, excerpt, kinds)
+                low, high, expense_note = fix_expense_of_sign(metric, low, high, excerpt)
+                parens_note = parens_note or expense_note
                 check_range_language(stated, excerpt)
                 check_numbers_in_evidence(stated, excerpt)
                 check_not_past_tense(excerpt)

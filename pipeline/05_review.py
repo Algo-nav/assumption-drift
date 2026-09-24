@@ -47,6 +47,19 @@ A withdrawn row is still a draft: the status field is `open`, and a person decid
 This script never overwrites a review file. Rows already in a CSV are kept exactly as they
 are, hand edits and all, and only drafts whose record_id is not there yet are appended.
 
+    python -m pipeline.05_review --refresh-pipeline-fields [--company TICKER ...]
+
+The one exception: `--refresh-pipeline-fields` rewrites the columns this script itself derives from a
+draft's outcome (`outcome.*`, `acknowledged_at`, `acknowledgement_evidence.*`, `days_to_falsifiable`,
+`days_to_acknowledged`, `aid_proposed_status`, `aid_capture_method`, `aid_heading`, `aid_lead_in`,
+`aid_table_header`, `aid_outcome_note`, `aid_flag_note`, `aid_withdrawal_note`) on rows nobody has touched
+yet (`approved` is still "false" and `reviewer_note` is still empty), using the current data/outcomes/. A row
+with any human edit is skipped, whatever this does. `aid_verify`, `aid_verify_reason` and `aid_verify_class`
+are never touched here: they belong to 03b_verify.py, and this script's own fresh-built row always leaves
+them blank, so copying them over would erase a real verify verdict with an empty one. This is for the case
+where 04_outcomes finds something different for a draft that is already queued: the normal run above only
+appends what is new, it never revisits a row once it is in the file.
+
 Reads   data/drafts/{cik}.jsonl, data/drafts/{cik}.empty_blocks.jsonl, data/outcomes/{cik}.jsonl
 Writes  data/review/{cik}.csv
 """
@@ -298,14 +311,83 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
     return rows, stats
 
 
+# --- refreshing pipeline-owned columns on untouched rows --------------------
+
+# aid_verify, aid_verify_reason and aid_verify_class are deliberately left out: they belong to
+# 03b_verify.py, and build_row's own fresh row always leaves them blank, so refreshing them here would
+# erase a real verify verdict with an empty one.
+PIPELINE_OWNED_PREFIXES = ("outcome.", "acknowledgement_evidence.", "acknowledged_at", "days_to_", "aid_proposed_status",
+                            "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
+                            "aid_flag_note", "aid_withdrawal_note")
+
+
+def is_pipeline_owned(column: str) -> bool:
+    return column.startswith(PIPELINE_OWNED_PREFIXES)
+
+
+def untouched_by_a_human(row: dict[str, str]) -> bool:
+    """False once a row carries any human decision: an approval, or a note. `hand_verified` never comes
+    before `approved` in practice, so it is not checked separately."""
+    return row.get("approved") == "false" and not row.get("reviewer_note", "").strip()
+
+
+def refresh_row(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
+    """`row` with every pipeline-owned column replaced by `fresh`'s value. Everything else -- the reviewer
+    columns, the flags, the rest of the schema -- is kept exactly as it was."""
+    return {**row, **{c: fresh[c] for c in COLUMNS if is_pipeline_owned(c)}}
+
+
+def refresh_pipeline_fields(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
+    """Rewrite the pipeline-owned columns on every row of the company's CSV that nobody has touched yet, from
+    the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (nothing here
+    is derived from an outcome), or a record_id no longer in data/drafts/ is left exactly as it is."""
+    path = REVIEW_DIR / f"{company.cik}.csv"
+    rows = read_csv(path) if path.exists() else []
+    if not rows:
+        return rows, Counter()
+    drafts = {d["draft_id"]: d for d in _read_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl")}
+    outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
+    stats: Counter = Counter()
+    refreshed: list[dict[str, str]] = []
+    for row in rows:
+        draft = drafts.get(row["record_id"])
+        if row.get("empty_block") == "true" or not untouched_by_a_human(row) or draft is None:
+            refreshed.append(row)
+            stats["kept"] += 1
+            continue
+        try:
+            fresh = build_row(draft, outcomes.get(row["record_id"]), today)
+        except (ValidationError, KeyError, ValueError) as exc:
+            refreshed.append(row)
+            stats["invalid"] += 1
+            print(f"  {row['record_id']}: could not rebuild, left as it was: {str(exc)[:160]}", file=sys.stderr)
+            continue
+        new_row = refresh_row(row, fresh)
+        stats["changed" if new_row != row else "unchanged"] += 1
+        refreshed.append(new_row)
+    write_csv(path, refreshed)
+    return refreshed, stats
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Write the review queue CSVs.")
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER")
+    parser.add_argument("--refresh-pipeline-fields", action="store_true",
+                         help="rewrite outcome/acknowledgement/aid_ columns on untouched rows (approved=false, "
+                              "no reviewer_note) from the current data/outcomes/; a row with any human edit is never touched")
     args = parser.parse_args(argv)
     config = load_config(args.config)
     targets = companies(config, args.company)
     today = date.today()
+
+    if args.refresh_pipeline_fields:
+        print("refreshing outcome/acknowledgement/aid_ columns on rows nobody has touched (approved=false, no reviewer_note)")
+        for company in targets:
+            rows, stats = refresh_pipeline_fields(company, today)
+            print(f"  {company.ticker}: {len(rows):,} rows ({stats['changed']} changed, {stats['unchanged']} unchanged, "
+                  f"{stats['kept']} kept as-is (human-touched, an empty-block flag, or no longer drafted), {stats['invalid']} could not rebuild)")
+        return 0
 
     print("rows per company per status ('status' is the schema field, always open for a draft;")
     print("'proposed' is what the rubric says from the numbers alone)")

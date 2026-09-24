@@ -6,6 +6,7 @@ import copy
 import csv
 import importlib
 import json
+from collections import Counter
 from datetime import date
 
 import pytest
@@ -426,6 +427,120 @@ def test_a_withdrawal_that_is_malformed_is_ignored(parts, bad) -> None:
     draft, outcome_row, _ = parts
     row = review.build_row(draft, {**outcome_row, "withdrawal": bad}, TODAY)
     assert row["aid_proposed_status"] == "missed" and row["aid_withdrawal_note"] == ""
+
+
+# --- refreshing pipeline-owned columns on untouched rows --------------------
+
+
+def test_is_pipeline_owned_covers_outcome_and_aid_columns_but_not_verify() -> None:
+    for column in ["outcome.reported_value", "acknowledged_at", "acknowledgement_evidence.excerpt",
+                    "days_to_falsifiable", "days_to_acknowledged", "aid_proposed_status", "aid_outcome_note", "aid_withdrawal_note"]:
+        assert review.is_pipeline_owned(column)
+    for column in ["record_id", "assumption.metric", "status", "approved", "reviewer_note", "conflict",
+                    "empty_block", "aid_verify", "aid_verify_reason", "aid_verify_class"]:
+        assert not review.is_pipeline_owned(column)
+
+
+def test_untouched_by_a_human() -> None:
+    assert review.untouched_by_a_human({"approved": "false", "reviewer_note": ""})
+    assert not review.untouched_by_a_human({"approved": "true", "reviewer_note": ""})
+    assert not review.untouched_by_a_human({"approved": "false", "reviewer_note": "checked on EDGAR"})
+
+
+def test_refresh_row_replaces_only_pipeline_owned_columns() -> None:
+    row = {c: "old" for c in review.COLUMNS}
+    fresh = {c: "new" for c in review.COLUMNS}
+    merged = review.refresh_row(row, fresh)
+    for c in review.COLUMNS:
+        assert merged[c] == ("new" if review.is_pipeline_owned(c) else "old")
+
+
+def test_refresh_pipeline_fields_updates_an_untouched_row(dirs, parts) -> None:
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    assert review.read_csv(path)[0]["acknowledged_at"] == ""
+
+    seed(dirs, [draft], [{**outcome_row, "acknowledgement": ack}])  # 04_outcomes now finds an acknowledgement
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert (stats["changed"], stats["unchanged"], stats["kept"]) == (1, 0, 0)
+    assert rows[0]["acknowledged_at"] == "2025-05-01" and rows[0]["acknowledgement_evidence.excerpt"] == "Below our guidance."
+    assert review.read_csv(path)[0]["acknowledged_at"] == "2025-05-01"  # written back
+
+
+def test_refresh_pipeline_fields_never_touches_a_row_with_a_human_edit(dirs, parts) -> None:
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true", reviewer_note="checked on EDGAR")
+    review.write_csv(path, edited)
+
+    seed(dirs, [draft], [{**outcome_row, "acknowledgement": ack}])
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["kept"] == 1 and stats["changed"] == 0
+    assert rows[0]["acknowledged_at"] == "" and rows[0]["approved"] == "true"  # untouched, hand edit intact
+
+
+def test_refresh_pipeline_fields_never_touches_aid_verify_columns(dirs, parts) -> None:
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(aid_verify="yes", aid_verify_reason="matches the excerpt", aid_verify_class="")
+    review.write_csv(path, edited)
+
+    seed(dirs, [draft], [{**outcome_row, "acknowledgement": ack}])
+    rows, _ = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert (rows[0]["aid_verify"], rows[0]["aid_verify_reason"]) == ("yes", "matches the excerpt")
+    assert rows[0]["acknowledged_at"] == "2025-05-01"  # the pipeline-owned column still refreshed
+
+
+def test_refresh_pipeline_fields_skips_empty_block_rows(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    seed_blocks(dirs, [empty_block()])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    before = review.read_csv(path)
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    flags = [r for r in rows if r["empty_block"] == "true"]
+    assert len(flags) == 1 and flags[0] == next(r for r in before if r["empty_block"] == "true")
+    assert stats["kept"] >= 1
+
+
+def test_refresh_pipeline_fields_leaves_a_row_alone_when_its_draft_is_gone(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    seed(dirs, [], [])  # the draft is no longer produced by 03_structure
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["kept"] == 1 and rows[0]["record_id"] == draft["draft_id"]
+
+
+def test_refresh_pipeline_fields_on_a_missing_file_does_nothing(dirs) -> None:
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert rows == [] and stats == Counter()
+
+
+def test_main_refresh_pipeline_fields_flag(dirs, parts, tmp_path, capsys) -> None:
+    import yaml
+
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    seed(dirs, [draft], [{**outcome_row, "acknowledgement": ack}])
+    cfg = common.load_config()
+    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik}]
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.safe_dump(cfg))
+    assert review.main(["--config", str(path), "--refresh-pipeline-fields"]) == 0
+    out = capsys.readouterr().out
+    assert "refreshing outcome/acknowledgement/aid_ columns" in out and "1 changed" in out
+    assert review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")[0]["acknowledged_at"] == "2025-05-01"
 
 
 def test_a_withdrawn_row_reaches_the_csv_and_the_summary_counts_it(dirs, parts, tmp_path, capsys) -> None:

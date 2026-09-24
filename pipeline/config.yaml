@@ -188,14 +188,22 @@ outcomes:
     - 'suspension'
     - 'no longer (?:provid|issu|giv)(?:e|es|ing)'
   withdrawal_subjects: 'guidance|outlook|forecast|expectations|projections|targets?'
+  # Which words count as an acknowledgement depends on which side of the guided range the actual result
+  # fell on (`research_record.rubric.direction`). Searching a beat with only the shortfall list (or the
+  # reverse) means the row can never be found however plainly the company said it.
   acknowledgement_phrases:
-    - 'below'
-    - 'short of'
-    - 'fell short'
-    - 'shortfall'
-    - 'did not meet'
-    - 'lower than our'
-    - 'lower than expected'
-    - 'less than expected'
-    - 'missed'
-    - 'revised'
+    shortfall:
+      - 'below'
+      - 'short of'
+      - 'fell short'
+      - 'shortfall'
+      - 'did not meet'
+      - 'lower than our'
+      - 'lower than expected'
+      - 'less than expected'
+      - 'missed'
+      - 'revised'
+    beat:
+      - 'exceeded'
+      - 'above the high end'
+      - 'better than'
