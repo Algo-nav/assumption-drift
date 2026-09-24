@@ -432,19 +432,21 @@ def test_a_withdrawal_that_is_malformed_is_ignored(parts, bad) -> None:
 # --- refreshing pipeline-owned columns on untouched rows --------------------
 
 
-def test_is_pipeline_owned_covers_outcome_and_aid_columns_but_not_verify() -> None:
-    for column in ["outcome.reported_value", "acknowledged_at", "acknowledgement_evidence.excerpt",
+def test_is_pipeline_owned_covers_assumption_outcome_and_aid_columns_but_not_verify() -> None:
+    for column in ["assumption.metric", "assumption.target_low", "assumption.evidence.excerpt", "claim", "invalidation_condition",
+                    "outcome.reported_value", "acknowledged_at", "acknowledgement_evidence.excerpt",
                     "days_to_falsifiable", "days_to_acknowledged", "aid_proposed_status", "aid_outcome_note", "aid_withdrawal_note"]:
         assert review.is_pipeline_owned(column)
-    for column in ["record_id", "assumption.metric", "status", "approved", "reviewer_note", "conflict",
+    for column in ["record_id", "status", "approved", "hand_verified", "reviewer_note", "conflict",
                     "empty_block", "aid_verify", "aid_verify_reason", "aid_verify_class"]:
         assert not review.is_pipeline_owned(column)
 
 
 def test_untouched_by_a_human() -> None:
-    assert review.untouched_by_a_human({"approved": "false", "reviewer_note": ""})
-    assert not review.untouched_by_a_human({"approved": "true", "reviewer_note": ""})
-    assert not review.untouched_by_a_human({"approved": "false", "reviewer_note": "checked on EDGAR"})
+    assert review.untouched_by_a_human({"approved": "false", "hand_verified": "false", "reviewer_note": ""})
+    assert not review.untouched_by_a_human({"approved": "true", "hand_verified": "false", "reviewer_note": ""})
+    assert not review.untouched_by_a_human({"approved": "false", "hand_verified": "true", "reviewer_note": ""})
+    assert not review.untouched_by_a_human({"approved": "false", "hand_verified": "false", "reviewer_note": "checked on EDGAR"})
 
 
 def test_refresh_row_replaces_only_pipeline_owned_columns() -> None:
@@ -469,6 +471,26 @@ def test_refresh_pipeline_fields_updates_an_untouched_row(dirs, parts) -> None:
     assert review.read_csv(path)[0]["acknowledged_at"] == "2025-05-01"  # written back
 
 
+def test_refresh_pipeline_fields_updates_assumption_claim_and_invalidation_condition(dirs, parts) -> None:
+    """From the "expense of" sign fix: 03_structure changed a draft's target_low/target_high after it was
+    already queued, and the review CSV needs to pick that up on a row nobody has touched."""
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    before = review.read_csv(path)[0]
+    assert before["assumption.target_low"] == "5000.0" and before["invalidation_condition"] == "reported value falls outside [5000, 6000]"
+
+    revised = copy.deepcopy(draft)
+    revised["assumption"] = {**revised["assumption"], "target_low": -6000.0, "target_high": -5000.0}
+    seed(dirs, [revised], [outcome_row])
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["changed"] == 1
+    assert rows[0]["assumption.target_low"] == "-6000.0" and rows[0]["assumption.target_high"] == "-5000.0"
+    assert "-6000" in rows[0]["invalidation_condition"] and "-6000" in rows[0]["claim"]
+    assert review.read_csv(path)[0]["assumption.target_low"] == "-6000.0"  # written back
+
+
 def test_refresh_pipeline_fields_never_touches_a_row_with_a_human_edit(dirs, parts) -> None:
     draft, outcome_row, ack = parts
     seed(dirs, [draft], [outcome_row])
@@ -482,6 +504,26 @@ def test_refresh_pipeline_fields_never_touches_a_row_with_a_human_edit(dirs, par
     rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
     assert stats["kept"] == 1 and stats["changed"] == 0
     assert rows[0]["acknowledged_at"] == "" and rows[0]["approved"] == "true"  # untouched, hand edit intact
+
+
+def test_refresh_pipeline_fields_never_touches_a_hand_verified_row(dirs, parts) -> None:
+    """hand_verified can be set without approved or reviewer_note ever being touched (SCOPE 4.3: Navneet
+    independently re-finds a row on EDGAR by hand), and that alone must stop a refresh."""
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(hand_verified="true")
+    review.write_csv(path, edited)
+    before = review.read_csv(path)[0]
+
+    revised = copy.deepcopy(draft)
+    revised["assumption"] = {**revised["assumption"], "target_low": -6000.0, "target_high": -5000.0}
+    seed(dirs, [revised], [{**outcome_row, "acknowledgement": ack}])
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["kept"] == 1 and stats["changed"] == 0
+    assert rows[0] == before  # untouched, byte for byte
 
 
 def test_refresh_pipeline_fields_never_touches_aid_verify_columns(dirs, parts) -> None:
@@ -539,7 +581,7 @@ def test_main_refresh_pipeline_fields_flag(dirs, parts, tmp_path, capsys) -> Non
     path.write_text(yaml.safe_dump(cfg))
     assert review.main(["--config", str(path), "--refresh-pipeline-fields"]) == 0
     out = capsys.readouterr().out
-    assert "refreshing outcome/acknowledgement/aid_ columns" in out and "1 changed" in out
+    assert "refreshing assumption/outcome/acknowledgement/aid_ columns" in out and "1 changed" in out
     assert review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")[0]["acknowledged_at"] == "2025-05-01"
 
 

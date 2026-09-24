@@ -49,16 +49,18 @@ are, hand edits and all, and only drafts whose record_id is not there yet are ap
 
     python -m pipeline.05_review --refresh-pipeline-fields [--company TICKER ...]
 
-The one exception: `--refresh-pipeline-fields` rewrites the columns this script itself derives from a
-draft's outcome (`outcome.*`, `acknowledged_at`, `acknowledgement_evidence.*`, `days_to_falsifiable`,
-`days_to_acknowledged`, `aid_proposed_status`, `aid_capture_method`, `aid_heading`, `aid_lead_in`,
-`aid_table_header`, `aid_outcome_note`, `aid_flag_note`, `aid_withdrawal_note`) on rows nobody has touched
-yet (`approved` is still "false" and `reviewer_note` is still empty), using the current data/outcomes/. A row
-with any human edit is skipped, whatever this does. `aid_verify`, `aid_verify_reason` and `aid_verify_class`
-are never touched here: they belong to 03b_verify.py, and this script's own fresh-built row always leaves
-them blank, so copying them over would erase a real verify verdict with an empty one. This is for the case
-where 04_outcomes finds something different for a draft that is already queued: the normal run above only
-appends what is new, it never revisits a row once it is in the file.
+The one exception: `--refresh-pipeline-fields` rewrites every column this script itself derives from a
+draft, whether from its assumption or from its outcome (`assumption.*`, `claim`, `invalidation_condition`,
+`outcome.*`, `acknowledged_at`, `acknowledgement_evidence.*`, `days_to_falsifiable`, `days_to_acknowledged`,
+`aid_proposed_status`, `aid_capture_method`, `aid_heading`, `aid_lead_in`, `aid_table_header`,
+`aid_outcome_note`, `aid_flag_note`, `aid_withdrawal_note`) on rows nobody has touched yet (`approved` is
+still "false", `hand_verified` is still "false", and `reviewer_note` is still empty), using the current
+data/drafts/ and data/outcomes/. A row with any human edit is skipped, whatever this does. `aid_verify`,
+`aid_verify_reason` and `aid_verify_class` are never touched here: they belong to 03b_verify.py, and this
+script's own fresh-built row always leaves them blank, so copying them over would erase a real verify
+verdict with an empty one. This is for the case where 03_structure or 04_outcomes finds something different
+for a draft that is already queued: the normal run above only appends what is new, it never revisits a row
+once it is in the file.
 
 Reads   data/drafts/{cik}.jsonl, data/drafts/{cik}.empty_blocks.jsonl, data/outcomes/{cik}.jsonl
 Writes  data/review/{cik}.csv
@@ -315,10 +317,12 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
 
 # aid_verify, aid_verify_reason and aid_verify_class are deliberately left out: they belong to
 # 03b_verify.py, and build_row's own fresh row always leaves them blank, so refreshing them here would
-# erase a real verify verdict with an empty one.
-PIPELINE_OWNED_PREFIXES = ("outcome.", "acknowledgement_evidence.", "acknowledged_at", "days_to_", "aid_proposed_status",
-                            "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-                            "aid_flag_note", "aid_withdrawal_note")
+# erase a real verify verdict with an empty one. status, approved, hand_verified, reviewer_note, conflict
+# and empty_block are also left out: a draft row's status is always "open" regardless of anything a refresh
+# could change, and the rest are the reviewer's own columns.
+PIPELINE_OWNED_PREFIXES = ("assumption.", "claim", "invalidation_condition", "outcome.", "acknowledgement_evidence.",
+                            "acknowledged_at", "days_to_", "aid_proposed_status", "aid_capture_method", "aid_heading",
+                            "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note")
 
 
 def is_pipeline_owned(column: str) -> bool:
@@ -326,9 +330,12 @@ def is_pipeline_owned(column: str) -> bool:
 
 
 def untouched_by_a_human(row: dict[str, str]) -> bool:
-    """False once a row carries any human decision: an approval, or a note. `hand_verified` never comes
-    before `approved` in practice, so it is not checked separately."""
-    return row.get("approved") == "false" and not row.get("reviewer_note", "").strip()
+    """False once a row carries any human decision: an approval, a hand-verification mark, or a note."""
+    return (
+        row.get("approved") == "false"
+        and row.get("hand_verified") == "false"
+        and not row.get("reviewer_note", "").strip()
+    )
 
 
 def refresh_row(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
@@ -339,8 +346,9 @@ def refresh_row(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
 
 def refresh_pipeline_fields(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
     """Rewrite the pipeline-owned columns on every row of the company's CSV that nobody has touched yet, from
-    the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (nothing here
-    is derived from an outcome), or a record_id no longer in data/drafts/ is left exactly as it is."""
+    the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (it is not a
+    draft, so there is nothing here to rebuild it from), or a record_id no longer in data/drafts/ is left
+    exactly as it is."""
     path = REVIEW_DIR / f"{company.cik}.csv"
     rows = read_csv(path) if path.exists() else []
     if not rows:
@@ -374,15 +382,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER")
     parser.add_argument("--refresh-pipeline-fields", action="store_true",
-                         help="rewrite outcome/acknowledgement/aid_ columns on untouched rows (approved=false, "
-                              "no reviewer_note) from the current data/outcomes/; a row with any human edit is never touched")
+                         help="rewrite assumption/outcome/acknowledgement/aid_ columns on untouched rows (approved=false, "
+                              "hand_verified=false, no reviewer_note) from the current data/drafts/ and data/outcomes/; "
+                              "a row with any human edit is never touched")
     args = parser.parse_args(argv)
     config = load_config(args.config)
     targets = companies(config, args.company)
     today = date.today()
 
     if args.refresh_pipeline_fields:
-        print("refreshing outcome/acknowledgement/aid_ columns on rows nobody has touched (approved=false, no reviewer_note)")
+        print("refreshing assumption/outcome/acknowledgement/aid_ columns on rows nobody has touched "
+              "(approved=false, hand_verified=false, no reviewer_note)")
         for company in targets:
             rows, stats = refresh_pipeline_fields(company, today)
             print(f"  {company.ticker}: {len(rows):,} rows ({stats['changed']} changed, {stats['unchanged']} unchanged, "
