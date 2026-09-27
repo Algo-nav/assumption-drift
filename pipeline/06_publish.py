@@ -240,7 +240,7 @@ By company:
 {_company_table_markdown(result["company_table"])}
 
 ![Missed rows: when the gap was acknowledged](figures/{figures.FIGURE_FILES[0]})
-![Beats get mentioned. Shortfalls do not.](figures/{figures.FIGURE_FILES[1]})
+![Shortfalls and beats, acknowledged or not](figures/{figures.FIGURE_FILES[1]})
 ![Resolution by fiscal year](figures/{figures.FIGURE_FILES[2]})
 ![Miss magnitude](figures/{figures.FIGURE_FILES[3]})
 

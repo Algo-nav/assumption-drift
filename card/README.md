@@ -55,7 +55,7 @@ By company:
 | Target Corporation | 82 | 27 | 38 | 2 | 15 | 79% |
 
 ![Missed rows: when the gap was acknowledged](figures/falsifiable_vs_acknowledged.png)
-![Beats get mentioned. Shortfalls do not.](figures/acknowledgement_by_company.png)
+![Shortfalls and beats, acknowledged or not](figures/acknowledgement_by_company.png)
 ![Resolution by fiscal year](figures/resolution_by_fiscal_year.png)
 ![Miss magnitude](figures/miss_magnitude.png)
 

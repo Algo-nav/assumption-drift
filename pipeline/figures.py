@@ -16,6 +16,7 @@ import random
 import re
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 import matplotlib
 
@@ -29,7 +30,8 @@ from research_record.schema import ResearchRecord
 
 __all__ = [
     "GREY_DARK", "GREY_MID", "GREY_LIGHT", "ACCENT_MISSED", "FIGURE_FILES", "ACK_CATEGORIES",
-    "fiscal_year", "direction", "nearest_edge", "miss_magnitude", "acknowledgement_bucket", "write_all",
+    "fiscal_year", "direction", "nearest_edge", "miss_magnitude", "acknowledgement_bucket",
+    "acknowledgement_summary", "write_all",
 ]
 
 GREY_DARK = "#3f3f46"
@@ -147,45 +149,47 @@ def _falsifiable_vs_acknowledged(records: list[ResearchRecord], dataset: str, ge
     return fig
 
 
-# --- 2. share acknowledged, beat vs shortfall, per company, grouped horizontal bars --------------
+# --- 2. shortfalls vs beats, acknowledged or not: a stat tile -----------------------------------
 
 
-def _acknowledgement_by_company(records: list[ResearchRecord], dataset: str, generated_at: date) -> plt.Figure:
-    def share_and_count(rows: list[ResearchRecord]) -> tuple[float, int]:
-        return ((sum(1 for r in rows if r.acknowledged_at is not None) / len(rows)) if rows else 0.0, len(rows))
+def acknowledgement_summary(records: list[ResearchRecord]) -> dict[str, Any]:
+    """Missed rows split into shortfalls and beats, and how many of each were ever acknowledged:
+    `{"shortfalls", "shortfalls_acknowledged", "beats", "beats_acknowledged", "acknowledging_companies"}`.
+    The last, sorted, is which companies had at least one acknowledged beat; empty if none did."""
+    missed = [r for r in records if r.status == "missed"]
+    shortfalls = [r for r in missed if direction(r) == "shortfall"]
+    beats = [r for r in missed if direction(r) == "beat"]
+    beats_acknowledged = [r for r in beats if r.acknowledged_at is not None]
+    return {
+        "shortfalls": len(shortfalls),
+        "shortfalls_acknowledged": sum(1 for r in shortfalls if r.acknowledged_at is not None),
+        "beats": len(beats),
+        "beats_acknowledged": len(beats_acknowledged),
+        "acknowledging_companies": sorted({r.company for r in beats_acknowledged}),
+    }
 
-    groups: list[tuple[str, list[ResearchRecord], list[ResearchRecord]]] = []
-    for company in sorted({r.company for r in records}):
-        missed = [r for r in records if r.company == company and r.status == "missed"]
-        beat = [r for r in missed if direction(r) == "beat"]
-        shortfall = [r for r in missed if direction(r) == "shortfall"]
-        if beat or shortfall:
-            groups.append((company, beat, shortfall))
 
-    fig, ax = plt.subplots(figsize=(7, max(2.5, 0.9 * len(groups) + 1)))
-    bar_height = 0.35
-    total_rows = 0
-    for i, (_, beat, shortfall) in enumerate(groups):
-        beat_share, beat_n = share_and_count(beat)
-        shortfall_share, shortfall_n = share_and_count(shortfall)
-        total_rows += beat_n + shortfall_n
-        ax.barh(i + bar_height / 2, beat_share, height=bar_height, color=GREY_DARK, label="beat" if i == 0 else None)
-        ax.barh(i - bar_height / 2, shortfall_share, height=bar_height, color=ACCENT_MISSED, label="shortfall" if i == 0 else None)
-        ax.text(beat_share + 0.02, i + bar_height / 2, f"n={beat_n}", va="center", fontsize=8, color=GREY_MID)
-        ax.text(shortfall_share + 0.02, i - bar_height / 2, f"n={shortfall_n}", va="center", fontsize=8, color=GREY_MID)
-    ax.set_yticks(range(len(groups)))
-    ax.set_yticklabels([company for company, _, _ in groups])
-    ax.invert_yaxis()
-    ax.set_xlim(0, 1.15)
-    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1))
-    ax.set_xlabel("share acknowledged")
-    ax.set_title("Beats get mentioned. Shortfalls do not.")
-    ax.grid(True, axis="x", color=GREY_LIGHT, linewidth=0.5, alpha=0.6)
-    for spine in ("top", "right"):
-        ax.spines[spine].set_visible(False)
-    if groups:
-        ax.legend(frameon=False, fontsize=8, loc="lower right")
-    _footer(fig, dataset, total_rows, generated_at)
+def _join_names(names: list[str]) -> str:
+    if not names:
+        return ""
+    if len(names) == 1:
+        return names[0]
+    return ", ".join(names[:-1]) + f" and {names[-1]}"
+
+
+def _acknowledgement_stat_tile(records: list[ResearchRecord], dataset: str, generated_at: date) -> plt.Figure:
+    summary = acknowledgement_summary(records)
+    headline = f"{summary['shortfalls']:,} shortfalls. {summary['shortfalls_acknowledged']:,} acknowledged."
+    subline = f"Beats: {summary['beats_acknowledged']:,} of {summary['beats']:,} acknowledged"
+    if summary["acknowledging_companies"]:
+        subline += f", by {_join_names(summary['acknowledging_companies'])}"
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    ax.axis("off")  # plain background: no axes, no gridlines, just the two lines and the footer
+    ax.text(0.5, 0.58, headline, ha="center", va="center", fontsize=24, fontweight="bold",
+            color=ACCENT_MISSED, transform=ax.transAxes, wrap=True)
+    ax.text(0.5, 0.38, subline, ha="center", va="center", fontsize=13, color=GREY_DARK, transform=ax.transAxes, wrap=True)
+    _footer(fig, dataset, sum(1 for r in records if r.status == "missed"), generated_at)
     fig.tight_layout(rect=(0, 0.04, 1, 1))
     return fig
 
@@ -243,7 +247,7 @@ def _miss_magnitude_histogram(records: list[ResearchRecord], dataset: str, gener
             ax.text(0.99, 0.97, f"{outside} row(s) outside the shown range", transform=ax.transAxes,
                     ha="right", va="top", fontsize=8, color=GREY_MID)
     ax.axvline(0, color=GREY_DARK, linewidth=1)
-    ax.text(0, ax.get_ylim()[1], " edge of guided range", rotation=90, ha="left", va="top", fontsize=8, color=GREY_DARK)
+    ax.text(0, ax.get_ylim()[1], "edge of guided range", ha="center", va="top", fontsize=8, color=GREY_DARK)
     ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1))
     ax.set_xlabel("(reported - nearest target edge) / nearest target edge")
     ax.set_ylabel("rows")
@@ -258,7 +262,7 @@ def _miss_magnitude_histogram(records: list[ResearchRecord], dataset: str, gener
 
 _BUILDERS = (
     _falsifiable_vs_acknowledged,
-    _acknowledgement_by_company,
+    _acknowledgement_stat_tile,
     _resolution_by_fiscal_year,
     _miss_magnitude_histogram,
 )

@@ -122,6 +122,46 @@ def test_ack_categories_lists_all_three_in_display_order() -> None:
     )
 
 
+# --- acknowledgement_summary, for the stat tile ---------------------------------
+
+
+def test_acknowledgement_summary_counts_shortfalls_and_beats_separately() -> None:
+    shortfall = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K")  # default: reported 4800 vs [5000, 6000], a shortfall
+    beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", outcome=outcome(6_500.0))
+    summary = figures.acknowledgement_summary([shortfall, beat])
+    assert (summary["shortfalls"], summary["beats"]) == (1, 1)
+
+
+def test_acknowledgement_summary_counts_acknowledged_shortfalls_and_beats() -> None:
+    ack_shortfall = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K", acknowledged_at="2025-02-10",
+                         acknowledgement_evidence=evidence(content_sha256="c" * 64), days_to_acknowledged=7)
+    bare_shortfall = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K")
+    ack_beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH3K", outcome=outcome(6_500.0), acknowledged_at="2025-02-03",
+                    acknowledgement_evidence=evidence(content_sha256="d" * 64), days_to_acknowledged=0)
+    bare_beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH4K", outcome=outcome(6_600.0))
+    summary = figures.acknowledgement_summary([ack_shortfall, bare_shortfall, ack_beat, bare_beat])
+    assert (summary["shortfalls"], summary["shortfalls_acknowledged"]) == (2, 1)
+    assert (summary["beats"], summary["beats_acknowledged"]) == (2, 1)
+
+
+def test_acknowledgement_summary_names_only_companies_with_an_acknowledged_beat() -> None:
+    acknowledged_beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K", company="Acme Corp", outcome=outcome(6_500.0),
+                             acknowledged_at="2025-02-03", acknowledgement_evidence=evidence(content_sha256="c" * 64), days_to_acknowledged=0)
+    bare_beat_other_company = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", company="Zeta Corp", outcome=outcome(6_600.0))
+    acknowledged_shortfall_third_company = rec(  # acknowledged, but a shortfall, not a beat: must not be named
+        "01HZY8Q9XMR3T7VBN2CDEFGH3K", company="Beta Corp", acknowledged_at="2025-02-10",
+        acknowledgement_evidence=evidence(content_sha256="d" * 64), days_to_acknowledged=7,
+    )
+    summary = figures.acknowledgement_summary([acknowledged_beat, bare_beat_other_company, acknowledged_shortfall_third_company])
+    assert summary["acknowledging_companies"] == ["Acme Corp"]
+
+
+def test_acknowledgement_summary_on_no_missed_rows() -> None:
+    met = rec(status="met", outcome=outcome(5_500.0))
+    summary = figures.acknowledgement_summary([met])
+    assert summary == {"shortfalls": 0, "shortfalls_acknowledged": 0, "beats": 0, "beats_acknowledged": 0, "acknowledging_companies": []}
+
+
 # --- write_all: all four files exist and are non-empty, live data or none at all ----
 
 
