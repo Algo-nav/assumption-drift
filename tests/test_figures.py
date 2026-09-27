@@ -94,6 +94,34 @@ def test_miss_magnitude_of_a_beat_is_positive() -> None:
     assert figures.miss_magnitude(beat) == pytest.approx(0.1)
 
 
+# --- acknowledgement_bucket -----------------------------------------------------
+
+
+def test_acknowledgement_bucket_is_none_unless_missed() -> None:
+    met = rec(status="met", outcome=outcome(5_500.0))
+    assert figures.acknowledgement_bucket(met) is None
+
+
+def test_acknowledgement_bucket_is_the_same_filing_when_days_to_acknowledged_is_zero() -> None:
+    r = rec(acknowledged_at="2025-02-03", acknowledgement_evidence=evidence(content_sha256="c" * 64), days_to_acknowledged=0)
+    assert figures.acknowledgement_bucket(r) == "acknowledged in the same filing"
+
+
+def test_acknowledgement_bucket_is_later_when_days_to_acknowledged_is_positive() -> None:
+    r = rec(acknowledged_at="2025-02-10", acknowledgement_evidence=evidence(content_sha256="c" * 64), days_to_acknowledged=7)
+    assert figures.acknowledgement_bucket(r) == "acknowledged later"
+
+
+def test_acknowledgement_bucket_is_never_without_an_acknowledgement() -> None:
+    assert figures.acknowledgement_bucket(rec()) == "never acknowledged"
+
+
+def test_ack_categories_lists_all_three_in_display_order() -> None:
+    assert figures.ACK_CATEGORIES == (
+        "acknowledged in the same filing", "acknowledged later", "never acknowledged",
+    )
+
+
 # --- write_all: all four files exist and are non-empty, live data or none at all ----
 
 
@@ -128,3 +156,10 @@ def test_write_all_uses_no_red_amber_or_green() -> None:
     # the accent is a blue-violet, not a warm colour: its red channel is not the dominant one
     r, g, b = (int(figures.ACCENT_MISSED[i : i + 2], 16) for i in (1, 3, 5))
     assert b >= r
+
+
+def test_figures_module_source_has_no_em_dash() -> None:
+    import pathlib
+
+    source = pathlib.Path(figures.__file__).read_text(encoding="utf-8")
+    assert "—" not in source

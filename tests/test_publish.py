@@ -176,16 +176,48 @@ def sample_result(record_data):
     return stats.compute([ResearchRecord(**record_data())])
 
 
+def render(result, **overrides):
+    kwargs = dict(dataset="assumption-drift", generated_at=date(2026, 9, 27), hf_user="Nav772",
+                  filing_date_from=date(2019, 1, 1), filing_date_to=date(2026, 9, 20))
+    kwargs.update(overrides)
+    return publish.render_card(result, **kwargs)
+
+
 def test_render_card_has_every_section_in_order(sample_result) -> None:
-    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    text = render(sample_result)
     sections = ["## What this is", "## How a row is built", "## The resolution rubric", "## Provenance guarantee",
                 "## Known limitations", "## How to cite", "## Licence"]
     positions = [text.index(s) for s in sections]
     assert positions == sorted(positions)
 
 
+def test_render_card_starts_with_hugging_face_yaml_frontmatter(sample_result) -> None:
+    text = render(sample_result)
+    assert text.startswith("---\n")
+    frontmatter = text[4 : text.index("\n---\n", 4)]
+    assert "license: cc-by-4.0" in frontmatter
+    assert "- en" in frontmatter
+    for tag in ("finance", "sec-filings", "guidance", "provenance"):
+        assert f"- {tag}" in frontmatter
+    assert "- n<1K" in frontmatter
+    assert "pretty_name: assumption-drift" in frontmatter
+
+
+def test_render_card_names_the_companies_and_filing_range_in_the_first_paragraph(sample_result) -> None:
+    text = render(sample_result, filing_date_from=date(2019, 1, 1), filing_date_to=date(2026, 9, 20))
+    first_paragraph = text[text.index("## What this is") : text.index("## How a row is built")]
+    assert sample_result["company_table"][0]["company"] in first_paragraph
+    assert "January 2019" in first_paragraph and "September 2026" in first_paragraph
+
+
+def test_render_card_defines_acknowledged_under_the_rubric(sample_result) -> None:
+    text = render(sample_result)
+    rubric_section = text[text.index("## The resolution rubric") : text.index("As of")]
+    assert "Acknowledged means" in rubric_section
+
+
 def test_render_card_states_every_limitation_plainly(sample_result) -> None:
-    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    text = render(sample_result)
     limitations = text[text.index("## Known limitations") : text.index("## How to cite")]
     for phrase in [
         "three companies", "pilot",
@@ -194,13 +226,22 @@ def test_render_card_states_every_limitation_plainly(sample_result) -> None:
         "one-sided floor", "not measured",
         "8-K, 10-K and 10-Q", "earnings call",
         "multi-column table", "unresolved",
-        "human-reviewed", "ten percent", "hand-verified",
     ]:
         assert phrase in limitations, f"missing: {phrase!r}"
 
 
+def test_render_card_states_the_human_review_guarantee_once_in_provenance_only(sample_result) -> None:
+    text = render(sample_result)
+    how_built = text[text.index("## How a row is built") : text.index("## The resolution rubric")]
+    provenance = text[text.index("## Provenance guarantee") : text.index("## Known limitations")]
+    limitations = text[text.index("## Known limitations") : text.index("## How to cite")]
+    assert "checked by a person" in provenance and "ten percent" in provenance and "hand" in provenance
+    assert "checked by a person" not in how_built and "hand-verified" not in how_built.lower()
+    assert "human-reviewed" not in limitations.lower() and "hand-verified" not in limitations.lower()
+
+
 def test_render_card_has_no_em_dash_and_no_buy_side_and_no_product_mention(sample_result) -> None:
-    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    text = render(sample_result)
     assert "—" not in text
     assert "buy-side" not in text.lower()
     for banned in ("anthropic", "claude", "scnd order"):
@@ -208,22 +249,27 @@ def test_render_card_has_no_em_dash_and_no_buy_side_and_no_product_mention(sampl
 
 
 def test_render_card_embeds_live_numbers_from_stats(sample_result) -> None:
-    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    text = render(sample_result)
     assert f"{sample_result['rows']:,} rows" in text
     assert "figures/falsifiable_vs_acknowledged.png" in text
 
 
 def test_render_card_says_the_hash_is_of_the_extracted_text(sample_result) -> None:
-    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    text = render(sample_result)
     assert "sha256 of the extracted text" in text
 
 
 def test_render_card_links_all_four_figures(sample_result) -> None:
     from pipeline import figures
 
-    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    text = render(sample_result)
     for name in figures.FIGURE_FILES:
         assert f"figures/{name}" in text
+
+
+def test_render_card_cite_block_has_the_right_shape(sample_result) -> None:
+    text = render(sample_result, hf_user="Nav772", generated_at=date(2026, 9, 27))
+    assert "Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-09-27." in text
 
 
 # --- main, end to end ------------------------------------------------------------
@@ -268,6 +314,9 @@ def test_main_without_any_flag_also_does_not_upload(world, config_path, record_d
 
 def test_main_live_refuses_when_hf_user_is_still_the_placeholder(world, config_path, record_data, monkeypatch, capsys) -> None:
     seed(world, COMPANY, [csv_row(record_data)])
+    cfg = yaml.safe_load(config_path.read_text())
+    cfg["hf"]["user"] = "{HF_USER}"
+    config_path.write_text(yaml.safe_dump(cfg))
     monkeypatch.setattr(publish, "upload_to_hub", lambda *a, **k: pytest.fail("must not upload"))
     assert publish.main(["--config", str(config_path), "--live"]) == 2
     assert "placeholder" in capsys.readouterr().err

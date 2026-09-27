@@ -63,7 +63,7 @@ llm:
   price_output_per_mtok: 5.00
   batch_discount: 0.5
 hf:
-  user: "{HF_USER}"
+  user: "Nav772"
   dataset: "assumption-drift"
 
 # Phase 1, 02_candidates.py. A sentence is a candidate when it has at least one

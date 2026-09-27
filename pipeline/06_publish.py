@@ -159,32 +159,61 @@ def _company_table_markdown(company_table: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def render_card(result: dict[str, Any], *, dataset: str, generated_at: date) -> str:
+def _join_names(names: list[str]) -> str:
+    if not names:
+        return "no companies yet"
+    if len(names) == 1:
+        return names[0]
+    return ", ".join(names[:-1]) + f" and {names[-1]}"
+
+
+def _frontmatter(dataset: str) -> str:
+    return f"""\
+---
+license: cc-by-4.0
+language:
+- en
+tags:
+- finance
+- sec-filings
+- guidance
+- provenance
+size_categories:
+- n<1K
+pretty_name: {dataset}
+---
+"""
+
+
+def render_card(
+    result: dict[str, Any], *, dataset: str, generated_at: date, hf_user: str, filing_date_from: date, filing_date_to: date
+) -> str:
     """The dataset card (SCOPE.md 5.4), sections in order: what this is, how a row is built, the
-    resolution rubric, provenance guarantee, known limitations, how to cite, licence. Every number in
-    it comes from `result` (`research_record.stats.compute()`'s own dict): nothing here is typed by
-    hand and drifts from the release."""
+    resolution rubric, provenance guarantee, known limitations, how to cite, licence, behind a Hugging
+    Face YAML frontmatter block. Every number in it comes from `result`
+    (`research_record.stats.compute()`'s own dict): nothing here is typed by hand and drifts from the
+    release. The human-review guarantee is stated once, under Provenance, and nowhere else."""
     by_status = result["by_status"]
     beat = result["missed_by_direction"].get("beat", 0)
     shortfall = result["missed_by_direction"].get("shortfall", 0)
+    companies_named = _join_names([row["company"] for row in result["company_table"]])
+    filing_range = f"{filing_date_from:%B %Y} and {filing_date_to:%B %Y}"
 
-    return f"""\
+    return _frontmatter(dataset) + f"""\
 # {dataset}
 
 ## What this is
 
-This dataset pairs numeric forward guidance statements from public company SEC filings with what the
-company later reported for that same metric and period. Each row also records whether the company
-ever acknowledged the gap, if the guidance was missed. It is a problem statement in data form, not a
-model and not a demonstration of one.
+{companies_named} made numeric forward guidance statements in their own SEC filings, filed between
+{filing_range}. This dataset pairs each one with what the company later reported for that same metric
+and period, and records whether the company ever acknowledged the gap when the guidance was missed.
+It is a problem statement in data form, not a model and not a demonstration of one.
 
 ## How a row is built
 
 A row starts as a sentence or a table in an 8-K, 10-K or 10-Q filing that names a metric, a number or
 range, and a period. A later filing reporting the same metric for the same period supplies the outcome,
-when one exists. Every candidate row was drafted by a language model reading the filing text, then
-checked by a person against the cached filing before it was approved; nothing below is published
-without that check.
+when one exists. Every candidate row was drafted by a language model reading the filing text.
 
 ## The resolution rubric
 
@@ -198,6 +227,9 @@ A row resolves mechanically from its own numbers, once the period has closed and
   the period closed
 - **unresolved**: the period has not closed yet, or no later filing reports the metric
 
+Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words: "below", "short of" or
+"did not meet" for a shortfall, "exceeded" or "above the high end" for a beat.
+
 As of {generated_at.isoformat()}, the release holds **{result['rows']:,} rows**: {", ".join(f"{v:,} {k}" for k, v in by_status.items())}.
 Of the misses, {beat:,} were a beat and {shortfall:,} a shortfall; median days from the guidance to the
 filing that made it checkable was {result['median_days_to_falsifiable']}, and
@@ -207,8 +239,8 @@ By company:
 
 {_company_table_markdown(result["company_table"])}
 
-![Missed rows: falsifiable vs acknowledged](figures/{figures.FIGURE_FILES[0]})
-![Acknowledgement of shortfalls by company](figures/{figures.FIGURE_FILES[1]})
+![Missed rows: when the gap was acknowledged](figures/{figures.FIGURE_FILES[0]})
+![Beats get mentioned. Shortfalls do not.](figures/{figures.FIGURE_FILES[1]})
 ![Resolution by fiscal year](figures/{figures.FIGURE_FILES[2]})
 ![Miss magnitude](figures/{figures.FIGURE_FILES[3]})
 
@@ -219,8 +251,9 @@ built from a URL that was not actually fetched. Every excerpt is the exact text 
 filing. Its provenance hash is the sha256 of the extracted text, not of the raw page: SEC serves a
 per-request script tag inside the raw HTML that differs on every fetch of the same document, so only
 the extracted text is stable enough to hash and check again later. Every row was independently
-checked by a person against the cached filing, and at least ten percent of the approved rows for each
-company were separately re-found on EDGAR by hand and their URL compared to the one the pipeline used.
+checked by a person against the cached filing before it was approved, and at least ten percent of the
+approved rows for each company were separately re-found on EDGAR by hand, their URL compared to the
+one the pipeline used.
 
 ## Known limitations
 
@@ -237,15 +270,12 @@ company were separately re-found on EDGAR by hand and their URL compared to the 
   not in EDGAR.
 - An outcome that would come from a multi-column table whose header could not be confidently matched
   to a period is held back as unresolved rather than guessed at.
-- Every row here was human-reviewed against the filing it cites, and at least ten percent of the
-  approved rows per company were hand-verified on EDGAR by comparing the pipeline's URL to one
-  independently found.
 
 ## How to cite
 
-If you use this dataset, please cite it by name and the date it was accessed:
+If you use this dataset, please cite it as:
 
-    {dataset}, accessed {generated_at.isoformat()}.
+    Navneet ({generated_at.year}). {dataset}. https://huggingface.co/datasets/{hf_user}/{dataset}. Accessed {generated_at.isoformat()}.
 
 ## Licence
 
@@ -298,7 +328,12 @@ def main(argv: list[str] | None = None) -> int:
     result = stats.compute(records)
     CARD_DIR.mkdir(parents=True, exist_ok=True)
     card_path = CARD_DIR / "README.md"
-    card_path.write_text(render_card(result, dataset=DATASET_NAME, generated_at=generated_at), encoding="utf-8")
+    card_text = render_card(
+        result, dataset=DATASET_NAME, generated_at=generated_at, hf_user=hf_user,
+        filing_date_from=date.fromisoformat(config["edgar"]["date_from"]),
+        filing_date_to=date.fromisoformat(config["edgar"]["date_to"]),
+    )
+    card_path.write_text(card_text, encoding="utf-8")
     print(f"  wrote {card_path}")
 
     if args.live:

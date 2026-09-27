@@ -12,6 +12,7 @@ behind that figure, the generation date, and "Source: SEC EDGAR".
 
 from __future__ import annotations
 
+import random
 import re
 from datetime import date
 from pathlib import Path
@@ -21,13 +22,14 @@ import matplotlib
 matplotlib.use("Agg")  # headless: this runs from a script and from tests, never a display
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 
 from research_record import rubric
 from research_record.schema import ResearchRecord
 
 __all__ = [
-    "GREY_DARK", "GREY_MID", "GREY_LIGHT", "ACCENT_MISSED", "FIGURE_FILES",
-    "fiscal_year", "direction", "nearest_edge", "miss_magnitude", "write_all",
+    "GREY_DARK", "GREY_MID", "GREY_LIGHT", "ACCENT_MISSED", "FIGURE_FILES", "ACK_CATEGORIES",
+    "fiscal_year", "direction", "nearest_edge", "miss_magnitude", "acknowledgement_bucket", "write_all",
 ]
 
 GREY_DARK = "#3f3f46"
@@ -89,6 +91,21 @@ def miss_magnitude(record: ResearchRecord) -> float | None:
     return (record.outcome.reported_value - edge) / edge
 
 
+#: The three buckets a missed row's acknowledgement falls into, in display order (top to bottom).
+ACK_CATEGORIES = ("acknowledged in the same filing", "acknowledged later", "never acknowledged")
+
+
+def acknowledgement_bucket(record: ResearchRecord) -> str | None:
+    """Which of `ACK_CATEGORIES` a missed row falls into: the same filing that reported the outcome
+    also acknowledged it (`days_to_acknowledged == 0`), a later one did (`> 0`), or none ever did.
+    None for a row that is not missed."""
+    if record.status != "missed":
+        return None
+    if record.acknowledged_at is None:
+        return "never acknowledged"
+    return "acknowledged in the same filing" if (record.days_to_acknowledged or 0) == 0 else "acknowledged later"
+
+
 def _footer(fig, dataset: str, rows: int, generated_at: date) -> None:
     unit = "row" if rows == 1 else "rows"
     fig.text(
@@ -97,67 +114,79 @@ def _footer(fig, dataset: str, rows: int, generated_at: date) -> None:
     )
 
 
-# --- 1. falsifiable vs acknowledged, missed rows, never-acknowledged as a strip at the top ------
+# --- 1. when a missed row was acknowledged: a categorical strip plot, jittered ------------------
 
 
 def _falsifiable_vs_acknowledged(records: list[ResearchRecord], dataset: str, generated_at: date) -> plt.Figure:
     missed = [r for r in records if r.status == "missed"]
-    both = [(r.days_to_falsifiable, r.days_to_acknowledged) for r in missed
-            if r.days_to_falsifiable is not None and r.days_to_acknowledged is not None]
-    never = [r.days_to_falsifiable for r in missed if r.days_to_falsifiable is not None and r.acknowledged_at is None]
+    rng = random.Random(0)  # fixed seed: the jitter is reproducible for the same release data
+    buckets: dict[str, list[int]] = {c: [] for c in ACK_CATEGORIES}
+    for r in missed:
+        bucket = acknowledgement_bucket(r)
+        if bucket is not None and r.days_to_falsifiable is not None:
+            buckets[bucket].append(r.days_to_falsifiable)
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
-    top_y = max([y for _, y in both] + [1]) * 4 if (both or never) else 10
-    if both:
-        xs, ys = zip(*both)
-        ax.scatter(xs, [max(y, 1) for y in ys], color=ACCENT_MISSED, alpha=0.75, s=28, label="acknowledged", zorder=3)
-    if never:
-        ax.scatter(never, [top_y] * len(never), color=ACCENT_MISSED, marker="x", s=28, label="never acknowledged", zorder=3)
-        ax.axhline(top_y * 0.6, color=GREY_LIGHT, linewidth=0.8, linestyle="--", zorder=1)
-    ax.set_yscale("log")
+    for i, category in enumerate(ACK_CATEGORIES):
+        xs = buckets[category]
+        if not xs:
+            continue
+        ys = [i + rng.uniform(-0.15, 0.15) for _ in xs]
+        color = ACCENT_MISSED if category == "never acknowledged" else GREY_DARK
+        ax.scatter(xs, ys, color=color, alpha=0.7, s=28, zorder=3)
+    ax.set_yticks(range(len(ACK_CATEGORIES)))
+    ax.set_yticklabels(ACK_CATEGORIES)
+    ax.invert_yaxis()
     ax.set_xlabel("days to falsifiable (guidance to the filing that reported it)")
-    ax.set_ylabel("days to acknowledged (log scale)")
-    ax.set_title("Missed rows: how long before the gap was checkable, and acknowledged")
-    ax.grid(True, which="both", axis="both", color=GREY_LIGHT, linewidth=0.5, alpha=0.6)
-    for spine in ("top", "right"):
+    ax.set_title("Missed rows: when the gap was acknowledged")
+    ax.grid(True, axis="x", color=GREY_LIGHT, linewidth=0.5, alpha=0.6)
+    for spine in ("top", "right", "left"):
         ax.spines[spine].set_visible(False)
-    if both or never:
-        ax.legend(frameon=False, fontsize=8, loc="lower right")
     _footer(fig, dataset, len(missed), generated_at)
     fig.tight_layout(rect=(0, 0.04, 1, 1))
     return fig
 
 
-# --- 2. share of shortfalls never acknowledged, per company, horizontal bars --------------------
+# --- 2. share acknowledged, beat vs shortfall, per company, grouped horizontal bars --------------
 
 
 def _acknowledgement_by_company(records: list[ResearchRecord], dataset: str, generated_at: date) -> plt.Figure:
-    companies = sorted({r.company for r in records})
-    shares: list[float] = []
-    used: list[str] = []
-    for company in companies:
-        shortfalls = [r for r in records if r.company == company and r.status == "missed" and direction(r) == "shortfall"]
-        if not shortfalls:
-            continue
-        never = sum(1 for r in shortfalls if r.acknowledged_at is None)
-        used.append(company)
-        shares.append(never / len(shortfalls))
+    def share_and_count(rows: list[ResearchRecord]) -> tuple[float, int]:
+        return ((sum(1 for r in rows if r.acknowledged_at is not None) / len(rows)) if rows else 0.0, len(rows))
 
-    fig, ax = plt.subplots(figsize=(7, max(2.5, 0.5 * len(used) + 1)))
-    y_pos = range(len(used))
-    ax.barh(list(y_pos), shares, color=ACCENT_MISSED)
-    ax.set_yticks(list(y_pos))
-    ax.set_yticklabels(used)
+    groups: list[tuple[str, list[ResearchRecord], list[ResearchRecord]]] = []
+    for company in sorted({r.company for r in records}):
+        missed = [r for r in records if r.company == company and r.status == "missed"]
+        beat = [r for r in missed if direction(r) == "beat"]
+        shortfall = [r for r in missed if direction(r) == "shortfall"]
+        if beat or shortfall:
+            groups.append((company, beat, shortfall))
+
+    fig, ax = plt.subplots(figsize=(7, max(2.5, 0.9 * len(groups) + 1)))
+    bar_height = 0.35
+    total_rows = 0
+    for i, (_, beat, shortfall) in enumerate(groups):
+        beat_share, beat_n = share_and_count(beat)
+        shortfall_share, shortfall_n = share_and_count(shortfall)
+        total_rows += beat_n + shortfall_n
+        ax.barh(i + bar_height / 2, beat_share, height=bar_height, color=GREY_DARK, label="beat" if i == 0 else None)
+        ax.barh(i - bar_height / 2, shortfall_share, height=bar_height, color=ACCENT_MISSED, label="shortfall" if i == 0 else None)
+        ax.text(beat_share + 0.02, i + bar_height / 2, f"n={beat_n}", va="center", fontsize=8, color=GREY_MID)
+        ax.text(shortfall_share + 0.02, i - bar_height / 2, f"n={shortfall_n}", va="center", fontsize=8, color=GREY_MID)
+    ax.set_yticks(range(len(groups)))
+    ax.set_yticklabels([company for company, _, _ in groups])
     ax.invert_yaxis()
-    ax.set_xlim(0, 1)
-    ax.set_xlabel("share of shortfalls never acknowledged")
-    ax.set_title("Acknowledgement of shortfalls, by company")
+    ax.set_xlim(0, 1.15)
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1))
+    ax.set_xlabel("share acknowledged")
+    ax.set_title("Beats get mentioned. Shortfalls do not.")
     ax.grid(True, axis="x", color=GREY_LIGHT, linewidth=0.5, alpha=0.6)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
-    total_shortfalls = sum(1 for r in records if r.status == "missed" and direction(r) == "shortfall")
-    _footer(fig, dataset, total_shortfalls, generated_at)
-    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    if groups:
+        ax.legend(frameon=False, fontsize=8, loc="lower right")
+    _footer(fig, dataset, total_rows, generated_at)
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     return fig
 
 
@@ -214,6 +243,8 @@ def _miss_magnitude_histogram(records: list[ResearchRecord], dataset: str, gener
             ax.text(0.99, 0.97, f"{outside} row(s) outside the shown range", transform=ax.transAxes,
                     ha="right", va="top", fontsize=8, color=GREY_MID)
     ax.axvline(0, color=GREY_DARK, linewidth=1)
+    ax.text(0, ax.get_ylim()[1], " edge of guided range", rotation=90, ha="left", va="top", fontsize=8, color=GREY_DARK)
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1))
     ax.set_xlabel("(reported - nearest target edge) / nearest target edge")
     ax.set_ylabel("rows")
     ax.set_title("Miss magnitude")

@@ -42,8 +42,8 @@ def test_llm_block_keeps_scopes_values_and_adds_prices(config) -> None:
     assert (llm["price_input_per_mtok"], llm["price_output_per_mtok"], llm["batch_discount"]) == (1.00, 5.00, 0.5)
 
 
-def test_hf_block_is_untouched(config) -> None:
-    assert config["hf"] == {"user": "{HF_USER}", "dataset": "assumption-drift"}  # supplied before Phase 3
+def test_hf_block_has_navneets_hugging_face_user(config) -> None:
+    assert config["hf"] == {"user": "Nav772", "dataset": "assumption-drift"}
 
 
 def test_a_config_with_another_user_agent_is_refused(tmp_path) -> None:
