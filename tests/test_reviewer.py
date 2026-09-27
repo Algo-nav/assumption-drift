@@ -289,6 +289,14 @@ def test_declining_the_tenth_approval_prompt_leaves_hand_verified_false(tmp_path
     assert read_csv(path)[-1]["hand_verified"] == "false"
 
 
+def test_approving_an_empty_block_row_is_refused(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", empty_block="true"))
+    s = Script(keys=["y", "s"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    assert any("empty block, use s" in m for m in s.out)
+    assert read_csv(path)[0]["approved"] == "false"
+
+
 def test_an_unrecognised_key_is_reported_and_the_row_stays(tmp_path) -> None:
     path = seed(tmp_path, row("R1"))
     s = Script(keys=["z", "s"])

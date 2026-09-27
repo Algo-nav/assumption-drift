@@ -11,6 +11,9 @@ below that, and the EDGAR URL the evidence came from. Keys:
   v  mark hand-verified       hand_verified -> true; stays on the row
   q  quit                     stop here; everything already written is already on disk
 
+A row with `empty_block=true` is not a draft record, so `y` on one refuses: it prints "empty block,
+use s" and leaves the row untouched. Use `s` to move past it.
+
 Every keypress writes the file back to disk before the next row is shown, so an interrupted session
 loses nothing already decided. SCOPE 4.3 requires hand-verifying at least 10% of approved rows per
 company: on every tenth approval (this file's running total, not just this session) the tool stops,
@@ -216,6 +219,9 @@ def run(
         write(PROMPT)
         key = read_key()
         if key == "y":
+            if row.get(EMPTY_BLOCK) == "true":
+                write("empty block, use s")
+                continue
             rf.rows[i] = approve(row)
             rf.save()
             if due_for_hand_verify(rf.rows):
