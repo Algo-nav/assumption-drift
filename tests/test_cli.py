@@ -40,6 +40,31 @@ def test_review_of_a_csv_with_no_record_id_column_reports_it_and_exits_1(tmp_pat
     assert "record_id" in capsys.readouterr().err
 
 
+def test_review_with_no_filter_flags_passes_none(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "R.csv"
+    make_csv(path)
+    seen: dict = {}
+    monkeypatch.setattr(reviewer, "run", lambda p, **kw: seen.update(kw))
+    assert cli.main(["review", str(path)]) == 0
+    assert seen["filters"] is None
+
+
+def test_review_passes_repeated_filter_flags_through_in_order(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "R.csv"
+    make_csv(path)
+    seen: dict = {}
+    monkeypatch.setattr(reviewer, "run", lambda p, **kw: seen.update(kw))
+    assert cli.main(["review", str(path), "--filter", "verify-no", "--filter", "no-note"]) == 0
+    assert seen["filters"] == ["verify-no", "no-note"]
+
+
+def test_review_with_an_unrecognised_filter_reports_it_and_exits_1(tmp_path, capsys) -> None:
+    path = tmp_path / "R.csv"
+    make_csv(path)
+    assert cli.main(["review", str(path), "--filter", "bogus"]) == 1
+    assert "bogus" in capsys.readouterr().err
+
+
 def test_a_keyboard_interrupt_during_review_exits_130(tmp_path, monkeypatch) -> None:
     path = tmp_path / "R.csv"
     make_csv(path)

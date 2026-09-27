@@ -19,6 +19,17 @@ loses nothing already decided. SCOPE 4.3 requires hand-verifying at least 10% of
 company: on every tenth approval (this file's running total, not just this session) the tool stops,
 prints the EDGAR URL again, and asks whether to mark that row hand-verified on the spot.
 
+`run(path, filters=[...])` restricts which rows are shown. Each filter spec is one of:
+
+  verify-no      only rows where aid_verify == "no"
+  no-note        only rows with an empty reviewer_note
+  ids=A,B,C      only rows whose record_id is A, B, or C
+
+Multiple specs combine with AND. Rows that do not match are never shown and never written to
+differently than they already were. When any filter is active, approving a row requires a non-empty
+reviewer_note: if `y` is pressed and the note is still empty, the tool prompts for one and saves it
+before approving.
+
 This module has no network calls and reads no other part of the pipeline: it works on any CSV that has
 a `record_id` column, so it does not need to import pipeline code, and nothing in the pipeline needs to
 import this. Its interactive loop takes its I/O (reading a key, reading a line, printing) as arguments,
@@ -129,6 +140,30 @@ def due_for_hand_verify(rows: list[dict[str, str]]) -> bool:
     return n > 0 and n % HAND_VERIFY_EVERY == 0
 
 
+# --- filters ---------------------------------------------------------------
+
+
+AID_VERIFY_COLUMN = "aid_verify"
+
+
+def parse_filter(spec: str) -> Callable[[dict[str, str]], bool]:
+    """One `--filter` spec into a predicate over a row. Raises ValueError on an unrecognised spec."""
+    if spec == "verify-no":
+        return lambda row: row.get(AID_VERIFY_COLUMN) == "no"
+    if spec == "no-note":
+        return lambda row: not row.get(REVIEWER_NOTE)
+    if spec.startswith("ids="):
+        ids = {part.strip() for part in spec[len("ids="):].split(",") if part.strip()}
+        return lambda row: row.get(RECORD_ID) in ids
+    raise ValueError(f"unrecognised filter: {spec!r}")
+
+
+def combine_filters(specs: list[str]) -> Callable[[dict[str, str]], bool]:
+    """All given specs ANDed together; an empty list matches every row."""
+    predicates = [parse_filter(spec) for spec in specs]
+    return lambda row: all(p(row) for p in predicates)
+
+
 # --- showing a row -------------------------------------------------------------
 
 
@@ -205,6 +240,7 @@ def default_read_key(stream: TextIO = sys.stdin) -> str:
 def run(
     path: Path,
     *,
+    filters: list[str] | None = None,
     read_key: Callable[[], str] | None = None,
     read_line: Callable[[str], str] = input,
     write: Callable[[str], None] = print,
@@ -212,49 +248,54 @@ def run(
 ) -> None:
     read_key = read_key or default_read_key
     rf = ReviewFile.load(path)
-    i = 0
-    while i < len(rf.rows):
-        row = rf.rows[i]
-        write(render_row(row, i + 1, len(rf.rows), wrap))
+    matches = combine_filters(filters) if filters else None
+    indices = [n for n, r in enumerate(rf.rows) if matches is None or matches(r)]
+    pos = 0
+    while pos < len(indices):
+        idx = indices[pos]
+        row = rf.rows[idx]
+        write(render_row(row, pos + 1, len(indices), wrap))
         write(PROMPT)
         key = read_key()
         if key == "y":
             if row.get(EMPTY_BLOCK) == "true":
                 write("empty block, use s")
                 continue
-            rf.rows[i] = approve(row)
+            if matches is not None and not row.get(REVIEWER_NOTE):
+                row = edit_field(row, REVIEWER_NOTE, read_line("Note required before approving: "))
+            rf.rows[idx] = approve(row)
             rf.save()
             if due_for_hand_verify(rf.rows):
                 write(f"\n{approved_count(rf.rows)} approvals for {row.get('ticker', 'this company')}. SCOPE 4.3: at least "
                       f"10% of approved rows must be independently hand-verified on EDGAR.")
                 write(f"EDGAR: {row.get(EDGAR_URL_COLUMN, '')}")
                 if read_line("Hand-verify this row now? [y/N] ").strip().lower().startswith("y"):
-                    rf.rows[i] = hand_verify(rf.rows[i])
+                    rf.rows[idx] = hand_verify(rf.rows[idx])
                     rf.save()
-            i += 1
+            pos += 1
         elif key == "n":
-            rf.rows[i] = reject(row, read_line("Reason: "))
+            rf.rows[idx] = reject(row, read_line("Reason: "))
             rf.save()
-            i += 1
+            pos += 1
         elif key == "e":
             field = read_line("Field to edit: ").strip()
             try:
                 value = read_line(f"New value for {field}: ")
-                rf.rows[i] = edit_field(row, field, value)
+                rf.rows[idx] = edit_field(row, field, value)
                 rf.save()
             except KeyError as exc:
                 write(str(exc))
             # stays on the same row: check the edit before deciding
         elif key == "v":
-            rf.rows[i] = hand_verify(row)
+            rf.rows[idx] = hand_verify(row)
             rf.save()
             # stays on the same row: hand-verifying is not itself a decision
         elif key == "s":
             rf.save()
-            i += 1
+            pos += 1
         elif key == "q":
-            write(f"stopped at row {i + 1}/{len(rf.rows)}; {path} is up to date.")
+            write(f"stopped at row {pos + 1}/{len(indices)}; {path} is up to date.")
             return
         else:
             write(f"unrecognised key {key!r}")
-    write(f"done: {len(rf.rows)} rows reviewed.")
+    write(f"done: {len(indices)} rows reviewed.")

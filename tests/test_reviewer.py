@@ -315,3 +315,117 @@ def test_default_read_key_returns_q_on_end_of_input(tmp_path) -> None:
     import io
 
     assert rv.default_read_key(io.StringIO("")) == "q"
+
+
+# --- filters -------------------------------------------------------------------
+
+
+def test_filter_verify_no_matches_only_aid_verify_no() -> None:
+    pred = rv.parse_filter("verify-no")
+    assert pred(row("R1", aid_verify="no"))
+    assert not pred(row("R2", aid_verify="yes"))
+    assert not pred(row("R3", aid_verify=""))
+
+
+def test_filter_no_note_matches_only_an_empty_reviewer_note() -> None:
+    pred = rv.parse_filter("no-note")
+    assert pred(row("R1", reviewer_note=""))
+    assert not pred(row("R2", reviewer_note="already reviewed"))
+
+
+def test_filter_ids_matches_only_the_listed_record_ids() -> None:
+    pred = rv.parse_filter("ids=R1,R3")
+    assert pred(row("R1")) and pred(row("R3"))
+    assert not pred(row("R2"))
+
+
+def test_filter_unrecognised_spec_raises() -> None:
+    with pytest.raises(ValueError, match="bogus"):
+        rv.parse_filter("bogus")
+
+
+def test_combine_filters_ands_them_together() -> None:
+    pred = rv.combine_filters(["verify-no", "no-note"])
+    assert pred(row("R1", aid_verify="no", reviewer_note=""))
+    assert not pred(row("R2", aid_verify="no", reviewer_note="already reviewed"))
+    assert not pred(row("R3", aid_verify="yes", reviewer_note=""))
+
+
+def test_combine_filters_with_no_specs_matches_every_row() -> None:
+    assert rv.combine_filters([])(row("R1"))
+
+
+# --- running with --filter ------------------------------------------------------
+
+
+def test_running_with_verify_no_only_visits_matching_rows(tmp_path) -> None:
+    path = seed(
+        tmp_path,
+        row("R1", aid_verify="no", reviewer_note="n"),
+        row("R2", aid_verify="yes", reviewer_note="n"),
+        row("R3", aid_verify="no", reviewer_note="n"),
+    )
+    s = Script(keys=["s", "s"])
+    rv.run(path, filters=["verify-no"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "done: 2 rows reviewed." in s.out
+    on_disk = {r["record_id"]: r for r in read_csv(path)}
+    assert on_disk["R2"]["approved"] == "false"  # never visited
+
+
+def test_running_with_no_note_only_visits_unnoted_rows(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", reviewer_note="already reviewed"), row("R2", reviewer_note=""))
+    s = Script(keys=["s"])
+    rv.run(path, filters=["no-note"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "done: 1 rows reviewed." in s.out
+
+
+def test_running_with_ids_only_visits_the_named_records(tmp_path) -> None:
+    path = seed(tmp_path, row("R1"), row("R2"), row("R3"))
+    s = Script(keys=["s"])
+    rv.run(path, filters=["ids=R2"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "done: 1 rows reviewed." in s.out
+
+
+def test_running_with_multiple_filters_ands_them(tmp_path) -> None:
+    path = seed(
+        tmp_path,
+        row("R1", aid_verify="no", reviewer_note=""),
+        row("R2", aid_verify="no", reviewer_note="already reviewed"),
+        row("R3", aid_verify="yes", reviewer_note=""),
+    )
+    s = Script(keys=["s"])
+    rv.run(path, filters=["verify-no", "no-note"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "done: 1 rows reviewed." in s.out
+
+
+def test_rows_outside_the_filter_are_left_untouched(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_verify="no", reviewer_note="n"), row("R2", aid_verify="yes", reviewer_note="n"))
+    before = {r["record_id"]: r for r in read_csv(path)}
+    s = Script(keys=["y"])
+    rv.run(path, filters=["verify-no"], read_key=s.key, read_line=s.line, write=s.write)
+    after = {r["record_id"]: r for r in read_csv(path)}
+    assert after["R2"] == before["R2"]
+
+
+def test_approving_a_filtered_row_with_an_empty_note_prompts_for_one(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_verify="no", reviewer_note=""))
+    s = Script(keys=["y"], lines=["verified against the 10-K"])
+    rv.run(path, filters=["verify-no"], read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "verified against the 10-K")
+
+
+def test_approving_a_filtered_row_with_an_existing_note_does_not_prompt(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_verify="no", reviewer_note="already checked"))
+    s = Script(keys=["y"])  # no lines queued: a prompt here would raise IndexError
+    rv.run(path, filters=["verify-no"], read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "already checked")
+
+
+def test_approving_without_any_filter_does_not_require_a_note(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", reviewer_note=""))
+    s = Script(keys=["y"])  # no lines queued: a prompt here would raise IndexError
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "")
