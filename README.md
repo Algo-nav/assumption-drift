@@ -15,8 +15,8 @@ This is a problem statement in data form. It is not a product and not a model.
 
 ## Status
 
-Phases 0 and 1 are done. Phase 2 is built and tested against a fake API but has not yet run
-against the real one: it needs an Anthropic API key (see below).
+Phases 0 through 3 are done, on the three-company pilot in `pipeline/config.yaml`. The 30-company
+run is not started; see `BACKLOG.md` for extractor fixes to do first.
 
 ## Running what exists
 
@@ -29,8 +29,14 @@ against the real one: it needs an Anthropic API key (see below).
 .venv/bin/python -m pipeline.04_outcomes             # Haiku: later outcomes and acknowledgements
 .venv/bin/python -m pipeline.05_review               # data/review/{cik}.csv for a human to check
 .venv/bin/python -m pipeline.03b_verify              # Haiku: a second opinion on each review row, written back to the CSV
+.venv/bin/python -m pipeline.03c_suggest             # code only: a suggested note for each row 03b_verify flagged "no"
 
 .venv/bin/rr review data/review/{cik}.csv            # review the queue one row at a time in the terminal
+
+# Phase 3. Dry run by default; --live also needs hf.user set in config.yaml.
+.venv/bin/rr validate data/release/assumption_drift.jsonl   # every check a published row must pass
+.venv/bin/rr stats data/release/assumption_drift.jsonl      # row counts, resolution, acknowledgement, per company
+.venv/bin/python -m pipeline.06_publish --dry-run           # parquet, jsonl, card/README.md, card/figures/*.png
 ```
 
 Companies, date range and the SEC User-Agent live in `pipeline/config.yaml`. SEC requests

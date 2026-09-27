@@ -106,3 +106,47 @@ def test_stats_of_a_missing_file_reports_it_and_exits_1(tmp_path, capsys) -> Non
     missing = tmp_path / "nope.jsonl"
     assert cli.main(["stats", str(missing)]) == 1
     assert "rr stats" in capsys.readouterr().err
+
+
+def test_stats_json_prints_valid_json(tmp_path, record_data, capsys) -> None:
+    path = tmp_path / "release.jsonl"
+    path.write_text(json.dumps(record_data(), default=str) + "\n", encoding="utf-8")
+    assert cli.main(["stats", str(path), "--json"]) == 0
+    parsed = json.loads(capsys.readouterr().out)
+    assert parsed["rows"] == 1
+
+
+# --- validate ------------------------------------------------------------------
+
+
+def test_validate_of_a_clean_jsonl_reports_ok_and_exits_0(tmp_path, record_data, capsys, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "data" / "raw" / "0000000123").mkdir(parents=True)
+    html = tmp_path / "data" / "raw" / "0000000123" / "0000000123-24-000001.html"
+    html.write_bytes(b"The Company expects full year 2024 revenue of $5.0 billion to $6.0 billion.")
+    from research_record.validate import DEFAULT_RAW_DIR
+    import hashlib
+    data = record_data()
+    data["assumption"]["evidence"]["content_sha256"] = hashlib.sha256(html.read_bytes()).hexdigest()
+    data["outcome"] = None
+    data["status"] = "unresolved"
+    data["days_to_falsifiable"] = None
+    path = tmp_path / "release.jsonl"
+    path.write_text(json.dumps(data, default=str) + "\n", encoding="utf-8")
+    assert cli.main(["validate", str(path.relative_to(tmp_path))]) == 0
+    assert "all OK" in capsys.readouterr().out
+
+
+def test_validate_reports_issues_and_exits_1(tmp_path, record_data, capsys) -> None:
+    path = tmp_path / "release.jsonl"
+    path.write_text(json.dumps(record_data(), default=str) + "\n", encoding="utf-8")  # cached doc absent
+    assert cli.main(["validate", str(path)]) == 1
+    err = capsys.readouterr().err
+    assert record_data()["record_id"] in err and "issue(s)" in err
+
+
+def test_validate_of_an_unsupported_extension_reports_it_and_exits_1(tmp_path, capsys) -> None:
+    path = tmp_path / "release.txt"
+    path.write_text("nothing", encoding="utf-8")
+    assert cli.main(["validate", str(path)]) == 1
+    assert "rr validate" in capsys.readouterr().err

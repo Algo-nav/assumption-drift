@@ -1,0 +1,130 @@
+"""pipeline/figures.py: the four static charts under card/figures/ (SCOPE.md section 5.5)."""
+
+from __future__ import annotations
+
+import importlib
+from datetime import date, datetime, timezone
+
+import pytest
+
+from research_record.schema import ResearchRecord
+
+figures = importlib.import_module("pipeline.figures")
+
+
+def evidence(**overrides):
+    e = {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/123/x.htm",
+        "accession_number": "0000000123-24-000001", "filing_type": "8-K",
+        "filed_at": date(2024, 2, 1), "fetched_at": datetime(2026, 9, 20, 12, 0, tzinfo=timezone.utc),
+        "content_sha256": "a" * 64, "excerpt": "x" * 10,
+    }
+    e.update(overrides)
+    return e
+
+
+DEFAULT_ID = "01HZY8Q9XMR3T7VBN2CDEFGH0K"
+
+
+def outcome(reported_value, **overrides):
+    base = {"reported_value": reported_value, "reported_at": date(2025, 2, 3), "evidence": evidence(content_sha256="b" * 64)}
+    base.update(overrides)
+    return base
+
+
+def rec(record_id=DEFAULT_ID, **overrides):
+    base = dict(
+        record_id=record_id, company="Example Corp", ticker="EXMP", cik="0000000123",
+        claim="c", assumption={
+            "text": "t", "metric": "revenue", "target_low": 5000.0, "target_high": 6000.0,
+            "unit": "USD millions", "target_period": "FY2024", "stated_at": date(2024, 2, 1), "evidence": evidence(),
+        },
+        outcome=outcome(4800.0),
+        invalidation_condition="x", status="missed", acknowledged_at=None, acknowledgement_evidence=None,
+        days_to_falsifiable=368, days_to_acknowledged=None, last_reviewed_at=date(2026, 9, 20), reviewer="navneet",
+    )
+    base.update(overrides)
+    return ResearchRecord(**base)
+
+
+# --- fiscal_year -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize("period, year", [("FY2024", 2024), ("Q3 FY2024", 2024), ("Q3 2024", 2024), ("no year here", None)])
+def test_fiscal_year(period, year) -> None:
+    assert figures.fiscal_year(period) == year
+
+
+# --- direction, nearest_edge, miss_magnitude -----------------------------------
+
+
+def test_direction_is_none_without_an_outcome() -> None:
+    assert figures.direction(rec(outcome=None, status="unresolved", days_to_falsifiable=None)) is None
+
+
+def test_direction_beat_and_shortfall() -> None:
+    assert figures.direction(rec(outcome=outcome(6_500.0))) == "beat"
+    assert figures.direction(rec()) == "shortfall"
+
+
+def test_nearest_edge_is_the_point_value_for_point_guidance() -> None:
+    point = rec(assumption={**rec().assumption.model_dump(mode="json"), "target_low": 5.0, "target_high": 5.0})
+    assert figures.nearest_edge(point) == 5.0
+
+
+def test_nearest_edge_is_the_high_end_on_a_beat_and_the_low_end_on_a_shortfall() -> None:
+    assert figures.nearest_edge(rec(outcome=outcome(6_500.0))) == 6_000.0
+    assert figures.nearest_edge(rec()) == 5_000.0
+
+
+def test_miss_magnitude_is_none_unless_missed_with_an_outcome() -> None:
+    assert figures.miss_magnitude(rec(outcome=None, status="unresolved", days_to_falsifiable=None)) is None
+    met = rec(status="met", outcome=outcome(5_500.0))
+    assert figures.miss_magnitude(met) is None
+
+
+def test_miss_magnitude_of_a_shortfall_is_negative() -> None:
+    # reported 4800 vs low end 5000: (4800 - 5000) / 5000 = -0.04
+    assert figures.miss_magnitude(rec()) == pytest.approx(-0.04)
+
+
+def test_miss_magnitude_of_a_beat_is_positive() -> None:
+    beat = rec(outcome=outcome(6_600.0))
+    # (6600 - 6000) / 6000 = 0.1
+    assert figures.miss_magnitude(beat) == pytest.approx(0.1)
+
+
+# --- write_all: all four files exist and are non-empty, live data or none at all ----
+
+
+def test_write_all_produces_all_four_files_with_no_records(tmp_path) -> None:
+    paths = figures.write_all([], tmp_path / "figures", dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    assert len(paths) == len(figures.FIGURE_FILES) == 4
+    for path in paths:
+        assert path.exists() and path.stat().st_size > 0
+
+
+def test_write_all_produces_all_four_files_with_records(tmp_path) -> None:
+    records = [
+        rec("01HZY8Q9XMR3T7VBN2CDEFGH1K"),  # missed shortfall, never acknowledged
+        rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", company="Beta Corp", status="met", outcome=outcome(5_500.0)),
+        rec("01HZY8Q9XMR3T7VBN2CDEFGH3K", company="Gamma Corp", status="withdrawn", outcome=None, days_to_falsifiable=None),
+        rec("01HZY8Q9XMR3T7VBN2CDEFGH4K", company="Beta Corp", outcome=outcome(6_500.0),
+            acknowledged_at="2025-02-10", acknowledgement_evidence=evidence(content_sha256="d" * 64), days_to_acknowledged=7),
+    ]
+    out = tmp_path / "figures"
+    paths = figures.write_all(records, out, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    assert {p.name for p in paths} == set(figures.FIGURE_FILES)
+    for filename in figures.FIGURE_FILES:
+        path = out / filename
+        assert path.exists() and path.stat().st_size > 0
+
+
+def test_write_all_uses_no_red_amber_or_green() -> None:
+    forbidden = {"red", "green", "amber", "orange", "yellow"}
+    for name in ("GREY_DARK", "GREY_MID", "GREY_LIGHT", "ACCENT_MISSED"):
+        value = getattr(figures, name).lower()
+        assert not any(word in value for word in forbidden)
+    # the accent is a blue-violet, not a warm colour: its red channel is not the dominant one
+    r, g, b = (int(figures.ACCENT_MISSED[i : i + 2], 16) for i in (1, 3, 5))
+    assert b >= r

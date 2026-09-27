@@ -19,6 +19,9 @@ CANDIDATES_DIR = REPO_ROOT / "data" / "candidates"
 DRAFTS_DIR = REPO_ROOT / "data" / "drafts"
 OUTCOMES_DIR = REPO_ROOT / "data" / "outcomes"
 REVIEW_DIR = REPO_ROOT / "data" / "review"
+RELEASE_DIR = REPO_ROOT / "data" / "release"
+CARD_DIR = REPO_ROOT / "card"
+FIGURES_DIR = CARD_DIR / "figures"
 
 #: The only User-Agent this project may send to the SEC. Config must match it.
 EXPECTED_USER_AGENT = "Navneet navn07588@gmail.com"

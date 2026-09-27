@@ -1,13 +1,15 @@
 """Provenance.
 
-The two `network` tests are the SEC User-Agent smoke test from SCOPE 3.1: the SEC
-must accept the declared header and refuse a request without it. They make two
-live requests. Deselect them with `-m "not network"`.
+The `network` tests make live requests and are deselected with `-m "not network"`:
+
+- the SEC User-Agent smoke test from SCOPE 3.1: the SEC must accept the declared header and refuse a
+  request without it.
+- the SCOPE section 6 provenance check: 5 random rows from `data/release/assumption_drift.jsonl`,
+  each one's `assumption.evidence.source_url` re-fetched live, its sha256 compared to the hash stored
+  on the row, and its excerpt checked to still appear verbatim in the re-fetched text.
 
 The cache test needs no network. It walks whatever is in data/raw/ and checks that
 every cached document came from a 200 on an SEC host and still matches its hash.
-The "re-fetch 5 random release rows and compare hashes" test arrives in Phase 3,
-with the release data it needs.
 """
 
 from __future__ import annotations
@@ -15,12 +17,15 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import random
 from urllib.parse import urlsplit
 
 import pytest
 
 from pipeline import common
+from research_record import stats
 from research_record.schema import ALLOWED_HOSTS
+from research_record.text import html_to_text
 
 fetch = importlib.import_module("pipeline.01_fetch")
 
@@ -71,3 +76,29 @@ def test_every_cached_document_came_from_a_200_on_an_sec_host_and_matches_its_ha
         elif hashlib.sha256(html_path.read_bytes()).hexdigest() != meta.get("content_sha256"):
             problems.append(f"{accession}: cached bytes do not match content_sha256")
     assert not problems, f"{len(problems)} problem(s):\n" + "\n".join(problems[:10])
+
+
+@pytest.mark.network
+def test_five_random_release_rows_match_a_live_refetch(client) -> None:
+    """SCOPE section 6: 5 random release rows, re-fetched live, sha256 and excerpt checked against
+    what is actually out there right now, not just against the cached copy."""
+    release_path = common.REPO_ROOT / "data" / "release" / "assumption_drift.jsonl"
+    if not release_path.exists():
+        pytest.skip("data/release/assumption_drift.jsonl does not exist; run `python -m pipeline.06_publish` first")
+    records, _ = stats.load_records(release_path)
+    if not records:
+        pytest.skip("data/release/assumption_drift.jsonl has no valid rows")
+
+    sample = random.sample(records, min(5, len(records)))
+    problems: list[str] = []
+    for record in sample:
+        evidence = record.assumption.evidence
+        got = client.get(str(evidence.source_url))
+        if got.status != 200:
+            problems.append(f"{record.record_id}: refetch returned status {got.status}")
+            continue
+        if hashlib.sha256(got.content).hexdigest() != evidence.content_sha256:
+            problems.append(f"{record.record_id}: live sha256 does not match the stored content_sha256")
+        if evidence.excerpt not in html_to_text(got.content):
+            problems.append(f"{record.record_id}: excerpt no longer appears verbatim in the live document")
+    assert not problems, f"{len(problems)} problem(s):\n" + "\n".join(problems)

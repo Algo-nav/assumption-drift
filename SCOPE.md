@@ -231,6 +231,21 @@ Prints: row count, per-status counts, median `days_to_falsifiable`, share of mis
 
 Sections in order: what this is (3 sentences), how a row is built, the resolution rubric, provenance guarantee, known limitations, how to cite, licence. Plain words. No em-dashes. No product or company mention. Do not use the phrase "buy-side". Describe the problem, not a solution.
 
+### 5.5 Figures (`card/figures/`)
+
+Four charts, written by `pipeline/06_publish.py` from release data. Matplotlib only. Never hand-edited: a figure that needs to change changes because the release data or this code changed, not because someone opened it in an editor.
+
+1. **Falsifiable vs acknowledged.** Scatter of `days_to_falsifiable` (x) against `days_to_acknowledged` (y), missed rows only, y on a log scale. A missed row that was never acknowledged has no `days_to_acknowledged` to plot on a log axis, so those rows are not dropped: they are drawn as a strip along the top of the chart, at the same x position their `days_to_falsifiable` gives them.
+2. **Acknowledgement by company.** Horizontal bars: share of shortfalls (missed rows whose reported value fell below the guided range, `research_record.rubric.direction`) that were never acknowledged, one bar per company.
+3. **Resolution by fiscal year.** Stacked bars of met / missed / withdrawn counts, one stack per fiscal year (the year named in `assumption.target_period`, quarter or full year alike).
+4. **Miss magnitude.** Histogram, missed rows only, of `(reported_value - nearest target edge) / nearest target edge`: the nearest edge is `target_high` for a beat, `target_low` for a shortfall, or the point value itself for point guidance.
+
+Colour: neutral greys, plus one accent colour reserved for "missed". Never red, amber or green anywhere in any figure: this is a dataset of gaps, not a scorecard, and stoplight colours read as a verdict this project is not making.
+
+Every figure carries one footer line, in the reserved neutral grey: the dataset name, the row count behind that figure, the generation date, and "Source: SEC EDGAR".
+
+`tests/test_figures.py` asserts all four files exist under `card/figures/` and are non-empty after a dry run of `pipeline/06_publish.py`: figures are written on every run, live or dry, since only the Hugging Face upload is gated on `--live`.
+
 ---
 
 ## 6. Tests and verification gate

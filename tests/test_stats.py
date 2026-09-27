@@ -117,6 +117,79 @@ def test_compute_on_no_records() -> None:
     assert result["median_days_to_falsifiable"] is None and result["missed_never_acknowledged_share"] is None
 
 
+# --- floors, counted apart from beat/shortfall ---------------------------------
+
+
+def test_is_floor_is_a_lower_bound_with_no_ceiling(record_data) -> None:
+    floor = _record(record_data, assumption={**record_data()["assumption"], "target_high": None})
+    ranged = _record(record_data)
+    ceiling = _record(record_data, assumption={**record_data()["assumption"], "target_low": None})
+    assert stats.is_floor(floor) and not stats.is_floor(ranged) and not stats.is_floor(ceiling)
+
+
+def test_compute_counts_missed_floors_separately_from_the_direction_split(record_data) -> None:
+    floor_shortfall = _record(record_data, assumption={**record_data()["assumption"], "target_high": None})
+    ranged_shortfall = _record(record_data)
+    result = stats.compute([floor_shortfall, ranged_shortfall])
+    assert result["missed_floors"] == 1
+    assert result["missed_by_direction"] == {"shortfall": 2}  # a floor is still a shortfall, just also flagged
+
+
+# --- median days to falsifiable, and acknowledgement rate, by direction --------
+
+
+def test_compute_median_days_to_falsifiable_by_direction(record_data) -> None:
+    beat = _record(record_data, days_to_falsifiable=100, outcome={**record_data()["outcome"], "reported_value": 6_500.0})
+    shortfall_a = _record(record_data, days_to_falsifiable=200)
+    shortfall_b = _record(record_data, days_to_falsifiable=400)
+    result = stats.compute([beat, shortfall_a, shortfall_b])
+    assert result["median_days_to_falsifiable_by_direction"] == {"beat": 100, "shortfall": 300}
+
+
+def test_compute_median_days_to_falsifiable_by_direction_is_none_with_nothing_in_it(record_data) -> None:
+    shortfall = _record(record_data)
+    result = stats.compute([shortfall])
+    assert result["median_days_to_falsifiable_by_direction"]["beat"] is None
+
+
+def test_compute_acknowledged_rate_by_direction(record_data) -> None:
+    acknowledged_beat = _record(
+        record_data, outcome={**record_data()["outcome"], "reported_value": 6_500.0},
+        acknowledged_at="2025-02-04", acknowledgement_evidence=record_data()["outcome"]["evidence"], days_to_acknowledged=1,
+    )
+    unacknowledged_beat = _record(record_data, outcome={**record_data()["outcome"], "reported_value": 6_500.0})
+    unacknowledged_shortfall = _record(record_data)
+    result = stats.compute([acknowledged_beat, unacknowledged_beat, unacknowledged_shortfall])
+    assert result["acknowledged_rate_by_direction"] == {"beat": pytest.approx(0.5), "shortfall": 0.0}
+
+
+def test_compute_acknowledged_rate_by_direction_is_none_with_nothing_in_it(record_data) -> None:
+    shortfall = _record(record_data)
+    result = stats.compute([shortfall])
+    assert result["acknowledged_rate_by_direction"]["beat"] is None
+
+
+# --- the per-company table -------------------------------------------------------
+
+
+def test_compute_company_table_has_rows_status_counts_and_never_ack_share(record_data) -> None:
+    a = _record(record_data, company="Alpha Corp")  # missed, never acknowledged
+    b = _record(record_data, company="Beta Corp", status="met", outcome={**record_data()["outcome"], "reported_value": 5_500.0})
+    result = stats.compute([a, b])
+    table = {row["company"]: row for row in result["company_table"]}
+    assert table["Alpha Corp"] == {"company": "Alpha Corp", "rows": 1, "by_status": {"missed": 1}, "missed_never_acknowledged_share": 1.0}
+    assert table["Beta Corp"] == {"company": "Beta Corp", "rows": 1, "by_status": {"met": 1}, "missed_never_acknowledged_share": None}
+
+
+def test_format_stats_renders_a_company_table_with_a_header(record_data) -> None:
+    result = stats.compute([_record(record_data, company="Alpha Corp")])
+    text = stats.format_stats(result)
+    assert "company table:" in text
+    assert "Alpha Corp" in text
+    lines = [line for line in text.splitlines() if "company" in line and "rows" in line]
+    assert lines  # a header row with both column names
+
+
 # --- run -------------------------------------------------------------------
 
 
@@ -137,3 +210,17 @@ def test_run_reports_invalid_rows_without_raising(tmp_path, record_data) -> None
 def test_run_on_a_missing_file_raises() -> None:
     with pytest.raises(FileNotFoundError):
         stats.run(Path("/nonexistent/release.jsonl"))
+
+
+def test_run_as_json_prints_computes_own_dict(tmp_path, record_data) -> None:
+    path = tmp_path / "release.jsonl"
+    write_jsonl(path, [record_data()])
+    parsed = json.loads(stats.run(path, as_json=True))
+    assert parsed["rows"] == 1 and parsed["missed_by_direction"] == {"shortfall": 1} and parsed["invalid"] == 0
+
+
+def test_run_as_json_counts_invalid_rows_too(tmp_path, record_data) -> None:
+    path = tmp_path / "release.jsonl"
+    path.write_text("not json\n" + json.dumps(record_data(), default=str) + "\n", encoding="utf-8")
+    parsed = json.loads(stats.run(path, as_json=True))
+    assert parsed["rows"] == 1 and parsed["invalid"] == 1

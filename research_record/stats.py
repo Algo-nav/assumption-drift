@@ -4,10 +4,22 @@ Reads a JSONL file, one ResearchRecord per line, and prints the row count, per-s
 `days_to_falsifiable`, the share of misses never acknowledged, and a per-company breakdown. This output
 feeds the LinkedIn posts, so it stays plain and short.
 
-A beat/shortfall split of the misses is added on top of what SCOPE.md 5.2 lists: which side of its own
-guided range a missed row's reported value landed on. It is computed from the numbers each time
-(`research_record.rubric.direction`), never read off a stored field: the schema carries no direction field,
-and this module does not write one anywhere.
+On top of what SCOPE.md 5.2 lists, added for Phase 3:
+
+- **beat/shortfall split of the misses**: which side of its own guided range a missed row's reported
+  value landed on, computed from the numbers each time (`research_record.rubric.direction`), never read
+  off a stored field: the schema carries no direction field, and this module does not write one anywhere.
+- **one-sided floors, counted separately**: a floor ("at least X", `target_high` is null) can only ever
+  be met or fall short; there is nothing above it to beat, so lumping it into the beat/shortfall split
+  would silently under-count "beat" as if a floor had a ceiling it does not have.
+- **median `days_to_falsifiable` by direction**, and **acknowledgement rate by direction**: among missed
+  rows only, split the same way.
+- **a per-company table** (`company_table`): rows, the same per-status counts as `by_status`, and the
+  never-acknowledged share, one entry per company, for `format_stats`'s table and for `pipeline/06_publish.py`'s
+  card renderer. `by_company` (bare `{status: count}`, unchanged) stays for anything that only wants that.
+
+`rr stats --json` (`run(path, as_json=True)`) prints `compute()`'s own dict as JSON, for the card renderer
+to consume without re-parsing the plain-text report.
 """
 
 from __future__ import annotations
@@ -23,7 +35,9 @@ from pydantic import ValidationError
 from research_record import rubric
 from research_record.schema import ResearchRecord
 
-__all__ = ["load_records", "missed_direction", "compute", "format_stats", "run"]
+__all__ = ["load_records", "missed_direction", "is_floor", "compute", "format_stats", "run"]
+
+_DIRECTIONS: tuple[rubric.Direction, ...] = ("beat", "shortfall")
 
 
 def load_records(path: Path) -> tuple[list[ResearchRecord], int]:
@@ -49,6 +63,37 @@ def missed_direction(record: ResearchRecord) -> rubric.Direction | None:
     return rubric.direction(record.assumption.target_low, record.assumption.target_high, record.outcome.reported_value)
 
 
+def is_floor(record: ResearchRecord) -> bool:
+    """A one-sided lower bound ("at least X"): a target_low with no target_high. It can be met or fall
+    short; there is no ceiling above it to beat, so it is counted apart from the beat/shortfall split."""
+    a = record.assumption
+    return a.target_low is not None and a.target_high is None
+
+
+def _median(values: list[float | int]) -> float | None:
+    return statistics.median(values) if values else None
+
+
+def _by_direction(missed: list[ResearchRecord]) -> dict[rubric.Direction, list[ResearchRecord]]:
+    buckets: dict[rubric.Direction, list[ResearchRecord]] = {d: [] for d in _DIRECTIONS}
+    for r in missed:
+        d = missed_direction(r)
+        if d is not None:
+            buckets[d].append(r)
+    return buckets
+
+
+def _company_row(company: str, records: list[ResearchRecord]) -> dict[str, Any]:
+    missed = [r for r in records if r.status == "missed"]
+    never_acknowledged = sum(1 for r in missed if r.acknowledged_at is None)
+    return {
+        "company": company,
+        "rows": len(records),
+        "by_status": dict(sorted(Counter(r.status for r in records).items())),
+        "missed_never_acknowledged_share": (never_acknowledged / len(missed)) if missed else None,
+    }
+
+
 def compute(records: list[ResearchRecord]) -> dict[str, Any]:
     """Pure: no file access, no model call."""
     by_status: Counter[str] = Counter(r.status for r in records)
@@ -56,9 +101,11 @@ def compute(records: list[ResearchRecord]) -> dict[str, Any]:
     by_direction: Counter[str] = Counter(missed_direction(r) or "unclassified" for r in missed)
     falsifiable = [r.days_to_falsifiable for r in records if r.days_to_falsifiable is not None]
     never_acknowledged = sum(1 for r in missed if r.acknowledged_at is None)
+    missed_by_direction_records = _by_direction(missed)
     by_company: dict[str, Counter[str]] = {}
     for r in records:
         by_company.setdefault(r.company, Counter())[r.status] += 1
+    companies = sorted({r.company for r in records})
     return {
         "rows": len(records),
         "by_status": dict(sorted(by_status.items())),
@@ -67,8 +114,44 @@ def compute(records: list[ResearchRecord]) -> dict[str, Any]:
         "missed_never_acknowledged": never_acknowledged,
         "missed_never_acknowledged_share": (never_acknowledged / len(missed)) if missed else None,
         "missed_by_direction": dict(sorted(by_direction.items())),
+        "missed_floors": sum(1 for r in missed if is_floor(r)),
+        "median_days_to_falsifiable_by_direction": {
+            d: _median([r.days_to_falsifiable for r in group if r.days_to_falsifiable is not None])
+            for d, group in missed_by_direction_records.items()
+        },
+        "acknowledged_rate_by_direction": {
+            d: ((sum(1 for r in group if r.acknowledged_at is not None) / len(group)) if group else None)
+            for d, group in missed_by_direction_records.items()
+        },
         "by_company": {company: dict(sorted(counts.items())) for company, counts in sorted(by_company.items())},
+        "company_table": [_company_row(c, [r for r in records if r.company == c]) for c in companies],
     }
+
+
+def _company_table_lines(company_table: list[dict[str, Any]]) -> list[str]:
+    if not company_table:
+        return ["  (no rows)"]
+    columns = ["met", "missed", "withdrawn", "unresolved"]
+    header = ["company", "rows", *columns, "never-ack share"]
+    widths = [max(len(header[i]), *(len(_cell(row, header[i], columns)) for row in company_table)) for i in range(len(header))]
+    lines = ["  " + "  ".join(h.ljust(w) for h, w in zip(header, widths))]
+    for row in company_table:
+        cells = [_cell(row, h, columns) for h in header]
+        lines.append("  " + "  ".join(c.ljust(w) for c, w in zip(cells, widths)))
+    return lines
+
+
+def _cell(row: dict[str, Any], column: str, status_columns: list[str]) -> str:
+    if column == "company":
+        return row["company"]
+    if column == "rows":
+        return str(row["rows"])
+    if column == "never-ack share":
+        share = row["missed_never_acknowledged_share"]
+        return f"{share:.0%}" if share is not None else "-"
+    if column in status_columns:
+        return str(row["by_status"].get(column, 0))
+    raise KeyError(column)  # pragma: no cover - every header name is handled above
 
 
 def format_stats(stats: dict[str, Any]) -> str:
@@ -80,18 +163,24 @@ def format_stats(stats: dict[str, Any]) -> str:
         f"missed: {stats['missed']:,}, never acknowledged: {stats['missed_never_acknowledged']:,}"
         + (f" ({share:.0%})" if share is not None else ""),
         f"missed by direction (beat = above the high end, shortfall = below the low end): {stats['missed_by_direction']}",
-        "by company:",
+        f"missed as one-sided floors (shortfall only; a floor has no ceiling to beat): {stats['missed_floors']:,}",
+        f"median days to falsifiable by direction: {stats['median_days_to_falsifiable_by_direction']}",
+        f"acknowledged rate by direction: "
+        f"{ {d: (f'{v:.0%}' if v is not None else None) for d, v in stats['acknowledged_rate_by_direction'].items()} }",
+        "company table:",
     ]
-    for company, counts in stats["by_company"].items():
-        lines.append(f"  {company}: {counts}")
+    lines.extend(_company_table_lines(stats["company_table"]))
     return "\n".join(lines)
 
 
-def run(path: Path) -> str:
+def run(path: Path, *, as_json: bool = False) -> str:
     if not path.exists():
         raise FileNotFoundError(f"{path} does not exist")
     records, invalid = load_records(path)
-    text = format_stats(compute(records))
+    result = compute(records)
+    if as_json:
+        return json.dumps({**result, "invalid": invalid}, indent=2)
+    text = format_stats(result)
     if invalid:
         text += f"\n{invalid} row(s) did not parse as a ResearchRecord and were left out"
     return text
