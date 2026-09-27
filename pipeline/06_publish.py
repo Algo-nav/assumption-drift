@@ -216,10 +216,11 @@ By company:
 
 Every `source_url` in this dataset returned a 200 from `www.sec.gov` or `efts.sec.gov`; no row was
 built from a URL that was not actually fetched. Every excerpt is the exact text taken from that
-filing, hashed at fetch time, and the hash is checked again before publication. Every row was
-independently checked by a person against the cached filing, and at least ten percent of the approved
-rows for each company were separately re-found on EDGAR by hand and their URL compared to the one the
-pipeline used.
+filing. Its provenance hash is the sha256 of the extracted text, not of the raw page: SEC serves a
+per-request script tag inside the raw HTML that differs on every fetch of the same document, so only
+the extracted text is stable enough to hash and check again later. Every row was independently
+checked by a person against the cached filing, and at least ten percent of the approved rows for each
+company were separately re-found on EDGAR by hand and their URL compared to the one the pipeline used.
 
 ## Known limitations
 

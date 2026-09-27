@@ -326,7 +326,7 @@ def cache(tmp_path, monkeypatch):
     def add(accession: str, filed: str, form: str, body: str, *, status: int = 200, tamper: bool = False) -> None:
         content = body.encode()
         meta = {**META, "accession": accession, "filed_at": filed, "filing_type": form, "http_status": status,
-                "content_sha256": hashlib.sha256(content).hexdigest()}
+                "raw_sha256": hashlib.sha256(content).hexdigest()}
         (folder / f"{accession}.meta.json").write_text(json.dumps(meta))
         (folder / f"{accession}.html").write_bytes(b"tampered" if tamper else content)
 

@@ -13,8 +13,10 @@ Checks, on every row read:
 - when there is an acknowledgement: `acknowledged_at >= outcome.reported_at`
 - `status` matches what `research_record.rubric.resolve_record` returns from the row's own values
 - for every evidence block the row carries (assumption, outcome, acknowledgement): the cached document
-  at `data/raw/{cik}/{accession_number}.html` exists, its sha256 matches `content_sha256`, and `excerpt`
-  appears verbatim in its extracted text (`research_record.text.html_to_text`)
+  at `data/raw/{cik}/{accession_number}.html` exists, `content_sha256` matches the sha256 of the
+  extracted text (`research_record.text.html_to_text`), not of the raw bytes -- SEC injects a
+  per-request script tag into the raw HTML, so a raw-byte hash could never be reproduced later, but
+  the extracted text is stable -- and `excerpt` appears verbatim in that same extracted text
 
 This module only ever reads `data/raw/`; it never fetches anything, and it does not import `pipeline`
 (a standalone install of this package has no `pipeline/` to import): the raw cache's location is a
@@ -133,11 +135,12 @@ def _check_evidence(record_id: str, label: str, cik: str, evidence: Evidence, ra
     html_path = raw_dir / cik / f"{evidence.accession_number}.html"
     if not html_path.exists():
         return [Issue(record_id, f"{label}.cached_document", f"no cached document at {html_path}")]
-    content = html_path.read_bytes()
+    text = html_to_text(html_path.read_bytes())
     issues = []
-    if hashlib.sha256(content).hexdigest() != evidence.content_sha256:
-        issues.append(Issue(record_id, f"{label}.content_sha256", f"cached document at {html_path} does not match content_sha256"))
-    if evidence.excerpt not in html_to_text(content):
+    if hashlib.sha256(text.encode("utf-8")).hexdigest() != evidence.content_sha256:
+        issues.append(Issue(record_id, f"{label}.content_sha256",
+                             f"sha256 of the extracted text of {html_path} does not match content_sha256"))
+    if evidence.excerpt not in text:
         issues.append(Issue(record_id, f"{label}.excerpt", f"excerpt does not appear verbatim in {html_path}"))
     return issues
 

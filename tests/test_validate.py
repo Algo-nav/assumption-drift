@@ -173,6 +173,17 @@ def test_validate_row_fails_when_the_hash_does_not_match(record_data, raw_dir) -
     data["assumption"]["evidence"]["content_sha256"] = "f" * 64
     issues = validate.validate_row(data, raw_dir=raw_dir)
     assert any(i.check == "assumption.evidence.content_sha256" for i in issues)
+    assert any("sha256 of the extracted text" in i.detail for i in issues)
+
+
+def test_validate_row_checks_the_hash_of_the_extracted_text_not_the_raw_bytes(record_data, raw_dir) -> None:
+    """DOC_TEXT has no markup, so the raw-byte hash and the extracted-text hash coincide; a document
+    with a script tag proves validate hashes the text research_record.text.html_to_text returns, not
+    the file's own bytes."""
+    marked_up = f"<html><body><script>var x=1;</script><p>{DOC_TEXT}</p></body></html>"
+    (raw_dir / CIK / f"{ACCESSION}.html").write_text(marked_up, encoding="utf-8")
+    data = good_record(record_data)  # content_sha256 is still sha256(DOC_TEXT), the extracted text
+    assert validate.validate_row(data, raw_dir=raw_dir) == []
 
 
 def test_validate_row_fails_when_the_excerpt_is_not_in_the_document(record_data, raw_dir) -> None:

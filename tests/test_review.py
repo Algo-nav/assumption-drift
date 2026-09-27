@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import copy
 import csv
+import hashlib
 import importlib
 import json
 from collections import Counter
 from datetime import date
+from pathlib import Path
 
 import pytest
 
 from research_record.schema import ResearchRecord
+from research_record.text import html_to_text
 
 review = importlib.import_module("pipeline.05_review")
 common = importlib.import_module("pipeline.common")
@@ -153,16 +156,24 @@ def test_every_row_loads_back_as_a_valid_research_record(parts) -> None:
 
 @pytest.fixture
 def dirs(tmp_path, monkeypatch):
-    for name in ("DRAFTS_DIR", "OUTCOMES_DIR", "REVIEW_DIR"):
+    for name in ("DRAFTS_DIR", "OUTCOMES_DIR", "REVIEW_DIR", "RAW_DIR"):
         monkeypatch.setattr(review, name, tmp_path / name.split("_")[0].lower())
     (tmp_path / "drafts").mkdir()
     (tmp_path / "outcomes").mkdir()
+    (tmp_path / "raw").mkdir()
     return tmp_path
 
 
 def seed(dirs, drafts, outcome_rows=()):
     (dirs / "drafts" / f"{COMPANY.cik}.jsonl").write_text("".join(json.dumps(d) + "\n" for d in drafts))
     (dirs / "outcomes" / f"{COMPANY.cik}.jsonl").write_text("".join(json.dumps(o) + "\n" for o in outcome_rows))
+
+
+def write_cached_document(dirs, cik, accession, html_bytes):
+    path = dirs / "raw" / cik / f"{accession}.html"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(html_bytes)
+    return path
 
 
 def another(draft, suffix):
@@ -455,6 +466,80 @@ def test_refresh_row_replaces_only_pipeline_owned_columns() -> None:
     merged = review.refresh_row(row, fresh)
     for c in review.COLUMNS:
         assert merged[c] == ("new" if review.is_pipeline_owned(c) else "old")
+
+
+def test_recompute_content_sha256_hashes_the_extracted_text_not_the_raw_bytes(dirs) -> None:
+    html = b"<html><body><p>Revenue guidance <script>var x = Math.random();</script>of $5 billion.</p></body></html>"
+    write_cached_document(dirs, COMPANY.cik, "0000000123-24-000001", html)
+    row = {"cik": COMPANY.cik, "assumption.evidence.accession_number": "0000000123-24-000001", "assumption.evidence.content_sha256": "0" * 64}
+    updated = review.recompute_content_sha256(row, dirs / "raw")
+    expected = hashlib.sha256(html_to_text(html).encode("utf-8")).hexdigest()
+    assert updated["assumption.evidence.content_sha256"] == expected
+    assert expected != hashlib.sha256(html).hexdigest()  # provably not a hash of the raw bytes
+
+
+def test_recompute_content_sha256_updates_outcome_and_acknowledgement_evidence_too(dirs) -> None:
+    write_cached_document(dirs, COMPANY.cik, "0000000123-24-000002", b"<p>Full year revenue was $4.8 billion.</p>")
+    write_cached_document(dirs, COMPANY.cik, "0000000123-24-000003", b"<p>Below our guidance.</p>")
+    row = {
+        "cik": COMPANY.cik,
+        "outcome.evidence.accession_number": "0000000123-24-000002", "outcome.evidence.content_sha256": "0" * 64,
+        "acknowledgement_evidence.accession_number": "0000000123-24-000003", "acknowledgement_evidence.content_sha256": "0" * 64,
+    }
+    updated = review.recompute_content_sha256(row, dirs / "raw")
+    assert updated["outcome.evidence.content_sha256"] not in ("0" * 64, "")
+    assert updated["acknowledgement_evidence.content_sha256"] not in ("0" * 64, "")
+
+
+def test_recompute_content_sha256_leaves_a_row_alone_when_the_document_is_missing(dirs) -> None:
+    row = {"cik": COMPANY.cik, "assumption.evidence.accession_number": "no-such-accession", "assumption.evidence.content_sha256": "0" * 64}
+    assert review.recompute_content_sha256(row, dirs / "raw") == row
+
+
+def test_recompute_content_sha256_leaves_a_row_alone_without_a_cik() -> None:
+    row = {"assumption.evidence.accession_number": "x", "assumption.evidence.content_sha256": "0" * 64}
+    assert review.recompute_content_sha256(row, Path("/nonexistent")) == row
+
+
+def test_recompute_content_sha256_leaves_a_row_alone_without_an_accession(dirs) -> None:
+    row = {"cik": COMPANY.cik, "assumption.evidence.content_sha256": "0" * 64}
+    assert review.recompute_content_sha256(row, dirs / "raw") == row
+
+
+def test_refresh_pipeline_fields_recomputes_content_sha256_even_on_an_approved_row(dirs, parts) -> None:
+    """content_sha256 is a fact about the cached document, not a human's judgement call, so it is
+    recomputed even on a row a human has already approved -- unlike every other pipeline-owned field."""
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    html = b"<p>Revenue is expected to be $5.0 billion to $6.0 billion.</p>"
+    write_cached_document(dirs, COMPANY.cik, "0000000123-24-000001", html)
+    edited = review.read_csv(path)
+    edited[0].update(approved="true", reviewer_note="checked on EDGAR")
+    review.write_csv(path, edited)
+
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["content_sha256_recomputed"] == 1
+    assert (rows[0]["approved"], rows[0]["reviewer_note"]) == ("true", "checked on EDGAR")  # human edits intact
+    assert rows[0]["assumption.metric"] == edited[0]["assumption.metric"]  # not rebuilt, only rehashed
+    expected = hashlib.sha256(html_to_text(html).encode("utf-8")).hexdigest()
+    assert rows[0]["assumption.evidence.content_sha256"] == expected
+    assert review.read_csv(path)[0]["assumption.evidence.content_sha256"] == expected  # written back
+
+
+def test_refresh_pipeline_fields_recomputes_content_sha256_on_an_empty_block_row(dirs) -> None:
+    seed(dirs, [], [])
+    seed_blocks(dirs, [empty_block()])
+    review.review_company(COMPANY, TODAY)
+    html = b"<p>Tax rate 17.0%</p>"
+    write_cached_document(dirs, COMPANY.cik, "0000000123-24-000001", html)
+
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    flag = next(r for r in rows if r["empty_block"] == "true")
+    expected = hashlib.sha256(html_to_text(html).encode("utf-8")).hexdigest()
+    assert flag["assumption.evidence.content_sha256"] == expected
+    assert stats["content_sha256_recomputed"] == 1
 
 
 def test_refresh_pipeline_fields_updates_an_untouched_row(dirs, parts) -> None:

@@ -12,9 +12,19 @@ What gets cached, one document per filing:
     10-Q   the primary document
 
 Cache layout: data/raw/{cik}/{accession}.html plus {accession}.meta.json holding
-fetched_at, final URL, HTTP status and sha256. Only a 200 response is ever
+fetched_at, final URL, HTTP status, and two hashes. Only a 200 response is ever
 written, and `final_url` in a meta file is the URL that returned it. Use that one,
 not `requested_url`, when a row needs a source URL.
+
+Two hashes, because they answer different questions:
+  raw_sha256      sha256 of the bytes exactly as fetched. Used only by `is_cached` to check
+                  the file on disk still matches what was written; never leaves this module.
+  content_sha256  sha256 of the document's extracted text (research_record.text.html_to_text),
+                  not its raw bytes. This is the value every evidence block downstream carries
+                  and `rr validate` checks. SEC injects a per-request script tag into the raw
+                  HTML (a different, effectively random one on every fetch of the same page), so
+                  a raw-byte hash can never be reproduced by a later fetch; the extracted text,
+                  stripped of scripts, styles and tags, can.
 """
 
 from __future__ import annotations
@@ -38,8 +48,9 @@ from urllib.parse import urljoin, urlsplit
 
 import requests
 
-from pipeline.common import CONFIG_PATH, Company, companies, load_config, raw_paths, read_meta
+from pipeline.common import CONFIG_PATH, RAW_DIR, Company, companies, load_config, raw_paths, read_meta
 from research_record.schema import ALLOWED_HOSTS
+from research_record.text import html_to_text
 
 #: SEC allows 10 per second per IP and blocks the address for about ten minutes
 #: past that. This project never goes above 8, whatever the config says.
@@ -378,12 +389,14 @@ def _write_atomic(path: Path, data: bytes) -> None:
 
 
 def is_cached(company: Company, accession: str) -> bool:
-    """A cached document needs its sidecar, a 200, and bytes that still match the hash."""
+    """A cached document needs its sidecar, a 200, and bytes that still match raw_sha256 (the hash of
+    the bytes as fetched -- content_sha256 is a hash of extracted text, so it not matching the file on
+    disk byte for byte is expected, not a sign of corruption)."""
     html_path, meta_path = raw_paths(company.cik, accession)
     meta = read_meta(meta_path)
     if not meta or meta.get("http_status") != 200 or not html_path.exists():
         return False
-    return hashlib.sha256(html_path.read_bytes()).hexdigest() == meta.get("content_sha256")
+    return hashlib.sha256(html_path.read_bytes()).hexdigest() == meta.get("raw_sha256")
 
 
 def cache_document(
@@ -407,11 +420,42 @@ def cache_document(
         "http_status": got.status,
         "content_type": got.content_type,
         "bytes": len(got.content),
-        "content_sha256": hashlib.sha256(got.content).hexdigest(),
+        "raw_sha256": hashlib.sha256(got.content).hexdigest(),
+        "content_sha256": hashlib.sha256(html_to_text(got.content).encode("utf-8")).hexdigest(),
         "fetched_at": got.fetched_at.isoformat(timespec="seconds"),
     }
     _write_atomic(meta_path, (json.dumps(meta, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8"))
     return got
+
+
+def rehash_cached_document(meta_path: Path, html_path: Path) -> bool:
+    """Rewrite one sidecar's raw_sha256 and content_sha256 from the bytes already on disk, fetching
+    nothing. True if either hash actually changed."""
+    meta = read_meta(meta_path)
+    if meta is None or not html_path.exists():
+        return False
+    body = html_path.read_bytes()
+    raw_sha256 = hashlib.sha256(body).hexdigest()
+    content_sha256 = hashlib.sha256(html_to_text(body).encode("utf-8")).hexdigest()
+    if meta.get("raw_sha256") == raw_sha256 and meta.get("content_sha256") == content_sha256:
+        return False
+    updated = {**meta, "raw_sha256": raw_sha256, "content_sha256": content_sha256}
+    _write_atomic(meta_path, (json.dumps(updated, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8"))
+    return True
+
+
+def rehash_all_cached_documents(raw_dir: Path | None = None) -> Counter:
+    """Every already-cached document's sidecar, brought up to date with the current hash rule
+    (raw_sha256 of the bytes as fetched, content_sha256 of the extracted text), without fetching
+    anything: this is a local migration over data/raw/, for when the hash rule itself changes (as it
+    did here: SEC's per-request script tag made a raw-byte content_sha256 unreproducible)."""
+    raw_dir = raw_dir if raw_dir is not None else RAW_DIR  # a live lookup, so a monkeypatched RAW_DIR is honoured
+    stats: Counter = Counter()
+    for meta_path in sorted(raw_dir.glob("*/*.meta.json")):
+        html_path = meta_path.with_name(meta_path.name.removesuffix(".meta.json") + ".html")
+        stats["changed" if rehash_cached_document(meta_path, html_path) else "unchanged"] += 1
+        stats["documents"] += 1
+    return stats
 
 
 # --- run -------------------------------------------------------------------
@@ -463,7 +507,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER", help="limit to this ticker; repeatable")
     parser.add_argument("--list-only", action="store_true", help="discover and print, download nothing")
+    parser.add_argument("--rehash", action="store_true",
+                         help="recompute raw_sha256 and content_sha256 on every already-cached document's sidecar, "
+                              "from the bytes already on disk; fetches nothing, ignores --company")
     args = parser.parse_args(argv)
+
+    if args.rehash:
+        stats = rehash_all_cached_documents()
+        print(f"rehashed {stats['documents']:,} cached document(s): {stats['changed']:,} changed, {stats['unchanged']:,} already current")
+        return 0
 
     config = load_config(args.config)
     targets = companies(config, args.company)

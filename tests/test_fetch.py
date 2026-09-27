@@ -11,6 +11,8 @@ import pytest
 import requests
 from requests.structures import CaseInsensitiveDict
 
+from research_record.text import html_to_text
+
 fetch = importlib.import_module("pipeline.01_fetch")
 common = importlib.import_module("pipeline.common")
 
@@ -355,6 +357,7 @@ def sec_routes(doc_bodies: dict[str, FakeResponse] | None = None) -> dict:
 @pytest.fixture
 def raw_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(common, "RAW_DIR", tmp_path / "raw")
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path / "raw")
     return tmp_path / "raw"
 
 
@@ -390,7 +393,8 @@ def test_fetch_company_caches_only_what_it_should_and_writes_a_sidecar(raw_dir) 
     assert html_path == raw_dir / "0000000123" / f"{ACC_8K_EX99}.html"
     body = html_path.read_bytes()
     meta = json.loads(meta_path.read_text())
-    assert meta["content_sha256"] == hashlib.sha256(body).hexdigest()
+    assert meta["raw_sha256"] == hashlib.sha256(body).hexdigest()
+    assert meta["content_sha256"] == hashlib.sha256(html_to_text(body).encode("utf-8")).hexdigest()
     assert meta["http_status"] == 200
     assert meta["final_url"].startswith("https://www.sec.gov/Archives/edgar/data/123/")
     assert meta["final_url"].endswith("/release.htm")
@@ -423,6 +427,60 @@ def test_a_non_200_document_is_not_cached(raw_dir) -> None:
     assert (stats["fetched"], stats["failed"]) == (1, 1)
     html_path, meta_path = common.raw_paths(COMPANY.cik, ACC_8K_EX99)
     assert not html_path.exists() and not meta_path.exists()
+
+
+# --- rehashing an already-cached document: raw_sha256 and content_sha256, no fetch -----------------
+
+
+def seed_old_style_sidecar(cik: str, accession: str, body: bytes) -> tuple:
+    """A pre-migration sidecar: content_sha256 was the raw bytes' own hash, and there was no raw_sha256."""
+    html_path, meta_path = common.raw_paths(cik, accession)
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+    html_path.write_bytes(body)
+    meta_path.write_text(json.dumps({"cik": cik, "accession": accession, "http_status": 200,
+                                      "content_sha256": hashlib.sha256(body).hexdigest()}))
+    return html_path, meta_path
+
+
+def test_rehash_cached_document_moves_content_sha256_to_the_extracted_text(raw_dir) -> None:
+    body = b"<html><body><p>Full year revenue was $4.8 billion.</p><script>var x=1;</script></body></html>"
+    html_path, meta_path = seed_old_style_sidecar(COMPANY.cik, ACC_10K, body)
+    assert fetch.rehash_cached_document(meta_path, html_path) is True
+    meta = json.loads(meta_path.read_text())
+    assert meta["raw_sha256"] == hashlib.sha256(body).hexdigest()
+    assert meta["content_sha256"] == hashlib.sha256(html_to_text(body).encode("utf-8")).hexdigest()
+    assert meta["content_sha256"] != hashlib.sha256(body).hexdigest()  # provably not the old, raw-byte meaning
+    assert meta["http_status"] == 200  # everything else preserved
+
+
+def test_rehash_cached_document_is_a_noop_once_already_current(raw_dir) -> None:
+    body = b"<p>Text.</p>"
+    html_path, meta_path = seed_old_style_sidecar(COMPANY.cik, ACC_10K, body)
+    fetch.rehash_cached_document(meta_path, html_path)
+    assert fetch.rehash_cached_document(meta_path, html_path) is False
+
+
+def test_rehash_cached_document_is_false_when_the_document_is_missing(raw_dir) -> None:
+    html_path, meta_path = common.raw_paths(COMPANY.cik, ACC_10K)
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
+    meta_path.write_text(json.dumps({"content_sha256": "0" * 64}))
+    assert fetch.rehash_cached_document(meta_path, html_path) is False
+
+
+def test_rehash_all_cached_documents_walks_every_sidecar_and_is_idempotent(raw_dir) -> None:
+    seed_old_style_sidecar(COMPANY.cik, ACC_10K, b"<p>One.</p>")
+    seed_old_style_sidecar(COMPANY.cik, ACC_8K_EX99, b"<p>Two.</p>")
+    stats = fetch.rehash_all_cached_documents(raw_dir)
+    assert (stats["documents"], stats["changed"], stats["unchanged"]) == (2, 2, 0)
+    again = fetch.rehash_all_cached_documents(raw_dir)
+    assert (again["documents"], again["changed"], again["unchanged"]) == (2, 0, 2)
+
+
+def test_main_rehash_flag_reports_counts_and_fetches_nothing(raw_dir, capsys) -> None:
+    seed_old_style_sidecar(COMPANY.cik, ACC_10K, b"<p>Text.</p>")
+    assert fetch.main(["--rehash"]) == 0
+    out = capsys.readouterr().out
+    assert "rehashed 1 cached document(s): 1 changed, 0 already current" in out
 
 
 def test_list_only_downloads_no_documents(raw_dir) -> None:

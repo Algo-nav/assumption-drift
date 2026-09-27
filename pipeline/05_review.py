@@ -67,7 +67,16 @@ verdict with an empty one. This is for the case where 03_structure or 04_outcome
 for a draft that is already queued: the normal run above only appends what is new, it never revisits a row
 once it is in the file.
 
-Reads   data/drafts/{cik}.jsonl, data/drafts/{cik}.empty_blocks.jsonl, data/outcomes/{cik}.jsonl
+One column inside that list is a further exception to the exception: every `*.content_sha256` column
+(`assumption.evidence.content_sha256`, `outcome.evidence.content_sha256`,
+`acknowledgement_evidence.content_sha256`) is recomputed on EVERY row this refresh touches, whatever its
+review state -- human-edited, approved, hand-verified, all of it (`recompute_content_sha256`). It is the
+sha256 of the cached document's extracted text (`research_record.text.html_to_text`), not of the raw
+bytes: SEC injects a per-request script tag into the raw HTML, so a raw-byte hash can never be reproduced
+by a later fetch. This is a fact about the cached document, not a judgement call a human made, so it is
+never treated as a human edit to preserve.
+
+Reads   data/drafts/{cik}.jsonl, data/drafts/{cik}.empty_blocks.jsonl, data/outcomes/{cik}.jsonl, data/raw/{cik}/*.html
 Writes  data/review/{cik}.csv
 """
 
@@ -75,6 +84,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -86,9 +96,10 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, REVIEW_DIR, Company, companies, load_config
+from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, RAW_DIR, REVIEW_DIR, Company, companies, load_config
 from research_record import rubric
 from research_record.schema import ResearchRecord
+from research_record.text import html_to_text
 
 REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
@@ -325,7 +336,9 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
 # erase a real verify verdict with an empty one. aid_suggested_note is left out for the same reason: it
 # belongs to 03c_suggest.py. status, approved, hand_verified, reviewer_note, conflict and empty_block are
 # also left out: a draft row's status is always "open" regardless of anything a refresh could change, and
-# the rest are the reviewer's own columns.
+# the rest are the reviewer's own columns. content_sha256 columns are technically inside "assumption." and
+# "outcome." and so are refreshed here too on an untouched row, but refresh_pipeline_fields also recomputes
+# them separately (recompute_content_sha256) on EVERY row, human-touched or not: see that function.
 PIPELINE_OWNED_PREFIXES = ("assumption.", "claim", "invalidation_condition", "outcome.", "acknowledgement_evidence.",
                             "acknowledged_at", "days_to_", "aid_proposed_status", "aid_capture_method", "aid_heading",
                             "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note")
@@ -350,11 +363,42 @@ def refresh_row(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
     return {**row, **{c: fresh[c] for c in COLUMNS if is_pipeline_owned(c)}}
 
 
-def refresh_pipeline_fields(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
+#: Every evidence block a row can carry, as the prefix its content_sha256 column sits under.
+EVIDENCE_PREFIXES = ("assumption.evidence.", "outcome.evidence.", "acknowledgement_evidence.")
+
+
+def recompute_content_sha256(row: dict[str, str], raw_dir: Path | None = None) -> dict[str, str]:
+    """Every evidence block's content_sha256 this row carries, recomputed from the cached document's
+    extracted text (research_record.text.html_to_text), not its raw bytes: SEC injects a per-request
+    script tag into the raw HTML, so a raw-byte hash can never be reproduced by a later fetch, but the
+    extracted text can. Applied whatever the row's review state is, human-touched or not: the hash
+    rule itself changed, not anything about what the row says. A block whose cached document is
+    missing is left as it was; nothing here fetches anything."""
+    raw_dir = raw_dir if raw_dir is not None else RAW_DIR  # a live lookup, so a monkeypatched RAW_DIR is honoured
+    updated = dict(row)
+    cik = row.get("cik")
+    if not cik:
+        return updated
+    for prefix in EVIDENCE_PREFIXES:
+        accession = row.get(f"{prefix}accession_number")
+        if not accession:
+            continue
+        html_path = raw_dir / cik / f"{accession}.html"
+        if not html_path.exists():
+            continue
+        text = html_to_text(html_path.read_bytes())
+        updated[f"{prefix}content_sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return updated
+
+
+def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None = None) -> tuple[list[dict[str, str]], Counter]:
     """Rewrite the pipeline-owned columns on every row of the company's CSV that nobody has touched yet, from
     the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (it is not a
     draft, so there is nothing here to rebuild it from), or a record_id no longer in data/drafts/ is left
-    exactly as it is."""
+    exactly as it is -- except its content_sha256 columns, which are always recomputed
+    (`recompute_content_sha256`), on every row, whatever its review state: that value depends only on the
+    cached document, never on a human's judgement."""
+    raw_dir = raw_dir if raw_dir is not None else RAW_DIR  # a live lookup, so a monkeypatched RAW_DIR is honoured
     path = REVIEW_DIR / f"{company.cik}.csv"
     rows = read_csv(path) if path.exists() else []
     if not rows:
@@ -379,8 +423,10 @@ def refresh_pipeline_fields(company: Company, today: date) -> tuple[list[dict[st
         new_row = refresh_row(row, fresh)
         stats["changed" if new_row != row else "unchanged"] += 1
         refreshed.append(new_row)
-    write_csv(path, refreshed)
-    return refreshed, stats
+    rehashed = [recompute_content_sha256(row, raw_dir) for row in refreshed]
+    stats["content_sha256_recomputed"] = sum(1 for old, new in zip(refreshed, rehashed) if old != new)
+    write_csv(path, rehashed)
+    return rehashed, stats
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -390,7 +436,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--refresh-pipeline-fields", action="store_true",
                          help="rewrite assumption/outcome/acknowledgement/aid_ columns on untouched rows (approved=false, "
                               "hand_verified=false, no reviewer_note) from the current data/drafts/ and data/outcomes/; "
-                              "a row with any human edit is never touched")
+                              "a row with any human edit is never touched, except its content_sha256 columns, which are "
+                              "always recomputed from the cached document's extracted text, on every row")
     args = parser.parse_args(argv)
     config = load_config(args.config)
     targets = companies(config, args.company)
@@ -398,11 +445,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.refresh_pipeline_fields:
         print("refreshing assumption/outcome/acknowledgement/aid_ columns on rows nobody has touched "
-              "(approved=false, hand_verified=false, no reviewer_note)")
+              "(approved=false, hand_verified=false, no reviewer_note); recomputing content_sha256 "
+              "(sha256 of the cached document's extracted text) on every row regardless")
         for company in targets:
             rows, stats = refresh_pipeline_fields(company, today)
             print(f"  {company.ticker}: {len(rows):,} rows ({stats['changed']} changed, {stats['unchanged']} unchanged, "
-                  f"{stats['kept']} kept as-is (human-touched, an empty-block flag, or no longer drafted), {stats['invalid']} could not rebuild)")
+                  f"{stats['kept']} kept as-is (human-touched, an empty-block flag, or no longer drafted), {stats['invalid']} could not rebuild, "
+                  f"{stats['content_sha256_recomputed']} content_sha256 recomputed)")
         return 0
 
     print("rows per company per status ('status' is the schema field, always open for a draft;")

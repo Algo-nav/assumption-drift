@@ -60,7 +60,7 @@ class Evidence(_Base):
     filing_type: NonEmpty  # 10-K, 10-Q, 8-K
     filed_at: date
     fetched_at: datetime
-    content_sha256: Sha256  # hash of the fetched document
+    content_sha256: Sha256  # sha256 of the extracted text (research_record.text.html_to_text), not the raw HTML
     excerpt: Excerpt  # the exact sentence(s), max 400 chars
 
     @field_validator("source_url")

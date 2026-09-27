@@ -213,6 +213,11 @@ def test_render_card_embeds_live_numbers_from_stats(sample_result) -> None:
     assert "figures/falsifiable_vs_acknowledged.png" in text
 
 
+def test_render_card_says_the_hash_is_of_the_extracted_text(sample_result) -> None:
+    text = publish.render_card(sample_result, dataset="assumption-drift", generated_at=date(2026, 9, 27))
+    assert "sha256 of the extracted text" in text
+
+
 def test_render_card_links_all_four_figures(sample_result) -> None:
     from pipeline import figures
 

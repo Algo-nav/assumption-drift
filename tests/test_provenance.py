@@ -8,8 +8,13 @@ The `network` tests make live requests and are deselected with `-m "not network"
   each one's `assumption.evidence.source_url` re-fetched live, its sha256 compared to the hash stored
   on the row, and its excerpt checked to still appear verbatim in the re-fetched text.
 
-The cache test needs no network. It walks whatever is in data/raw/ and checks that
-every cached document came from a 200 on an SEC host and still matches its hash.
+content_sha256 is a hash of the document's extracted text (research_record.text.html_to_text), not
+its raw bytes: SEC injects a per-request script tag into the raw HTML, different on every fetch of
+the same page, so a raw-byte hash could never match a later fetch. The extracted text is stable.
+
+The cache test needs no network. It walks whatever is in data/raw/ and checks that every cached
+document came from a 200 on an SEC host, its raw bytes still match raw_sha256 (the file on disk is
+what was actually fetched), and its extracted text still matches content_sha256.
 """
 
 from __future__ import annotations
@@ -73,8 +78,12 @@ def test_every_cached_document_came_from_a_200_on_an_sec_host_and_matches_its_ha
             problems.append(f"{accession}: final_url host not allowed: {meta.get('final_url')}")
         if not html_path.exists():
             problems.append(f"{accession}: no cached document")
-        elif hashlib.sha256(html_path.read_bytes()).hexdigest() != meta.get("content_sha256"):
-            problems.append(f"{accession}: cached bytes do not match content_sha256")
+        else:
+            body = html_path.read_bytes()
+            if hashlib.sha256(body).hexdigest() != meta.get("raw_sha256"):
+                problems.append(f"{accession}: cached bytes do not match raw_sha256")
+            if hashlib.sha256(html_to_text(body).encode("utf-8")).hexdigest() != meta.get("content_sha256"):
+                problems.append(f"{accession}: extracted text does not match content_sha256")
     assert not problems, f"{len(problems)} problem(s):\n" + "\n".join(problems[:10])
 
 
@@ -97,8 +106,9 @@ def test_five_random_release_rows_match_a_live_refetch(client) -> None:
         if got.status != 200:
             problems.append(f"{record.record_id}: refetch returned status {got.status}")
             continue
-        if hashlib.sha256(got.content).hexdigest() != evidence.content_sha256:
+        live_text = html_to_text(got.content)
+        if hashlib.sha256(live_text.encode("utf-8")).hexdigest() != evidence.content_sha256:
             problems.append(f"{record.record_id}: live sha256 does not match the stored content_sha256")
-        if evidence.excerpt not in html_to_text(got.content):
+        if evidence.excerpt not in live_text:
             problems.append(f"{record.record_id}: excerpt no longer appears verbatim in the live document")
     assert not problems, f"{len(problems)} problem(s):\n" + "\n".join(problems)

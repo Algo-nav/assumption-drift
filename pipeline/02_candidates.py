@@ -386,9 +386,9 @@ def build_company(
         except FileNotFoundError:
             stats["missing"] += 1
             continue
-        if hashlib.sha256(content).hexdigest() != meta["content_sha256"]:
+        if hashlib.sha256(content).hexdigest() != meta["raw_sha256"]:
             stats["hash_mismatch"] += 1
-            print(f"  {meta['accession']}: cached bytes do not match the sidecar hash, skipped", file=sys.stderr)
+            print(f"  {meta['accession']}: cached bytes do not match the sidecar's raw_sha256, skipped", file=sys.stderr)
             continue
         doc_rows, too_long = candidates_for_document(meta, content, settings, company)
         rows.extend(doc_rows)
