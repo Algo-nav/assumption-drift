@@ -30,6 +30,11 @@ differently than they already were. When any filter is active, approving a row r
 reviewer_note: if `y` is pressed and the note is still empty, the tool prompts for one and saves it
 before approving.
 
+A row with an `aid_suggested_note` (written by pipeline/03c_suggest.py, on a row 03b_verify flagged
+"no") shows it, and `y` on that row prompts for a note with the suggestion as the default: press
+Enter to accept it as reviewer_note, or type something else to use that instead. It never approves
+by itself; the reviewer still has to press `y`.
+
 This module has no network calls and reads no other part of the pipeline: it works on any CSV that has
 a `record_id` column, so it does not need to import pipeline code, and nothing in the pipeline needs to
 import this. Its interactive loop takes its I/O (reading a key, reading a line, printing) as arguments,
@@ -51,6 +56,7 @@ APPROVED = "approved"
 HAND_VERIFIED = "hand_verified"
 REVIEWER_NOTE = "reviewer_note"
 EMPTY_BLOCK = "empty_block"
+SUGGESTED_NOTE = "aid_suggested_note"
 EDGAR_URL_COLUMN = "assumption.evidence.source_url"
 EXCERPT_COLUMN = "assumption.evidence.excerpt"
 OUTCOME_VALUE_COLUMN = "outcome.reported_value"
@@ -204,8 +210,12 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
         f"proposed: {row.get('aid_proposed_status', '')}  verify: {row.get('aid_verify', '') or '(not checked)'}"
         + (f" ({row['aid_verify_reason']})" if row.get('aid_verify') == 'no' and row.get('aid_verify_reason') else "")
         + f"  conflict: {row.get('conflict', 'false')}",
-        f"approved: {row.get(APPROVED, 'false')}  hand_verified: {row.get(HAND_VERIFIED, 'false')}  note: {row.get(REVIEWER_NOTE, '') or '(none)'}",
     ]
+    if row.get(SUGGESTED_NOTE):
+        lines.append(f"suggested note: {row[SUGGESTED_NOTE]}")
+    lines.append(
+        f"approved: {row.get(APPROVED, 'false')}  hand_verified: {row.get(HAND_VERIFIED, 'false')}  note: {row.get(REVIEWER_NOTE, '') or '(none)'}"
+    )
     return "\n".join(lines)
 
 
@@ -261,7 +271,10 @@ def run(
             if row.get(EMPTY_BLOCK) == "true":
                 write("empty block, use s")
                 continue
-            if matches is not None and not row.get(REVIEWER_NOTE):
+            if row.get(SUGGESTED_NOTE) and not row.get(REVIEWER_NOTE):
+                typed = read_line(f"Note [{row[SUGGESTED_NOTE]}]: ").strip()
+                row = edit_field(row, REVIEWER_NOTE, typed or row[SUGGESTED_NOTE])
+            elif matches is not None and not row.get(REVIEWER_NOTE):
                 row = edit_field(row, REVIEWER_NOTE, read_line("Note required before approving: "))
             rf.rows[idx] = approve(row)
             rf.save()

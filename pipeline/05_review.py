@@ -35,6 +35,11 @@ an unapproved row is never published.
                     mismatch it is (wrong_metric, wrong_value, wrong_period, wrong_sign, not_guidance, other).
                     Blank until that script has run on the row. It is a prompt to look closer, never a decision:
                     it does not touch `approved` or any other reviewer column.
+  aid_suggested_note   written by pipeline/03c_suggest.py, not by this script: on a row where aid_verify is
+                    "no" and reviewer_note is still empty, one line saying whether aid_verify_class looks
+                    like a false alarm ("false alarm: ...", worked out in code from the row's own fields) or
+                    is worth a closer look ("CHECK: ..."). Blank on every other row. `rr review` shows it and
+                    lets Enter accept it as the note on `y`; it is never itself a reason to approve.
 
 Every row is `open`: the rubric's word for a draft nobody has reviewed. `aid_proposed_status`
 is what `rubric.resolve` says from the numbers alone, so a reviewer can see the direction
@@ -89,7 +94,7 @@ REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
 FLAG_COLUMNS = ["conflict", "empty_block"]
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class"]
+               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -317,9 +322,10 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
 
 # aid_verify, aid_verify_reason and aid_verify_class are deliberately left out: they belong to
 # 03b_verify.py, and build_row's own fresh row always leaves them blank, so refreshing them here would
-# erase a real verify verdict with an empty one. status, approved, hand_verified, reviewer_note, conflict
-# and empty_block are also left out: a draft row's status is always "open" regardless of anything a refresh
-# could change, and the rest are the reviewer's own columns.
+# erase a real verify verdict with an empty one. aid_suggested_note is left out for the same reason: it
+# belongs to 03c_suggest.py. status, approved, hand_verified, reviewer_note, conflict and empty_block are
+# also left out: a draft row's status is always "open" regardless of anything a refresh could change, and
+# the rest are the reviewer's own columns.
 PIPELINE_OWNED_PREFIXES = ("assumption.", "claim", "invalidation_condition", "outcome.", "acknowledgement_evidence.",
                             "acknowledged_at", "days_to_", "aid_proposed_status", "aid_capture_method", "aid_heading",
                             "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note")

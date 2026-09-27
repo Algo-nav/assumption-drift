@@ -14,7 +14,7 @@ COLUMNS = [
     "assumption.evidence.source_url", "assumption.evidence.excerpt",
     "outcome.reported_value", "outcome.reported_at", "outcome.evidence.excerpt",
     "approved", "hand_verified", "reviewer_note", "conflict", "empty_block",
-    "aid_proposed_status", "aid_outcome_note", "aid_flag_note", "aid_verify", "aid_verify_reason",
+    "aid_proposed_status", "aid_outcome_note", "aid_flag_note", "aid_verify", "aid_verify_reason", "aid_suggested_note",
 ]
 
 
@@ -172,6 +172,15 @@ def test_render_row_shows_the_verify_reason_only_when_it_says_no() -> None:
     assert "verify: no (wrong period)" in no
 
 
+def test_render_row_shows_the_suggested_note_when_there_is_one() -> None:
+    out = rv.render_row(row("R1", aid_suggested_note="false alarm: metric in heading"), 1, 1)
+    assert "suggested note: false alarm: metric in heading" in out
+
+
+def test_render_row_has_no_suggested_note_line_when_there_is_none() -> None:
+    assert "suggested note:" not in rv.render_row(row("R1"), 1, 1)
+
+
 # --- the interactive loop -------------------------------------------------------
 
 
@@ -295,6 +304,38 @@ def test_approving_an_empty_block_row_is_refused(tmp_path) -> None:
     rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
     assert any("empty block, use s" in m for m in s.out)
     assert read_csv(path)[0]["approved"] == "false"
+
+
+def test_approving_a_row_with_a_suggested_note_and_pressing_enter_accepts_it(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_suggested_note="false alarm: metric in heading"))
+    s = Script(keys=["y"], lines=[""])  # blank line: Enter
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "false alarm: metric in heading")
+
+
+def test_approving_a_row_with_a_suggested_note_and_typing_something_else_uses_that(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_suggested_note="false alarm: metric in heading"))
+    s = Script(keys=["y"], lines=["actually the metric is wrong"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "actually the metric is wrong")
+
+
+def test_a_suggested_note_is_not_offered_once_the_row_already_has_a_note(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_suggested_note="false alarm: metric in heading", reviewer_note="already checked"))
+    s = Script(keys=["y"])  # no lines queued: a prompt here would raise IndexError
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "already checked")
+
+
+def test_a_suggested_note_satisfies_a_filtered_sessions_note_requirement_without_a_second_prompt(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", aid_verify="no", aid_suggested_note="false alarm: metric in heading"))
+    s = Script(keys=["y"], lines=[""])  # exactly one line consumed: no second prompt
+    rv.run(path, filters=["verify-no"], read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "false alarm: metric in heading")
 
 
 def test_an_unrecognised_key_is_reported_and_the_row_stays(tmp_path) -> None:

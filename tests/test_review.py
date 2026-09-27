@@ -38,14 +38,14 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 58
+    assert len(cols) == len(set(cols)) == 59
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-16:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
+    assert cols[-17:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
                           "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note",
-                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class"]
-    assert set(review.schema_columns()) == set(cols[:-16])
+                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note"]
+    assert set(review.schema_columns()) == set(cols[:-17])
 
 
 # --- the words code writes -------------------------------------------------
@@ -438,7 +438,7 @@ def test_is_pipeline_owned_covers_assumption_outcome_and_aid_columns_but_not_ver
                     "days_to_falsifiable", "days_to_acknowledged", "aid_proposed_status", "aid_outcome_note", "aid_withdrawal_note"]:
         assert review.is_pipeline_owned(column)
     for column in ["record_id", "status", "approved", "hand_verified", "reviewer_note", "conflict",
-                    "empty_block", "aid_verify", "aid_verify_reason", "aid_verify_class"]:
+                    "empty_block", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note"]:
         assert not review.is_pipeline_owned(column)
 
 
