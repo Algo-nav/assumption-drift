@@ -439,26 +439,27 @@ def test_an_empty_or_out_of_range_answer_is_no_acknowledgement(world) -> None:
     assert "did not parse" in outcomes.derive_acknowledgements(index, bad, {COMPANY.cik: store()})[1][0]["reason"]
 
 
-# --- acknowledgement vocabulary differs by direction ------------------------
+# --- acknowledgement vocabulary depends on the side and the metric's polarity -------------------
 #
-# 318 missed rows and zero acknowledgements: the acknowledgement phrase list had only shortfall words
-# ("below", "short of", ...), but 243 of those 320 missed rows were beats (the reported value above the
-# high end, not below the low end) -- a beat could never be found however plainly the company said it.
+# 318 missed rows and zero acknowledgements: the acknowledgement phrase list had only words for a value
+# below the range, but most missed rows were above it, so those could never be found however plainly the
+# company said it. The vocabulary is now the side's words ("below", "above the high end") plus the
+# direction's words ("did not meet", "better than"), and a cost above its range is worse, not better.
 
 
-def test_a_beat_is_acknowledged_with_beat_vocabulary(world) -> None:
+def test_a_better_row_is_acknowledged_with_its_own_vocabulary(world) -> None:
     """From data/review/0000027419.csv, draft 01H0KG3A0009YTW3NZ8Q4YZRWP (TGT, EPS GAAP, Q2 FY2023): guided
     1.3 to 1.7, reported 1.8, acknowledged in the very same 8-K with "above the high end of the Company's
-    guidance range" -- vocabulary the shortfall-only phrase list could never match."""
+    guidance range". EPS is higher-is-better, so above the range is better than guided."""
     add_filing(world, "0021", "2024-05-01", "8-K", [
         "Second quarter GAAP and Adjusted EPS1 of $1.80 was more than 4 times higher than a year ago and "
         "above the high end of the Company's guidance range, reflecting a meaningful profit recovery from last year's inventory actions."
     ])
     d = draft(metric="EPS GAAP", unit="USD", low=1.3, high=1.7)
     out = {"reported_value": 1.8, "reported_at": "2024-05-01"}
-    assert outcomes.missed(d, out) and rubric.direction(1.3, 1.7, 1.8) == "beat"
+    assert outcomes.missed(d, out) and rubric.direction(1.3, 1.7, 1.8, True) == "better"
     reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
-    assert len(reqs) == 1 and "above the high end of the guided range (a beat)" in reqs[0].user
+    assert len(reqs) == 1 and "above the high end of the guided range (that is better than guided for EPS GAAP)" in reqs[0].user
     (cid,) = index
     assert any("above the high end of the Company's guidance range" in l.sentence for l in index[cid][1])
     res = {cid: llm.Result(cid, "succeeded", json.dumps({"indices": [1]}), 1, 1, None, "b")}
@@ -466,28 +467,45 @@ def test_a_beat_is_acknowledged_with_beat_vocabulary(world) -> None:
     assert found["D1"]["acknowledged_at"] == "2024-05-01" and rejects == []
 
 
-def test_a_shortfall_is_still_acknowledged_with_shortfall_vocabulary(world) -> None:
-    """The direction split must not cost the shortfall side anything it already had. (A real Target FY2020 or
-    Salesforce shortfall was checked directly against the cached filings for this: Target's FY2020 Q1 miss
-    was guidance withdrawn before the quarter closed, not a plain miss, and Salesforce's FY2020 EPS collapse
-    is reported later without referring back to the original guidance in these words. This fixture is
-    synthetic for that reason, and exercises the same code path as the beat test above.)"""
+def test_a_worse_row_is_still_acknowledged_with_its_own_vocabulary(world) -> None:
+    """Revenue below its range is worse than guided; the words it had before still find it. (Synthetic: a
+    real Target or Salesforce case was either a withdrawal or never referred back to the guidance.)"""
     add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter revenue of $4.8 billion did not meet the low end of our guidance range."])
-    d = draft()  # default range 5.0-6.0, a shortfall against 4.8
+    d = draft()  # default range 5.0-6.0, below it at 4.8
     out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
-    assert rubric.direction(5.0, 6.0, 4.8) == "shortfall"
+    assert rubric.direction(5.0, 6.0, 4.8, True) == "worse"
     reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
-    assert len(reqs) == 1 and "below the low end of the guided range (a shortfall)" in reqs[0].user
+    assert len(reqs) == 1 and "below the low end of the guided range (that is worse than guided for revenue)" in reqs[0].user
     assert any("did not meet the low end of our guidance range" in l.sentence for l in index["k-D1"][1])
 
 
-def test_beat_vocabulary_does_not_leak_into_a_shortfall_search_or_the_reverse(world) -> None:
+def test_a_cost_above_its_range_is_worse_and_is_found_with_cost_vocabulary(world) -> None:
+    """Operating expenses above the range is worse than guided. "higher than expected" is a side word for
+    above, so the search finds it; "did not meet" (an outcome word for a lower-is-better cost that ran
+    over) would find it too."""
+    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter operating expenses of $6.4 billion were higher than expected."])
+    d = draft(metric="operating expenses GAAP")
+    out = {"reported_value": 6.4, "reported_at": "2024-05-01"}
+    assert rubric.direction(5.0, 6.0, 6.4, False) == "worse"
+    reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+    assert len(reqs) == 1 and "(that is worse than guided for operating expenses GAAP)" in reqs[0].user
+    assert any("higher than expected" in l.sentence for l in index["k-D1"][1])
+
+
+def test_a_cost_below_its_range_is_better(world) -> None:
+    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter operating expenses of $4.8 billion were below our guidance."])
+    d = draft(metric="operating expenses GAAP")
+    out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
+    assert rubric.direction(5.0, 6.0, 4.8, False) == "better"
+    reqs, _ = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
+    assert len(reqs) == 1 and "below the low end of the guided range (that is better than guided for operating expenses GAAP)" in reqs[0].user
+
+
+def test_words_for_the_other_side_do_not_leak_into_a_search(world) -> None:
     add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter revenue of $4.8 billion exceeded expectations by a wide margin."])
-    d = draft()  # a shortfall: 4.8 is below the 5.0-6.0 range
+    d = draft()  # 4.8 is below the 5.0-6.0 range
     out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
     _, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
-    # the fixture's own "Last quarter revenue ... was below our guidance." is still a candidate; the new,
-    # beat-worded sentence about the same period and metric is not, because this is a shortfall search
     sentences = [l.sentence for l in index["k-D1"][1]]
     assert "Last quarter revenue of $4.8 billion was below our guidance." in sentences
     assert not any("exceeded expectations" in s for s in sentences)

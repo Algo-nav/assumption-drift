@@ -6,12 +6,14 @@ feeds the LinkedIn posts, so it stays plain and short.
 
 On top of what SCOPE.md 5.2 lists, added for Phase 3:
 
-- **beat/shortfall split of the misses**: which side of its own guided range a missed row's reported
-  value landed on, computed from the numbers each time (`research_record.rubric.direction`), never read
-  off a stored field: the schema carries no direction field, and this module does not write one anywhere.
+- **better/worse split of the misses**: whether a missed row's reported value landed on the good or the
+  bad side of its own guided range, computed from the numbers and the metric's polarity each time
+  (`research_record.rubric.direction`, `higher_is_better` in pipeline/config.yaml), never read off a
+  stored field: the schema carries no direction field, and this module does not write one anywhere.
+  Above the range is better for revenue and worse for operating expenses.
 - **one-sided floors, counted separately**: a floor ("at least X", `target_high` is null) can only ever
-  be met or fall short; there is nothing above it to beat, so lumping it into the beat/shortfall split
-  would silently under-count "beat" as if a floor had a ceiling it does not have.
+  be met or fall below; there is nothing above it to exceed, so lumping it into the better/worse split
+  would silently under-count "better" as if a floor had a ceiling it does not have.
 - **median `days_to_falsifiable` by direction**, and **acknowledgement rate by direction**: among missed
   rows only, split the same way.
 - **a per-company table** (`company_table`): rows, the same per-status counts as `by_status`, and the
@@ -32,12 +34,12 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from research_record import rubric
+from research_record import polarity, rubric
 from research_record.schema import ResearchRecord
 
 __all__ = ["load_records", "missed_direction", "is_floor", "compute", "format_stats", "run"]
 
-_DIRECTIONS: tuple[rubric.Direction, ...] = ("beat", "shortfall")
+_DIRECTIONS: tuple[rubric.Direction, ...] = ("better", "worse")
 
 
 def load_records(path: Path) -> tuple[list[ResearchRecord], int]:
@@ -57,15 +59,13 @@ def load_records(path: Path) -> tuple[list[ResearchRecord], int]:
 
 
 def missed_direction(record: ResearchRecord) -> rubric.Direction | None:
-    """"beat" or "shortfall" for a missed record's own numbers, or None when there is nothing to compare."""
-    if record.outcome is None:
-        return None
-    return rubric.direction(record.assumption.target_low, record.assumption.target_high, record.outcome.reported_value)
+    """"better" or "worse" for a missed record's own numbers, or None when there is nothing to compare."""
+    return polarity.record_direction(record)
 
 
 def is_floor(record: ResearchRecord) -> bool:
     """A one-sided lower bound ("at least X"): a target_low with no target_high. It can be met or fall
-    short; there is no ceiling above it to beat, so it is counted apart from the beat/shortfall split."""
+    below it; there is no ceiling above it to exceed, so it is counted apart from the better/worse split."""
     a = record.assumption
     return a.target_low is not None and a.target_high is None
 
@@ -162,8 +162,8 @@ def format_stats(stats: dict[str, Any]) -> str:
         f"median days to falsifiable: {stats['median_days_to_falsifiable']}",
         f"missed: {stats['missed']:,}, never acknowledged: {stats['missed_never_acknowledged']:,}"
         + (f" ({share:.0%})" if share is not None else ""),
-        f"missed by direction (beat = above the high end, shortfall = below the low end): {stats['missed_by_direction']}",
-        f"missed as one-sided floors (shortfall only; a floor has no ceiling to beat): {stats['missed_floors']:,}",
+        f"missed by direction (better or worse than guided, by each metric's polarity): {stats['missed_by_direction']}",
+        f"missed as one-sided floors (only a value below a floor can be missed; a floor has no ceiling): {stats['missed_floors']:,}",
         f"median days to falsifiable by direction: {stats['median_days_to_falsifiable_by_direction']}",
         f"acknowledged rate by direction: "
         f"{ {d: (f'{v:.0%}' if v is not None else None) for d, v in stats['acknowledged_rate_by_direction'].items()} }",

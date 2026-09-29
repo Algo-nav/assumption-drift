@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
-from research_record import rubric, stats
+from research_record import polarity, stats
 from research_record.schema import ResearchRecord
 
 figures = importlib.import_module("pipeline.figures")
@@ -44,21 +44,21 @@ def sample(record_data):
     ]
 
 
-def test_one_card_per_shortfall_row(record_data) -> None:
+def test_one_card_per_worse_row(record_data) -> None:
     records = sample(record_data)
     html = page(records)
-    shortfalls = [r for r in records if rubric.direction(r.assumption.target_low, r.assumption.target_high, r.outcome.reported_value) == "shortfall"]
-    assert html.count('class="card shortfall"') == len(shortfalls) == 3
-    assert html.count('class="card beat"') == 1
+    worse = [r for r in records if polarity.record_direction(r) == "worse"]
+    assert html.count('class="card worse"') == len(worse) == 3
+    assert html.count('class="card better"') == 1
 
 
-def test_beats_sit_in_a_collapsed_section(record_data) -> None:
+def test_better_rows_sit_in_a_collapsed_section(record_data) -> None:
     html = page(sample(record_data))
-    beats = html[html.index('<details class="beats">') : html.index("</details>")]
-    assert 'class="card beat"' in beats and "open" not in beats.split(">")[0]
+    better = html[html.index('<details class="better-section">') : html.index("</details>")]
+    assert 'class="card better"' in better and "open" not in better.split(">")[0]
 
 
-def test_shortfalls_are_newest_first(record_data) -> None:
+def test_worse_rows_are_newest_first(record_data) -> None:
     html = page(sample(record_data))
     assert html.index("Guidance, 2025-02-01") < html.index("Guidance, 2024-02-01")
 
@@ -105,7 +105,7 @@ def test_limitations_from_card_joins_wrapped_bullets() -> None:
     assert space.limitations_from_card(card) == ["one wrapped across lines.", "two."]
 
 
-def test_release_page_has_one_card_per_shortfall_row(tmp_path) -> None:
+def test_release_page_has_one_card_per_worse_row(tmp_path) -> None:
     records, _ = stats.load_records(REPO / "data" / "release" / "assumption_drift.jsonl")
     card = (REPO / "card" / "README.md").read_text(encoding="utf-8")
     plot = REPO / "card" / "figures" / figures.FIGURE_FILES[0]
@@ -114,7 +114,17 @@ def test_release_page_has_one_card_per_shortfall_row(tmp_path) -> None:
         strip_plot=plot, card_text=card, hf_user="Nav772", generated_at=date(2026, 9, 29), space_dir=tmp_path,
     )
     html = index.read_text(encoding="utf-8")
-    assert html.count('class="card shortfall"') == figures.acknowledgement_summary(records)["shortfalls"]
+    assert html.count('class="card worse"') == figures.acknowledgement_summary(records)["worse"]
     for url in space.external_urls(html):
         assert any((urlparse(url).hostname or "").endswith(a) for a in ALLOWED), url
     assert "sdk: static" in (tmp_path / "README.md").read_text()
+
+
+def test_headline_is_the_stat_tile_sentence_and_sections_are_named_by_direction(record_data) -> None:
+    records = sample(record_data)
+    html = page(records)
+    summary = figures.acknowledgement_summary(records)
+    assert figures.headline_sentence(summary) in html
+    assert "3 worse than guided. 1 acknowledged." in html
+    assert "Worse than guided (2)" in html and "Better than guided (1)" in html
+    assert "shortfall" not in html.lower() and "beat" not in html.lower()

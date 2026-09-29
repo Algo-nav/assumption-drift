@@ -62,9 +62,9 @@ def test_direction_is_none_without_an_outcome() -> None:
     assert figures.direction(rec(outcome=None, status="unresolved", days_to_falsifiable=None)) is None
 
 
-def test_direction_beat_and_shortfall() -> None:
-    assert figures.direction(rec(outcome=outcome(6_500.0))) == "beat"
-    assert figures.direction(rec()) == "shortfall"
+def test_direction_better_and_worse() -> None:
+    assert figures.direction(rec(outcome=outcome(6_500.0))) == "better"
+    assert figures.direction(rec()) == "worse"
 
 
 def test_nearest_edge_is_the_point_value_for_point_guidance() -> None:
@@ -72,7 +72,7 @@ def test_nearest_edge_is_the_point_value_for_point_guidance() -> None:
     assert figures.nearest_edge(point) == 5.0
 
 
-def test_nearest_edge_is_the_high_end_on_a_beat_and_the_low_end_on_a_shortfall() -> None:
+def test_nearest_edge_is_the_high_end_on_a_better_and_the_low_end_on_a_worse() -> None:
     assert figures.nearest_edge(rec(outcome=outcome(6_500.0))) == 6_000.0
     assert figures.nearest_edge(rec()) == 5_000.0
 
@@ -83,12 +83,12 @@ def test_miss_magnitude_is_none_unless_missed_with_an_outcome() -> None:
     assert figures.miss_magnitude(met) is None
 
 
-def test_miss_magnitude_of_a_shortfall_is_negative() -> None:
+def test_miss_magnitude_of_a_worse_is_negative() -> None:
     # reported 4800 vs low end 5000: (4800 - 5000) / 5000 = -0.04
     assert figures.miss_magnitude(rec()) == pytest.approx(-0.04)
 
 
-def test_miss_magnitude_of_a_beat_is_positive() -> None:
+def test_miss_magnitude_of_a_better_is_positive() -> None:
     beat = rec(outcome=outcome(6_600.0))
     # (6600 - 6000) / 6000 = 0.1
     assert figures.miss_magnitude(beat) == pytest.approx(0.1)
@@ -125,41 +125,41 @@ def test_ack_categories_lists_all_three_in_display_order() -> None:
 # --- acknowledgement_summary, for the stat tile ---------------------------------
 
 
-def test_acknowledgement_summary_counts_shortfalls_and_beats_separately() -> None:
-    shortfall = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K")  # default: reported 4800 vs [5000, 6000], a shortfall
+def test_acknowledgement_summary_counts_worse_and_better_separately() -> None:
+    worse = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K")  # default: reported 4800 vs [5000, 6000], a worse
     beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", outcome=outcome(6_500.0))
-    summary = figures.acknowledgement_summary([shortfall, beat])
-    assert (summary["shortfalls"], summary["beats"]) == (1, 1)
+    summary = figures.acknowledgement_summary([worse, beat])
+    assert (summary["worse"], summary["better"]) == (1, 1)
 
 
-def test_acknowledgement_summary_counts_acknowledged_shortfalls_and_beats() -> None:
-    ack_shortfall = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K", acknowledged_at="2025-02-10",
+def test_acknowledgement_summary_counts_acknowledged_worse_and_better() -> None:
+    ack_worse = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K", acknowledged_at="2025-02-10",
                          acknowledgement_evidence=evidence(content_sha256="c" * 64), days_to_acknowledged=7)
-    bare_shortfall = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K")
-    ack_beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH3K", outcome=outcome(6_500.0), acknowledged_at="2025-02-03",
+    bare_worse = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K")
+    ack_better = rec("01HZY8Q9XMR3T7VBN2CDEFGH3K", outcome=outcome(6_500.0), acknowledged_at="2025-02-03",
                     acknowledgement_evidence=evidence(content_sha256="d" * 64), days_to_acknowledged=0)
-    bare_beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH4K", outcome=outcome(6_600.0))
-    summary = figures.acknowledgement_summary([ack_shortfall, bare_shortfall, ack_beat, bare_beat])
-    assert (summary["shortfalls"], summary["shortfalls_acknowledged"]) == (2, 1)
-    assert (summary["beats"], summary["beats_acknowledged"]) == (2, 1)
+    bare_better = rec("01HZY8Q9XMR3T7VBN2CDEFGH4K", outcome=outcome(6_600.0))
+    summary = figures.acknowledgement_summary([ack_worse, bare_worse, ack_better, bare_better])
+    assert (summary["worse"], summary["worse_acknowledged"]) == (2, 1)
+    assert (summary["better"], summary["better_acknowledged"]) == (2, 1)
 
 
-def test_acknowledgement_summary_names_only_companies_with_an_acknowledged_beat() -> None:
-    acknowledged_beat = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K", company="Acme Corp", outcome=outcome(6_500.0),
+def test_acknowledgement_summary_names_only_companies_with_an_acknowledged_better() -> None:
+    acknowledged_better = rec("01HZY8Q9XMR3T7VBN2CDEFGH1K", company="Acme Corp", outcome=outcome(6_500.0),
                              acknowledged_at="2025-02-03", acknowledgement_evidence=evidence(content_sha256="c" * 64), days_to_acknowledged=0)
-    bare_beat_other_company = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", company="Zeta Corp", outcome=outcome(6_600.0))
-    acknowledged_shortfall_third_company = rec(  # acknowledged, but a shortfall, not a beat: must not be named
+    bare_better_other_company = rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", company="Zeta Corp", outcome=outcome(6_600.0))
+    acknowledged_worse_third_company = rec(  # acknowledged, but a worse, not a beat: must not be named
         "01HZY8Q9XMR3T7VBN2CDEFGH3K", company="Beta Corp", acknowledged_at="2025-02-10",
         acknowledgement_evidence=evidence(content_sha256="d" * 64), days_to_acknowledged=7,
     )
-    summary = figures.acknowledgement_summary([acknowledged_beat, bare_beat_other_company, acknowledged_shortfall_third_company])
+    summary = figures.acknowledgement_summary([acknowledged_better, bare_better_other_company, acknowledged_worse_third_company])
     assert summary["acknowledging_companies"] == ["Acme Corp"]
 
 
 def test_acknowledgement_summary_on_no_missed_rows() -> None:
     met = rec(status="met", outcome=outcome(5_500.0))
     summary = figures.acknowledgement_summary([met])
-    assert summary == {"shortfalls": 0, "shortfalls_acknowledged": 0, "beats": 0, "beats_acknowledged": 0, "acknowledging_companies": []}
+    assert summary == {"worse": 0, "worse_acknowledged": 0, "better": 0, "better_acknowledged": 0, "acknowledging_companies": []}
 
 
 # --- write_all: all four files exist and are non-empty, live data or none at all ----
@@ -174,7 +174,7 @@ def test_write_all_produces_all_four_files_with_no_records(tmp_path) -> None:
 
 def test_write_all_produces_all_four_files_with_records(tmp_path) -> None:
     records = [
-        rec("01HZY8Q9XMR3T7VBN2CDEFGH1K"),  # missed shortfall, never acknowledged
+        rec("01HZY8Q9XMR3T7VBN2CDEFGH1K"),  # missed worse, never acknowledged
         rec("01HZY8Q9XMR3T7VBN2CDEFGH2K", company="Beta Corp", status="met", outcome=outcome(5_500.0)),
         rec("01HZY8Q9XMR3T7VBN2CDEFGH3K", company="Gamma Corp", status="withdrawn", outcome=None, days_to_falsifiable=None),
         rec("01HZY8Q9XMR3T7VBN2CDEFGH4K", company="Beta Corp", outcome=outcome(6_500.0),

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import csv as csv_module
 import importlib
 import json
@@ -214,15 +216,19 @@ def test_render_card_defines_acknowledged_under_the_rubric(sample_result) -> Non
     text = render(sample_result)
     rubric_section = text[text.index("## The resolution rubric") : text.index("As of")]
     assert "Acknowledged means" in rubric_section
+    flat = " ".join(rubric_section.split())
+    assert "better than guided" in flat and "worse than guided" in flat
+    assert "Lower is better for operating expenses and tax rate" in flat
+    assert not re.search(r"\bbeats?\b|shortfalls?", text, re.IGNORECASE)
 
 
 def test_render_card_states_every_limitation_plainly(sample_result) -> None:
     text = render(sample_result)
-    limitations = text[text.index("## Known limitations") : text.index("## How to cite")]
+    limitations = " ".join(text[text.index("## Known limitations") : text.index("## How to cite")].split())
     for phrase in [
         "three companies", "pilot",
         "does not claim to capture every guidance statement",
-        "recorded as missed",
+        "recorded as missed", "once per metric",
         "one-sided floor", "not measured",
         "8-K, 10-K and 10-Q", "earnings call",
         "multi-column table", "unresolved",

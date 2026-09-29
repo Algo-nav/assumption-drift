@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -49,7 +50,7 @@ from pydantic import ValidationError
 
 from pipeline import figures, space
 from pipeline.common import CARD_DIR, CONFIG_PATH, FIGURES_DIR, RELEASE_DIR, REPO_ROOT, REVIEW_DIR, Company, companies, load_config
-from research_record import rubric, stats
+from research_record import polarity, rubric, stats
 from research_record.schema import ResearchRecord
 from research_record.validate import unflatten_csv_row
 
@@ -162,6 +163,16 @@ def _company_table_markdown(company_table: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _families(metrics: Any) -> list[str]:
+    """Metric names without their GAAP / non-GAAP suffix, each once, in config order."""
+    names = [re.sub(r" (?:GAAP|non-GAAP)$", "", m) for m in metrics]
+    return list(dict.fromkeys(names))
+
+
+def _join_names_plain(names: list[str]) -> str:
+    return ", ".join(names[:-1]) + f" and {names[-1]}" if len(names) > 1 else "".join(names)
+
+
 def _join_names(names: list[str]) -> str:
     if not names:
         return "no companies yet"
@@ -197,8 +208,11 @@ def render_card(
     (`research_record.stats.compute()`'s own dict): nothing here is typed by hand and drifts from the
     release. The human-review guarantee is stated once, under Provenance, and nowhere else."""
     by_status = result["by_status"]
-    beat = result["missed_by_direction"].get("beat", 0)
-    shortfall = result["missed_by_direction"].get("shortfall", 0)
+    better = result["missed_by_direction"].get("better", 0)
+    worse = result["missed_by_direction"].get("worse", 0)
+    table = polarity.load()
+    higher = _join_names_plain(_families(m for m, up in table.items() if up))
+    lower = _join_names_plain(_families(m for m, up in table.items() if not up))
     companies_named = _join_names([row["company"] for row in result["company_table"]])
     filing_range = f"{filing_date_from:%B %Y} and {filing_date_to:%B %Y}"
 
@@ -224,17 +238,19 @@ A row resolves mechanically from its own numbers, once the period has closed and
 
 - **met**: the reported value falls inside the guided range, endpoints included (a single point value
   is met within half a percent of itself)
-- **missed**: the reported value falls outside the guided range, either above it (a beat: the company
-  did better than it said) or below it (a shortfall: the company did worse)
+- **missed**: the reported value falls outside the guided range, on the good side of it (better than
+  guided) or the bad side (worse than guided). Which side is good depends on the metric. Higher is better
+  for {higher}. Lower is better for {lower}
 - **withdrawn**: the company explicitly withdrew or suspended the guidance in a later filing, before
   the period closed
 - **unresolved**: the period has not closed yet, or no later filing reports the metric
 
-Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words: "below", "short of" or
-"did not meet" for a shortfall, "exceeded" or "above the high end" for a beat.
+Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, naming which side of its
+guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
+"exceeded" or "above the high end".
 
 As of {generated_at.isoformat()}, the release holds **{result['rows']:,} rows**: {", ".join(f"{v:,} {k}" for k, v in by_status.items())}.
-Of the misses, {beat:,} were a beat and {shortfall:,} a shortfall; median days from the guidance to the
+Of the misses, {better:,} were better than guided and {worse:,} worse than guided; median days from the guidance to the
 filing that made it checkable was {result['median_days_to_falsifiable']}, and
 {_pct(result['missed_never_acknowledged_share'])} of misses were never acknowledged in a later filing.
 
@@ -243,7 +259,7 @@ By company:
 {_company_table_markdown(result["company_table"])}
 
 ![Missed rows: when the gap was acknowledged](figures/{figures.FIGURE_FILES[0]})
-![Shortfalls and beats, acknowledged or not](figures/{figures.FIGURE_FILES[1]})
+![Worse and better than guided, acknowledged or not](figures/{figures.FIGURE_FILES[1]})
 ![Resolution by fiscal year](figures/{figures.FIGURE_FILES[2]})
 ![Miss magnitude](figures/{figures.FIGURE_FILES[3]})
 
@@ -263,11 +279,13 @@ one the pipeline used.
 - This covers three companies. It is a pilot, not a survey of the market.
 - The pipeline does not claim to capture every guidance statement a company ever made; it captures
   the ones its patterns and its model caught.
-- A beat is recorded as missed, the same as a shortfall, because the underlying assumption (the
-  guided range) was wrong either way. Which direction it missed in is reported separately, not folded
-  into the status.
+- A row reported better than guided is recorded as missed, the same as one reported worse, because the
+  guided range was wrong either way. Which side it fell on is reported separately, not folded into the
+  status. Whether a side is good or bad is fixed once per metric, the same for every company: operating
+  expenses and the tax rate are treated as lower-is-better, everything else as higher-is-better.
 - A one-sided floor ("at least X") resolves as met on any reported value above the floor. There is no
-  ceiling to beat against, so a floor's beats are not measured; only shortfalls are.
+  ceiling to measure against, so a floor's better-than-guided rows are not measured; only values below
+  it can be missed.
 - The search for an acknowledgement covers 8-K, 10-K and 10-Q filing text only. A company that only
   addressed a miss on an earnings call, and never wrote it into a filing, is not found: that text is
   not in EDGAR.

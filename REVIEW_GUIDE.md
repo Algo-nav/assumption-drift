@@ -31,14 +31,14 @@ Three parts, left to right:
 |---|---|---|
 | **Assumption** | What did the company say would happen, for which metric, which period, stated when, and where is the sentence? | Pipeline. You correct it if wrong. |
 | **Outcome** | What did the company later report for that same metric and period, and where is that sentence? | Pipeline. You clear it if it matched the wrong thing. You never fill it. |
-| **Acknowledgement** | Did the company ever say, in a later filing, that it missed or beat that guidance? | Pipeline. You clear it if wrong. You never fill it. |
+| **Acknowledgement** | Did the company ever say, in a later filing, that it landed better or worse than that guidance? | Pipeline. You clear it if wrong. You never fill it. |
 
 Plus three columns that are yours: `approved`, `hand_verified`, `reviewer_note`.
 
 The status is computed from the numbers by the rubric, never typed by anyone:
 
 - `met`: reported value inside the range
-- `missed`: reported value outside the range (either direction; `beat` or `shortfall` is shown separately)
+- `missed`: reported value outside the range (on either side; `better` or `worse` than guided is shown separately)
 - `withdrawn`: company pulled the guidance before the period ended
 - `unresolved`: period not closed yet, or no report found
 - `open`: what every row says until it is published; ignore it
@@ -61,7 +61,7 @@ The status is computed from the numbers by the rubric, never typed by anyone:
 `rr review` prints one row at a time:
 
 ```
-[12/89]  TGT  01F...   sentence   aid_verify: yes   proposed: missed (shortfall)
+[12/89]  TGT  01F...   sentence   aid_verify: yes   proposed: missed (worse)
 
 ASSUMPTION
   metric:   EPS GAAP           unit: USD per share
@@ -109,11 +109,11 @@ The reviewer sorts rows for you: verifier `no` first, then section-captured, the
 
 | Tier | Rows | What you do | Time per row |
 |---|---|---|---|
-| **Full** | `aid_verify=no`; proposed `shortfall`; proposed `withdrawn`; `conflict=true`; any Salesforce section row; any long-range target (period more than 2 years after stated date) | All of section 6, every step | 1 to 2 min |
+| **Full** | `aid_verify=no`; proposed `worse`; proposed `withdrawn`; `conflict=true`; any Salesforce section row; any long-range target (period more than 2 years after stated date) | All of section 6, every step | 1 to 2 min |
 | **Medium** | Section-captured `yes` rows (NVIDIA, Target) | Excerpt, header, metric, period, glance at numbers | 20 sec |
-| **Fast** | Sentence-captured `yes` rows, proposed `met`, `beat` or `unresolved` | Read excerpt once, confirm metric and period match, `y` | 10 sec |
+| **Fast** | Sentence-captured `yes` rows, proposed `met`, `better` or `unresolved` | Read excerpt once, confirm metric and period match, `y` | 10 sec |
 
-Why shortfalls get the full check: they are the rows that carry the dataset's story, and the rows a PM will click on first. A wrong shortfall costs more credibility than ten wrong beats.
+Why worse-than-guided rows get the full check: they are the rows that carry the dataset's story, and the rows a PM will click on first. A wrong worse-than-guided row costs more credibility than ten wrong better-than-guided rows.
 
 Why fast rows are safe to move through: the code already guarantees the numbers came from the excerpt, the units match the metric, and the ± was expanded. What code cannot check is the metric label and the period. Those two are your job on every row.
 
@@ -198,11 +198,11 @@ Right: nothing to do; the status follows.
 `proposed` should follow from the numbers you just checked. If you changed a number or cleared the outcome, the reviewer recomputes it on save.
 
 - `withdrawn`: read the withdrawal note. The withdrawal filing must be dated **before** the period ended. Target 2020-05-20 withdrawing FY2020 guidance (period ends 2021-01-30) is correct. A "withdrawal" after the period closed is not one; the row resolves on the numbers.
-- `shortfall` or `beat` are shown next to `missed`. A beat is still `missed` in the schema (the assumption was wrong either way); the direction is computed, not stored.
+- `worse` or `better` are shown next to `missed`. Better than guided is still `missed` in the schema (the assumption was wrong either way); the direction is computed from the metric's polarity (`higher_is_better` in `pipeline/config.yaml`), not stored. Above the range is better for revenue and worse for operating expenses or the tax rate.
 
 ### Step 8: Acknowledgement (only if filled)
 
-The excerpt should mention the metric alongside the miss or beat: "below the low end of our guidance", "above the high end of the Company's guidance range", "did not meet". A generic "results were below expectations" still counts. An unrelated sentence does not.
+The excerpt should mention the metric alongside the gap: "below the low end of our guidance", "above the high end of the Company's guidance range", "did not meet". A generic "results were below expectations" still counts. An unrelated sentence does not.
 
 Wrong: `e`, clear `acknowledged_at`. Note: `ack mismatch`.
 
@@ -276,7 +276,7 @@ missed guidance in <accession>: <metric> <value> <period>
 - More than 1 in 10 rows in a company are wrong on metric or period. That is a pipeline pattern, not review work.
 - The same mistake appears three times.
 - A hand-verify URL does not match.
-- A shortfall row's outcome looks like a beat or vice versa, more than once.
+- A worse row's outcome looks better than guided, or vice versa, more than once.
 - Anything makes you unsure for more than a minute. `s` it, note `unsure: <why>`, and keep going. Skipped rows are listed at the end.
 
 ---
@@ -295,17 +295,17 @@ Then NVIDIA (`0001045810`), then Salesforce (`0001108524`). If you stop mid-file
 
 ## 12. Worked examples from your data
 
-**Target, EPS GAAP 1.55 to 1.75, Q1 FY2020, reported 0.56 on 2020-05-20, shortfall.**
-Excerpt is from the March 2020 release, forward-looking, named quarter. Outcome is May, past tense, same metric, same quarter. Real COVID shortfall. `y`. Acknowledgement blank: Target withdrew rather than acknowledged, which is the finding.
+**Target, EPS GAAP 1.55 to 1.75, Q1 FY2020, reported 0.56 on 2020-05-20, worse.**
+Excerpt is from the March 2020 release, forward-looking, named quarter. Outcome is May, past tense, same metric, same quarter. Real COVID gap. `y`. Acknowledgement blank: Target withdrew rather than acknowledged, which is the finding.
 
 **Target, operating margin GAAP at least 8.0, FY2022, reported 3.7.**
 Outcome excerpt: "Fourth quarter operating income margin rate was 3.7 percent". That is Q4, the target is the full year. `e`, clear `outcome.reported_value` and `outcome.reported_at`, note `outcome mismatch: wrong period, Q4 not FY`. Then `y`. Row becomes `unresolved`.
 
 **NVIDIA, other income and expense -55 to -55, Q3 FY2021.**
-Excerpt: "expected to be an expense of approximately $55 million". Negative is right. Outcome from "(50)" is -50, inside a ±? No, point target, so 0.5% tolerance; -50 vs -55 is `missed`, direction beat (less expense). `y`.
+Excerpt: "expected to be an expense of approximately $55 million". Negative is right. Outcome from "(50)" is -50, inside a ±? No, point target, so 0.5% tolerance; -50 vs -55 is `missed`, direction better (less expense; other income and expense is higher-is-better). `y`.
 
 **Salesforce, EPS GAAP -0.44 to -0.42, FY2022, reported 1.48.**
-Both excerpts clean, parentheses on EPS correctly negative. Huge beat from investment gains. `y`. It is a `missed` / `beat`.
+Both excerpts clean, parentheses on EPS correctly negative. Far better than guided, from investment gains. `y`. It is a `missed` / `better`.
 
 **Salesforce, tax rate 40, Q4 FY2020, outcome "is expected to be approximately 72%".**
 After the outcome fix this should already be cleared. If it survives: `e`, clear outcome, note `outcome mismatch: is guidance`.

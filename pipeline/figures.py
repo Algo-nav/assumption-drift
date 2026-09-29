@@ -25,13 +25,13 @@ matplotlib.use("Agg")  # headless: this runs from a script and from tests, never
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 
-from research_record import rubric
+from research_record import polarity, rubric
 from research_record.schema import ResearchRecord
 
 __all__ = [
     "GREY_DARK", "GREY_MID", "GREY_LIGHT", "ACCENT_MISSED", "FIGURE_FILES", "ACK_CATEGORIES",
     "fiscal_year", "direction", "nearest_edge", "miss_magnitude", "acknowledgement_bucket",
-    "acknowledgement_summary", "write_all",
+    "acknowledgement_summary", "headline_sentence", "subline_sentence", "write_all",
 ]
 
 GREY_DARK = "#3f3f46"
@@ -59,25 +59,24 @@ def fiscal_year(target_period: str) -> int | None:
 
 
 def direction(record: ResearchRecord) -> rubric.Direction | None:
-    """"beat" or "shortfall" for a missed record's own numbers. Recomputed from the numbers, same as
-    `research_record.stats.missed_direction`, kept local so this module's only dependencies are the
-    schema and the rubric."""
-    if record.outcome is None:
-        return None
-    return rubric.direction(record.assumption.target_low, record.assumption.target_high, record.outcome.reported_value)
+    """"better" or "worse" for a missed record's own numbers (`research_record.polarity.record_direction`):
+    above the range is better for revenue and worse for operating expenses."""
+    return polarity.record_direction(record)
 
 
 def nearest_edge(record: ResearchRecord) -> float | None:
     """The target value a missed row's reported figure is measured against: the point value itself for
-    point guidance, else whichever bound (`target_high` for a beat, `target_low` for a shortfall) the
+    point guidance, else whichever bound (`target_high` above the range, `target_low` below it) the
     reported value actually landed outside of. None when there is nothing to measure against."""
     a = record.assumption
     if rubric.is_point_guidance(a.target_low, a.target_high):
         return a.target_low
-    d = direction(record)
-    if d == "beat":
+    if record.outcome is None:
+        return None
+    landed = rubric.side(a.target_low, a.target_high, record.outcome.reported_value)
+    if landed == "above":
         return a.target_high
-    if d == "shortfall":
+    if landed == "below":
         return a.target_low
     return None
 
@@ -149,23 +148,24 @@ def _falsifiable_vs_acknowledged(records: list[ResearchRecord], dataset: str, ge
     return fig
 
 
-# --- 2. shortfalls vs beats, acknowledged or not: a stat tile -----------------------------------
+# --- 2. worse vs better than guided, acknowledged or not: a stat tile ---------------------------
 
 
 def acknowledgement_summary(records: list[ResearchRecord]) -> dict[str, Any]:
-    """Missed rows split into shortfalls and beats, and how many of each were ever acknowledged:
-    `{"shortfalls", "shortfalls_acknowledged", "beats", "beats_acknowledged", "acknowledging_companies"}`.
-    The last, sorted, is which companies had at least one acknowledged beat; empty if none did."""
+    """Missed rows split into worse and better than guided, and how many of each were ever acknowledged:
+    `{"worse", "worse_acknowledged", "better", "better_acknowledged", "acknowledging_companies"}`.
+    The last, sorted, is which companies had at least one acknowledged better-than-guided row; empty if
+    none did."""
     missed = [r for r in records if r.status == "missed"]
-    shortfalls = [r for r in missed if direction(r) == "shortfall"]
-    beats = [r for r in missed if direction(r) == "beat"]
-    beats_acknowledged = [r for r in beats if r.acknowledged_at is not None]
+    worse = [r for r in missed if direction(r) == "worse"]
+    better = [r for r in missed if direction(r) == "better"]
+    better_acknowledged = [r for r in better if r.acknowledged_at is not None]
     return {
-        "shortfalls": len(shortfalls),
-        "shortfalls_acknowledged": sum(1 for r in shortfalls if r.acknowledged_at is not None),
-        "beats": len(beats),
-        "beats_acknowledged": len(beats_acknowledged),
-        "acknowledging_companies": sorted({r.company for r in beats_acknowledged}),
+        "worse": len(worse),
+        "worse_acknowledged": sum(1 for r in worse if r.acknowledged_at is not None),
+        "better": len(better),
+        "better_acknowledged": len(better_acknowledged),
+        "acknowledging_companies": sorted({r.company for r in better_acknowledged}),
     }
 
 
@@ -177,12 +177,21 @@ def _join_names(names: list[str]) -> str:
     return ", ".join(names[:-1]) + f" and {names[-1]}"
 
 
+def headline_sentence(summary: dict[str, Any]) -> str:
+    return f"{summary['worse']:,} worse than guided. {summary['worse_acknowledged']:,} acknowledged."
+
+
+def subline_sentence(summary: dict[str, Any]) -> str:
+    text = f"Better than guided: {summary['better_acknowledged']:,} of {summary['better']:,} acknowledged"
+    if summary["acknowledging_companies"]:
+        text += f", by {_join_names(summary['acknowledging_companies'])}"
+    return text
+
+
 def _acknowledgement_stat_tile(records: list[ResearchRecord], dataset: str, generated_at: date) -> plt.Figure:
     summary = acknowledgement_summary(records)
-    headline = f"{summary['shortfalls']:,} shortfalls. {summary['shortfalls_acknowledged']:,} acknowledged."
-    subline = f"Beats: {summary['beats_acknowledged']:,} of {summary['beats']:,} acknowledged"
-    if summary["acknowledging_companies"]:
-        subline += f", by {_join_names(summary['acknowledging_companies'])}"
+    headline = headline_sentence(summary)
+    subline = subline_sentence(summary)
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.axis("off")  # plain background: no axes, no gridlines, just the two lines and the footer

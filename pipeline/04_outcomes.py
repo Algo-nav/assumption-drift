@@ -10,8 +10,8 @@ cost gate as 03_structure (one budget across all of them):
               headline names the draft's period, pick the lines that name the metric
               next to a number, and ask the model which line states the ACTUAL result.
   ack         For each draft whose outcome resolves to "missed" by the rubric, find later
-              lines that mention the metric next to words like "below" or "short of",
-              and ask the model whether one admits the shortfall. The earliest wins.
+              lines that mention the metric next to words like "below", "higher than" or "short of",
+              and ask the model whether one admits the gap. The earliest wins.
   withdrawal  For each draft, find the 8-K exhibits filed after the guidance and up to the
               day its period closed, pick the sentences that say withdraw, suspend or no
               longer providing about guidance, and ask the model whether one is the company
@@ -54,7 +54,7 @@ from pydantic import ValidationError
 
 from pipeline import common, llm
 from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config
-from research_record import rubric
+from research_record import polarity, rubric
 from research_record.schema import Evidence, Outcome
 from research_record.text import html_to_text, sentence_spans
 
@@ -119,16 +119,16 @@ Rules
 """
 
 ACK_SYSTEM = """\
-You decide whether a company admitted, in its own words in a later filing, that its actual result for a metric and period came in on a stated side of its own guidance: below it (a shortfall) or above it (a beat).
+You decide whether a company admitted, in its own words in a later filing, that its actual result for a metric and period came in on a stated side of its own guidance: worse than guided or better than guided.
 
-You are given the guidance (metric, period, the range the company guided to, what it actually reported, and which side of that range the reported value fell on), and a numbered list of lines from the company's later filings, oldest first.
+You are given the guidance (metric, period, the range the company guided to, what it actually reported, which side of that range the reported value fell on, and whether that side is worse or better for that metric), and a numbered list of lines from the company's later filings, oldest first.
 
-Return the numbers of the lines that say, in the company's own words, that its actual result for exactly that metric and exactly that period fell on the stated side of its guidance or expectations. For a shortfall: below, short of, lower than, did not meet, or otherwise missed it. For a beat: exceeded, above the high end of, better than, or otherwise beat it. Return an empty list if none do.
+Return the numbers of the lines that say, in the company's own words, that its actual result for exactly that metric and exactly that period fell on the stated side of its guidance or expectations. The company may say it in words about the side (below, above the high end of, lower than, higher than, exceeded) or about the outcome (short of, did not meet, better than, or otherwise missed or beat it). Return an empty list if none do.
 
 Rules
-- The line must be about the same metric and the same period. A miss on another metric or another period does not count.
+- The line must be about the same metric and the same period. A gap on another metric or another period does not count.
 - It must reference the result against guidance or expectations. A line that only states the result, or only gives a new outlook, does not count. A line that says guidance was revised because the result came in on the stated side does.
-- Do not count a line that describes the other side: for a shortfall, a line saying results were above or in line with guidance does not count; for a beat, a line saying results were below or in line with guidance does not count.
+- Do not count a line that describes the other side of the range: a line saying results were on the other side of guidance, or in line with it, does not count.
 """
 
 WITHDRAWAL_SYSTEM = """\
@@ -551,11 +551,14 @@ def build_ack_requests(
     *,
     today: date,
 ) -> tuple[list[llm.LlmRequest], dict[str, tuple[dict[str, Any], list[Line]]]]:
-    # Vocabulary differs by direction: a shortfall is admitted with "below" or "short of", a beat with
-    # "exceeded" or "above the high end". Searching every row with only the shortfall words meant a beat
-    # (the more common direction here) could never be found however plainly the company said it.
+    # Vocabulary depends on the side the value fell on and on whether that side was good or bad for the
+    # metric: "below" or "higher than" name the side, "short of" or "better than" name the outcome. A row is
+    # searched with its side's words plus its direction's words (config.yaml, acknowledgement_phrases).
+    phrases = cfg["acknowledgement_phrases"]
     phrase_patterns = {
-        side: re.compile("|".join(cfg["acknowledgement_phrases"][side]), re.IGNORECASE) for side in ("shortfall", "beat")
+        (side, direction): re.compile("|".join(phrases[side] + phrases[direction]), re.IGNORECASE)
+        for side in ("below", "above")
+        for direction in ("worse", "better")
     }
     requests: list[llm.LlmRequest] = []
     index: dict[str, tuple[dict[str, Any], list[Line]]] = {}
@@ -566,9 +569,10 @@ def build_ack_requests(
             if outcome is None or not missed(d, outcome):
                 continue
             a = d["assumption"]
-            side = rubric.direction(a["target_low"], a["target_high"], outcome["reported_value"])
+            side = rubric.side(a["target_low"], a["target_high"], outcome["reported_value"])
             if side is None:
                 continue
+            direction = rubric.direction(a["target_low"], a["target_high"], outcome["reported_value"], polarity.higher_is_better(a["metric"]))
             matcher = metric_pattern(a["metric"], cfg["metric_terms"])
             if matcher is None:
                 continue
@@ -577,14 +581,14 @@ def build_ack_requests(
             metas = [m for m in store.all_metas if reported <= m["filed_at"] <= horizon]  # every filing: the 10-Q and 10-K too
             # No number is required here: the line that admits the gap often just narrates it ("below our
             # guidance") with the value itself already given in the user message, or in a sentence just before.
-            lines = select_lines(store, metas, matcher, phrase_patterns[side], a["metric"], parse_period(a["target_period"]),
+            lines = select_lines(store, metas, matcher, phrase_patterns[(side, direction)], a["metric"], parse_period(a["target_period"]),
                                   cfg, number, require_number=False)
             if not lines:
                 continue
-            side_words = "above the high end of" if side == "beat" else "below the low end of"
+            side_words = "above the high end of" if side == "above" else "below the low end of"
             user = (
                 f"Guidance: {d['company']} guided {a['metric']} for {a['target_period']} to {_range_text(a)} {a['unit']}.\n"
-                f"Actually reported: {outcome['reported_value']:g} {a['unit']}, on {reported}, {side_words} the guided range (a {side}).\n\n"
+                f"Actually reported: {outcome['reported_value']:g} {a['unit']}, on {reported}, {side_words} the guided range (that is {direction} than guided for {a['metric']}).\n\n"
                 f"Lines from the company's filings from {reported} on (oldest first):\n{render_lines(lines)}"
             )
             cid = f"k-{d['draft_id']}"

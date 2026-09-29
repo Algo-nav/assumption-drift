@@ -55,6 +55,26 @@ metric_kinds:
   "comparable sales": percent
   "free cash flow": dollars
 
+# Which way is good for each metric, so "better" and "worse" than guided can be told from above and
+# below the range (research_record.rubric.direction). Higher is better for revenue, margins, income,
+# EPS, comparable sales, free cash flow and other income and expense; lower is better for operating
+# expenses and the tax rate. One rule per metric, the same for every company.
+higher_is_better:
+  "revenue": true
+  "gross margin GAAP": true
+  "gross margin non-GAAP": true
+  "operating expenses GAAP": false
+  "operating expenses non-GAAP": false
+  "operating margin GAAP": true
+  "operating margin non-GAAP": true
+  "operating income": true
+  "EPS GAAP": true
+  "EPS non-GAAP": true
+  "tax rate": false
+  "other income and expense": true
+  "comparable sales": true
+  "free cash flow": true
+
 llm:
   model: "claude-haiku-4-5"
   budget_usd: 10   # one budget across 03_structure and 04_outcomes, not one each
@@ -188,22 +208,30 @@ outcomes:
     - 'suspension'
     - 'no longer (?:provid|issu|giv)(?:e|es|ing)'
   withdrawal_subjects: 'guidance|outlook|forecast|expectations|projections|targets?'
-  # Which words count as an acknowledgement depends on which side of the guided range the actual result
-  # fell on (`research_record.rubric.direction`). Searching a beat with only the shortfall list (or the
-  # reverse) means the row can never be found however plainly the company said it.
+  # Which words count as an acknowledgement depends on two things about the row: which side of the range
+  # the result fell on (`below` or `above`, `research_record.rubric.side`), and whether that side was good
+  # or bad for the metric (`better` or `worse`, `rubric.direction`, from the metric's `higher_is_better`).
+  # A row is searched with its side's list plus its direction's list: a cost that came in above its range
+  # is admitted as "higher than expected", and revenue above its range as "exceeded", and neither row can
+  # be found with only the other's words.
   acknowledgement_phrases:
-    shortfall:
+    below:
       - 'below'
       - 'short of'
-      - 'fell short'
-      - 'shortfall'
-      - 'did not meet'
       - 'lower than our'
       - 'lower than expected'
       - 'less than expected'
+    above:
+      - 'above the high end'
+      - 'exceeded'
+      - 'higher than our'
+      - 'higher than expected'
+      - 'greater than expected'
+    worse:
+      - 'fell short'
+      - 'shortfall'
+      - 'did not meet'
       - 'missed'
       - 'revised'
-    beat:
-      - 'exceeded'
-      - 'above the high end'
+    better:
       - 'better than'

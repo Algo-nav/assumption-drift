@@ -1,4 +1,4 @@
-"""research_record/stats.py: `rr stats`, and the beat/shortfall direction split (SCOPE.md 5.2)."""
+"""research_record/stats.py: `rr stats`, and the beat/worse direction split (SCOPE.md 5.2)."""
 
 from __future__ import annotations
 
@@ -44,11 +44,11 @@ def test_load_records_counts_invalid_lines_without_raising(tmp_path, record_data
 # --- missed_direction ---------------------------------------------------------
 
 
-def test_missed_direction_reads_beat_and_shortfall_from_the_numbers(record_data) -> None:
+def test_missed_direction_reads_better_and_worse_from_the_numbers(record_data) -> None:
     beat = ResearchRecord(**{**record_data(status="missed"), "outcome": {**record_data()["outcome"], "reported_value": 6_500.0}})
-    shortfall = ResearchRecord(**record_data(status="missed"))  # fixture default: reported 4800, range [5000, 6000]
-    assert stats.missed_direction(beat) == "beat"
-    assert stats.missed_direction(shortfall) == "shortfall"
+    worse = ResearchRecord(**record_data(status="missed"))  # fixture default: reported 4800, range [5000, 6000]
+    assert stats.missed_direction(beat) == "better"
+    assert stats.missed_direction(worse) == "worse"
 
 
 def test_missed_direction_is_none_without_an_outcome(record_data) -> None:
@@ -73,9 +73,9 @@ def test_compute_counts_rows_and_status(record_data) -> None:
 
 def test_compute_splits_missed_rows_by_direction(record_data) -> None:
     beat = _record(record_data, status="missed", outcome={**record_data()["outcome"], "reported_value": 6_500.0})
-    shortfall = _record(record_data)  # reported 4800, below the 5000 low end
-    result = stats.compute([beat, shortfall])
-    assert result["missed_by_direction"] == {"beat": 1, "shortfall": 1}
+    worse = _record(record_data)  # reported 4800, below the 5000 low end
+    result = stats.compute([beat, worse])
+    assert result["missed_by_direction"] == {"better": 1, "worse": 1}
 
 
 def test_compute_never_acknowledged_share(record_data) -> None:
@@ -117,7 +117,7 @@ def test_compute_on_no_records() -> None:
     assert result["median_days_to_falsifiable"] is None and result["missed_never_acknowledged_share"] is None
 
 
-# --- floors, counted apart from beat/shortfall ---------------------------------
+# --- floors, counted apart from beat/worse ---------------------------------
 
 
 def test_is_floor_is_a_lower_bound_with_no_ceiling(record_data) -> None:
@@ -128,11 +128,11 @@ def test_is_floor_is_a_lower_bound_with_no_ceiling(record_data) -> None:
 
 
 def test_compute_counts_missed_floors_separately_from_the_direction_split(record_data) -> None:
-    floor_shortfall = _record(record_data, assumption={**record_data()["assumption"], "target_high": None})
-    ranged_shortfall = _record(record_data)
-    result = stats.compute([floor_shortfall, ranged_shortfall])
+    floor_worse = _record(record_data, assumption={**record_data()["assumption"], "target_high": None})
+    ranged_worse = _record(record_data)
+    result = stats.compute([floor_worse, ranged_worse])
     assert result["missed_floors"] == 1
-    assert result["missed_by_direction"] == {"shortfall": 2}  # a floor is still a shortfall, just also flagged
+    assert result["missed_by_direction"] == {"worse": 2}  # a floor is still a worse, just also flagged
 
 
 # --- median days to falsifiable, and acknowledgement rate, by direction --------
@@ -140,33 +140,33 @@ def test_compute_counts_missed_floors_separately_from_the_direction_split(record
 
 def test_compute_median_days_to_falsifiable_by_direction(record_data) -> None:
     beat = _record(record_data, days_to_falsifiable=100, outcome={**record_data()["outcome"], "reported_value": 6_500.0})
-    shortfall_a = _record(record_data, days_to_falsifiable=200)
-    shortfall_b = _record(record_data, days_to_falsifiable=400)
-    result = stats.compute([beat, shortfall_a, shortfall_b])
-    assert result["median_days_to_falsifiable_by_direction"] == {"beat": 100, "shortfall": 300}
+    worse_a = _record(record_data, days_to_falsifiable=200)
+    worse_b = _record(record_data, days_to_falsifiable=400)
+    result = stats.compute([beat, worse_a, worse_b])
+    assert result["median_days_to_falsifiable_by_direction"] == {"better": 100, "worse": 300}
 
 
 def test_compute_median_days_to_falsifiable_by_direction_is_none_with_nothing_in_it(record_data) -> None:
-    shortfall = _record(record_data)
-    result = stats.compute([shortfall])
-    assert result["median_days_to_falsifiable_by_direction"]["beat"] is None
+    worse = _record(record_data)
+    result = stats.compute([worse])
+    assert result["median_days_to_falsifiable_by_direction"]["better"] is None
 
 
 def test_compute_acknowledged_rate_by_direction(record_data) -> None:
-    acknowledged_beat = _record(
+    acknowledged_better = _record(
         record_data, outcome={**record_data()["outcome"], "reported_value": 6_500.0},
         acknowledged_at="2025-02-04", acknowledgement_evidence=record_data()["outcome"]["evidence"], days_to_acknowledged=1,
     )
-    unacknowledged_beat = _record(record_data, outcome={**record_data()["outcome"], "reported_value": 6_500.0})
-    unacknowledged_shortfall = _record(record_data)
-    result = stats.compute([acknowledged_beat, unacknowledged_beat, unacknowledged_shortfall])
-    assert result["acknowledged_rate_by_direction"] == {"beat": pytest.approx(0.5), "shortfall": 0.0}
+    unacknowledged_better = _record(record_data, outcome={**record_data()["outcome"], "reported_value": 6_500.0})
+    unacknowledged_worse = _record(record_data)
+    result = stats.compute([acknowledged_better, unacknowledged_better, unacknowledged_worse])
+    assert result["acknowledged_rate_by_direction"] == {"better": pytest.approx(0.5), "worse": 0.0}
 
 
 def test_compute_acknowledged_rate_by_direction_is_none_with_nothing_in_it(record_data) -> None:
-    shortfall = _record(record_data)
-    result = stats.compute([shortfall])
-    assert result["acknowledged_rate_by_direction"]["beat"] is None
+    worse = _record(record_data)
+    result = stats.compute([worse])
+    assert result["acknowledged_rate_by_direction"]["better"] is None
 
 
 # --- the per-company table -------------------------------------------------------
@@ -197,7 +197,7 @@ def test_run_prints_the_direction_split(tmp_path, record_data) -> None:
     path = tmp_path / "release.jsonl"
     write_jsonl(path, [record_data()])
     text = stats.run(path)
-    assert "rows: 1" in text and "missed by direction" in text and "'shortfall': 1" in text
+    assert "rows: 1" in text and "missed by direction" in text and "'worse': 1" in text
 
 
 def test_run_reports_invalid_rows_without_raising(tmp_path, record_data) -> None:
@@ -216,7 +216,7 @@ def test_run_as_json_prints_computes_own_dict(tmp_path, record_data) -> None:
     path = tmp_path / "release.jsonl"
     write_jsonl(path, [record_data()])
     parsed = json.loads(stats.run(path, as_json=True))
-    assert parsed["rows"] == 1 and parsed["missed_by_direction"] == {"shortfall": 1} and parsed["invalid"] == 0
+    assert parsed["rows"] == 1 and parsed["missed_by_direction"] == {"worse": 1} and parsed["invalid"] == 0
 
 
 def test_run_as_json_counts_invalid_rows_too(tmp_path, record_data) -> None:

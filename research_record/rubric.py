@@ -28,6 +28,7 @@ __all__ = [
     "POINT_TOLERANCE",
     "is_point_guidance",
     "in_range",
+    "side",
     "direction",
     "resolve",
     "resolve_record",
@@ -36,7 +37,8 @@ __all__ = [
     "days_to_acknowledged",
 ]
 
-Direction = Literal["beat", "shortfall"]
+Side = Literal["above", "below"]
+Direction = Literal["better", "worse"]
 
 #: Point guidance (low == high) is met within 0.5 percent of the stated value.
 POINT_TOLERANCE = 0.005
@@ -85,25 +87,41 @@ def in_range(
     return True
 
 
+def side(
+    target_low: float | None,
+    target_high: float | None,
+    reported_value: float | None,
+) -> Side | None:
+    """Which side of the range a missed value landed on: "above" target_high, "below" target_low. None
+    when the value is inside the range (or there is nothing to compare). Geometry only; whether that side
+    is good or bad depends on the metric, which is `direction`'s job."""
+    if in_range(target_low, target_high, reported_value) is not False:
+        return None
+    if target_high is not None and reported_value > target_high + _slack(target_high):  # type: ignore[operator]
+        return "above"
+    if target_low is not None and reported_value < target_low - _slack(target_low):  # type: ignore[operator]
+        return "below"
+    return None
+
+
 def direction(
     target_low: float | None,
     target_high: float | None,
     reported_value: float | None,
+    higher_is_better: bool,
 ) -> Direction | None:
-    """Which side of the range a missed value landed on: "beat" above target_high, "shortfall" below
-    target_low. None when the value is inside the range (or there is nothing to compare): it is not a
-    property of a "missed" row alone, so a caller checks that separately if it needs to.
+    """"better" when a missed value landed on the good side of the range for its metric, "worse" when it
+    landed on the bad side. Above the range is better where higher is better (revenue) and worse where
+    lower is better (operating expenses). None when the value is inside the range (or there is nothing to
+    compare): it is not a property of a "missed" row alone, so a caller checks that separately.
 
     Not stored on the record: the schema has no direction field, so callers compute this from the numbers
-    each time, as `rr stats` does for its beat/shortfall split and `04_outcomes.py` does to pick which
-    acknowledgement vocabulary to search with."""
-    if in_range(target_low, target_high, reported_value) is not False:
+    and the metric's polarity (`research_record.polarity`) each time, as `rr stats` does for its
+    better/worse split and `04_outcomes.py` does to pick which acknowledgement vocabulary to search with."""
+    landed = side(target_low, target_high, reported_value)
+    if landed is None:
         return None
-    if target_high is not None and reported_value > target_high + _slack(target_high):  # type: ignore[operator]
-        return "beat"
-    if target_low is not None and reported_value < target_low - _slack(target_low):  # type: ignore[operator]
-        return "shortfall"
-    return None
+    return "better" if (landed == "above") == higher_is_better else "worse"
 
 
 def withdrawn_before_close(withdrawn_at: date | None, period_end: date | None) -> bool:

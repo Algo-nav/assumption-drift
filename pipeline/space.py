@@ -14,7 +14,8 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
-from research_record import rubric
+from pipeline import figures
+from research_record import polarity
 from research_record.schema import Evidence, ResearchRecord
 
 SPACE_TITLE = "assumption-drift"
@@ -92,19 +93,19 @@ def _card(record: ResearchRecord, kind: str) -> str:
 def _kind(record: ResearchRecord) -> str | None:
     if record.status != "missed" or record.outcome is None or record.outcome.reported_value is None:
         return None
-    return rubric.direction(record.assumption.target_low, record.assumption.target_high, record.outcome.reported_value)
+    return polarity.record_direction(record)
 
 
 def _company_section(name: str, records: list[ResearchRecord], index: int) -> str:
     newest_first = sorted(records, key=lambda r: (r.assumption.stated_at, r.record_id), reverse=True)
-    shortfalls = [r for r in newest_first if _kind(r) == "shortfall"]
-    beats = [r for r in newest_first if _kind(r) == "beat"]
+    worse = [r for r in newest_first if _kind(r) == "worse"]
+    better = [r for r in newest_first if _kind(r) == "better"]
     parts = [f'<section class="company" id="company-{index}" data-company="{escape(name, quote=True)}">', f"<h2>{escape(name)}</h2>"]
-    parts.append(f"<h3>Shortfalls ({len(shortfalls):,})</h3>")
-    parts += [_card(r, "shortfall") for r in shortfalls] or ["<p>No shortfalls in the release.</p>"]
-    if beats:
-        parts.append(f'<details class="beats"><summary>Beats ({len(beats):,})</summary>')
-        parts += [_card(r, "beat") for r in beats]
+    parts.append(f"<h3>Worse than guided ({len(worse):,})</h3>")
+    parts += [_card(r, "worse") for r in worse] or ["<p>No rows worse than guided in the release.</p>"]
+    if better:
+        parts.append(f'<details class="better-section"><summary>Better than guided ({len(better):,})</summary>')
+        parts += [_card(r, "better") for r in better]
         parts.append("</details>")
     parts.append("</section>")
     return "\n".join(parts)
@@ -121,6 +122,7 @@ h3{font-size:1.05rem;margin:1.25rem 0 .5rem}
 h4{font-size:1rem;margin:0 0 .5rem}
 a{color:var(--accent)}
 .lede{color:var(--mute);margin:.25rem 0 1rem}
+.headline{font-size:1.6rem;font-weight:700;color:var(--accent);margin:.75rem 0 0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;margin:1rem 0}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.6rem .75rem}
 .stat b{display:block;font-size:1.6rem;color:var(--accent)}
@@ -129,13 +131,13 @@ img.plot{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;b
 label{display:block;margin:1.25rem 0 .25rem;font-weight:600}
 select{width:100%;font:inherit;padding:.5rem;border:1px solid var(--line);border-radius:6px;background:var(--card)}
 .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:.75rem;margin:.75rem 0}
-.card.beat{border-left-color:var(--line)}
+.card.better{border-left-color:var(--line)}
 .label{margin:.5rem 0 .1rem;color:var(--mute);font-size:.85rem}
 blockquote{margin:0;padding-left:.75rem;border-left:2px solid var(--line);overflow-wrap:anywhere}
 .line{font-weight:600;margin:.6rem 0 .25rem}
 .links{margin:.25rem 0;font-size:.9rem}
 .never{margin:.5rem 0 0;font-style:italic}
-details.beats{margin:1rem 0}
+details.better-section{margin:1rem 0}
 summary{cursor:pointer;font-weight:600}
 ul.limits{padding-left:1.1rem}
 footer{margin:2rem 0 1rem;color:var(--mute);font-size:.9rem}
@@ -166,9 +168,7 @@ def render_page(
     never = result["missed_never_acknowledged_share"]
     tiles = [
         (f"{result['rows']:,}", "rows"),
-        (f"{summary['shortfalls']:,}", "shortfalls"),
-        (f"{summary['shortfalls_acknowledged']:,}", "shortfalls acknowledged"),
-        (f"{summary['beats_acknowledged']:,} of {summary['beats']:,}", "beats acknowledged"),
+        (f"{summary['better_acknowledged']:,} of {summary['better']:,}", "better than guided, acknowledged"),
         (f"{never:.0%}" if never is not None else "n/a", "of misses never acknowledged"),
     ]
     tile_html = "\n".join(f'<div class="stat"><b>{escape(v)}</b><span>{escape(k)}</span></div>' for v, k in tiles)
@@ -189,6 +189,7 @@ def render_page(
 <main>
 <h1>{SPACE_TITLE}</h1>
 <p class="lede">Numeric guidance from SEC filings, set beside what the company later reported. Generated {generated_at.isoformat()} from the release data.</p>
+<p class="headline">{escape(figures.headline_sentence(summary))}</p>
 <div class="stats">
 {tile_html}
 </div>
