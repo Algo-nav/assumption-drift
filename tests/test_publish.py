@@ -284,11 +284,17 @@ def config_path(world):
     return path
 
 
+space_calls: list = []
+
+
 @pytest.fixture(autouse=True)
 def isolated_dirs(world, monkeypatch):
+    space_calls.clear()
     monkeypatch.setattr(publish, "RELEASE_DIR", world / "release")
     monkeypatch.setattr(publish, "CARD_DIR", world / "card")
     monkeypatch.setattr(publish, "FIGURES_DIR", world / "card" / "figures")
+    monkeypatch.setattr(publish, "SPACE_DIR", world / "space")
+    monkeypatch.setattr(publish, "upload_space", lambda *a, **k: space_calls.append((a, k)))
 
 
 def test_main_dry_run_writes_everything_but_does_not_upload(world, config_path, record_data, monkeypatch) -> None:
@@ -332,6 +338,8 @@ def test_main_live_uploads_when_hf_user_is_set(world, config_path, record_data, 
     monkeypatch.setattr(publish, "upload_to_hub", lambda *a, **k: called.append((a, k)))
     assert publish.main(["--config", str(config_path), "--live"]) == 0
     assert len(called) == 1 and called[0][0] == ("navneet",)
+    assert len(space_calls) == 1 and space_calls[0][0] == ("navneet",)
+    assert (world / "space" / "index.html").exists()
 
 
 def test_main_prints_how_many_rows_and_how_many_were_invalid(world, config_path, record_data, monkeypatch, capsys) -> None:

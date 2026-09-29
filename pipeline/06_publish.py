@@ -19,12 +19,13 @@ Writes, every run, live or dry:
     data/release/assumption_drift.parquet   one row per record, flat columns (the schema's own dotted names)
     data/release/assumption_drift.jsonl     one ResearchRecord per line, nested
     card/figures/*.png                      the four charts (pipeline/figures.py, SCOPE 5.5)
+    space/index.html                        the static Space (pipeline/space.py, SCOPE 5.6)
     card/README.md                          the dataset card (SCOPE 5.4), with live numbers from
                                              research_record.stats.compute()
 
 Dry run is the default. `--dry-run` is accepted explicitly too, as a no-op: it is already what
 happens without `--live`. `--live` additionally uploads `data/release/` and `card/` to
-`hf://datasets/{hf.user}/assumption-drift` via `huggingface_hub`, reading `hf.user` from
+`hf://datasets/{hf.user}/assumption-drift`, and `space/` to `hf://spaces/{hf.user}/assumption-drift`, via `huggingface_hub`, reading `hf.user` from
 `config.yaml`. Refused, before anything at all is written, if `hf.user` is still the `"{HF_USER}"`
 placeholder: a live run that fails to upload is worse than one that never tried.
 
@@ -46,8 +47,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import ValidationError
 
-from pipeline import figures
-from pipeline.common import CARD_DIR, CONFIG_PATH, FIGURES_DIR, RELEASE_DIR, REVIEW_DIR, Company, companies, load_config
+from pipeline import figures, space
+from pipeline.common import CARD_DIR, CONFIG_PATH, FIGURES_DIR, RELEASE_DIR, REPO_ROOT, REVIEW_DIR, Company, companies, load_config
 from research_record import rubric, stats
 from research_record.schema import ResearchRecord
 from research_record.validate import unflatten_csv_row
@@ -58,6 +59,8 @@ DATASET_NAME = "assumption-drift"
 HF_PLACEHOLDER = "{HF_USER}"
 PARQUET_NAME = "assumption_drift.parquet"
 JSONL_NAME = "assumption_drift.jsonl"
+SPACE_DIR = REPO_ROOT / "space"
+SPACE_NAME = "assumption-drift"
 
 
 # --- gathering approved rows -----------------------------------------------------
@@ -296,6 +299,15 @@ def upload_to_hub(hf_user: str, *, release_dir: Path = RELEASE_DIR, card_dir: Pa
     api.upload_folder(repo_id=repo_id, repo_type="dataset", folder_path=str(card_dir), path_in_repo=".")
 
 
+def upload_space(hf_user: str, *, space_dir: Path = SPACE_DIR) -> None:
+    from huggingface_hub import HfApi
+
+    repo_id = f"{hf_user}/{SPACE_NAME}"
+    api = HfApi()
+    api.create_repo(repo_id=repo_id, repo_type="space", space_sdk="static", exist_ok=True)
+    api.upload_folder(repo_id=repo_id, repo_type="space", folder_path=str(space_dir), path_in_repo=".")
+
+
 # --- running -------------------------------------------------------------------
 
 
@@ -336,9 +348,18 @@ def main(argv: list[str] | None = None) -> int:
     card_path.write_text(card_text, encoding="utf-8")
     print(f"  wrote {card_path}")
 
+    index_path = space.write_space(
+        records, result, figures.acknowledgement_summary(records),
+        strip_plot=FIGURES_DIR / figures.FIGURE_FILES[0], card_text=card_text, hf_user=hf_user,
+        generated_at=generated_at, space_dir=SPACE_DIR,
+    )
+    print(f"  wrote {index_path}")
+
     if args.live:
         upload_to_hub(hf_user, release_dir=RELEASE_DIR, card_dir=CARD_DIR)
         print(f"  uploaded to hf://datasets/{hf_user}/{DATASET_NAME}")
+        upload_space(hf_user, space_dir=SPACE_DIR)
+        print(f"  uploaded to hf://spaces/{hf_user}/{SPACE_NAME}")
     else:
         print("dry run: nothing was uploaded. Add --live (with hf.user set) to publish to Hugging Face.")
     return 0

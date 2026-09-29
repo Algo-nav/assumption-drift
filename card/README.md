@@ -41,7 +41,7 @@ A row resolves mechanically from its own numbers, once the period has closed and
 Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words: "below", "short of" or
 "did not meet" for a shortfall, "exceeded" or "above the high end" for a beat.
 
-As of 2026-09-27, the release holds **614 rows**: 103 met, 288 missed, 221 unresolved, 2 withdrawn.
+As of 2026-09-29, the release holds **614 rows**: 103 met, 288 missed, 221 unresolved, 2 withdrawn.
 Of the misses, 217 were a beat and 71 a shortfall; median days from the guidance to the
 filing that made it checkable was 92, and
 97% of misses were never acknowledged in a later filing.
@@ -90,7 +90,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-09-27.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-09-29.
 
 ## Licence
 
