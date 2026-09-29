@@ -32,17 +32,19 @@ A row resolves mechanically from its own numbers, once the period has closed and
 
 - **met**: the reported value falls inside the guided range, endpoints included (a single point value
   is met within half a percent of itself)
-- **missed**: the reported value falls outside the guided range, either above it (a beat: the company
-  did better than it said) or below it (a shortfall: the company did worse)
+- **missed**: the reported value falls outside the guided range, on the good side of it (better than
+  guided) or the bad side (worse than guided). Which side is good depends on the metric. Higher is better
+  for revenue, gross margin, operating margin, operating income, EPS, other income and expense, comparable sales and free cash flow. Lower is better for operating expenses and tax rate
 - **withdrawn**: the company explicitly withdrew or suspended the guidance in a later filing, before
   the period closed
 - **unresolved**: the period has not closed yet, or no later filing reports the metric
 
-Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words: "below", "short of" or
-"did not meet" for a shortfall, "exceeded" or "above the high end" for a beat.
+Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, naming which side of its
+guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
+"exceeded" or "above the high end".
 
 As of 2026-09-29, the release holds **614 rows**: 103 met, 288 missed, 221 unresolved, 2 withdrawn.
-Of the misses, 217 were a beat and 71 a shortfall; median days from the guidance to the
+Of the misses, 223 were better than guided and 65 worse than guided; median days from the guidance to the
 filing that made it checkable was 92, and
 97% of misses were never acknowledged in a later filing.
 
@@ -55,7 +57,7 @@ By company:
 | Target Corporation | 82 | 27 | 38 | 2 | 15 | 79% |
 
 ![Missed rows: when the gap was acknowledged](figures/falsifiable_vs_acknowledged.png)
-![Shortfalls and beats, acknowledged or not](figures/acknowledgement_by_company.png)
+![Worse and better than guided, acknowledged or not](figures/acknowledgement_by_company.png)
 ![Resolution by fiscal year](figures/resolution_by_fiscal_year.png)
 ![Miss magnitude](figures/miss_magnitude.png)
 
@@ -75,11 +77,13 @@ one the pipeline used.
 - This covers three companies. It is a pilot, not a survey of the market.
 - The pipeline does not claim to capture every guidance statement a company ever made; it captures
   the ones its patterns and its model caught.
-- A beat is recorded as missed, the same as a shortfall, because the underlying assumption (the
-  guided range) was wrong either way. Which direction it missed in is reported separately, not folded
-  into the status.
+- A row reported better than guided is recorded as missed, the same as one reported worse, because the
+  guided range was wrong either way. Which side it fell on is reported separately, not folded into the
+  status. Whether a side is good or bad is fixed once per metric, the same for every company: operating
+  expenses and the tax rate are treated as lower-is-better, everything else as higher-is-better.
 - A one-sided floor ("at least X") resolves as met on any reported value above the floor. There is no
-  ceiling to beat against, so a floor's beats are not measured; only shortfalls are.
+  ceiling to measure against, so a floor's better-than-guided rows are not measured; only values below
+  it can be missed.
 - The search for an acknowledgement covers 8-K, 10-K and 10-Q filing text only. A company that only
   addressed a miss on an earnings call, and never wrote it into a filing, is not found: that text is
   not in EDGAR.
