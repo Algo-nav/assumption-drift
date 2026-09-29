@@ -62,6 +62,9 @@ EXCERPT_COLUMN = "assumption.evidence.excerpt"
 OUTCOME_VALUE_COLUMN = "outcome.reported_value"
 OUTCOME_DATE_COLUMN = "outcome.reported_at"
 OUTCOME_EXCERPT_COLUMN = "outcome.evidence.excerpt"
+ACK_DATE_COLUMN = "acknowledged_at"
+ACK_EXCERPT_COLUMN = "acknowledgement_evidence.excerpt"
+ACK_URL_COLUMN = "acknowledgement_evidence.source_url"
 
 HAND_VERIFY_EVERY = 10  # SCOPE 4.3: at least 10% of approved rows per company
 
@@ -205,6 +208,14 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
                   f"  {highlight_numbers(row.get(OUTCOME_EXCERPT_COLUMN, ''), wrap) or '(none)'}"]
     else:
         lines += ["", f"outcome: none ({row.get('aid_outcome_note', '') or 'no reason recorded'})"]
+    if row.get(EMPTY_BLOCK) == "true":
+        pass  # a flag row is not a record: no outcome or acknowledgement to show
+    elif row.get(ACK_DATE_COLUMN) or row.get(ACK_EXCERPT_COLUMN):
+        lines += ["", f"acknowledgement: {row.get(ACK_DATE_COLUMN, '') or '(no date)'}",
+                  f"  {highlight_numbers(row.get(ACK_EXCERPT_COLUMN, ''), wrap) or '(none)'}",
+                  f"  EDGAR: {row.get(ACK_URL_COLUMN, '') or '(none)'}"]
+    else:
+        lines += ["", "acknowledgement: none"]
     lines += [
         "",
         f"proposed: {row.get('aid_proposed_status', '')}  verify: {row.get('aid_verify', '') or '(not checked)'}"

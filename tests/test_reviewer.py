@@ -158,6 +158,29 @@ def test_render_row_says_why_there_is_no_outcome() -> None:
     assert "outcome: none (no later 8-K release for that period found)" in out
 
 
+ACK = {"acknowledged_at": "2026-05-20", "acknowledgement_evidence.excerpt": "Revenue of $4.8 billion was below our guidance.",
+       "acknowledgement_evidence.source_url": "https://www.sec.gov/Archives/edgar/data/123/y/ack.htm"}
+
+
+def test_render_row_shows_the_acknowledgement_date_excerpt_and_edgar_link() -> None:
+    r = row("R1", **{"outcome.reported_value": "4.8", "outcome.reported_at": "2026-02-14", "outcome.evidence.excerpt": "x"}, **ACK)
+    out = rv.render_row(r, 1, 1, wrap=lambda s: f"[{s}]")
+    ack = out[out.index("acknowledgement:") :]
+    assert out.index("outcome:") < out.index("acknowledgement:")
+    assert "acknowledgement: 2026-05-20" in ack and "[4.8] billion was below our guidance." in ack
+    assert "EDGAR: https://www.sec.gov/Archives/edgar/data/123/y/ack.htm" in ack
+
+
+def test_render_row_says_none_when_there_is_no_acknowledgement() -> None:
+    out = rv.render_row(row("R1", **{"outcome.reported_value": "4.8", "outcome.reported_at": "2026-02-14"}), 1, 1)
+    assert "acknowledgement: none" in out and out.index("outcome:") < out.index("acknowledgement:")
+
+
+def test_render_row_with_no_outcome_still_says_acknowledgement_none() -> None:
+    out = rv.render_row(row("R1", aid_outcome_note="none found"), 1, 1)
+    assert "acknowledgement: none" in out
+
+
 def test_render_row_flags_an_empty_block_row_instead_of_a_target() -> None:
     r = row("R1", empty_block="true", aid_flag_note="the model returned no items", **{"assumption.metric": ""})
     out = rv.render_row(r, 1, 1)
