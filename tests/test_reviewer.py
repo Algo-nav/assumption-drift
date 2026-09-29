@@ -15,6 +15,9 @@ COLUMNS = [
     "outcome.reported_value", "outcome.reported_at", "outcome.evidence.excerpt",
     "approved", "hand_verified", "reviewer_note", "conflict", "empty_block",
     "aid_proposed_status", "aid_outcome_note", "aid_flag_note", "aid_verify", "aid_verify_reason", "aid_suggested_note",
+    "acknowledged_at", "days_to_acknowledged", "acknowledgement_evidence.source_url", "acknowledgement_evidence.accession_number",
+    "acknowledgement_evidence.filed_at", "acknowledgement_evidence.excerpt", "acknowledgement_evidence.content_sha256",
+    "ack_pending_review", "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence",
 ]
 
 
@@ -493,3 +496,78 @@ def test_approving_without_any_filter_does_not_require_a_note(tmp_path) -> None:
     rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
     on_disk = read_csv(path)[0]
     assert (on_disk["approved"], on_disk["reviewer_note"]) == ("true", "")
+
+
+# --- a proposed acknowledgement on an already-reviewed row ---------------------------------------
+
+PROPOSED_URL = "https://www.sec.gov/Archives/edgar/data/123/y/ack.htm"
+PROPOSED = {
+    "ack_pending_review": "true", "aid_ack_proposed_at": "2026-05-20", "aid_ack_proposed_url": PROPOSED_URL,
+    "aid_ack_proposed_excerpt": "Revenue of $4.8 billion was below our guidance.",
+    "aid_ack_proposed_evidence": ('{"accession_number": "0000000123-26-000009", "filed_at": "2026-05-20", "content_sha256": "%s",'
+                                  ' "source_url": "%s", "excerpt": "Revenue of $4.8 billion was below our guidance."}' % ("a" * 64, PROPOSED_URL)),
+}
+
+
+def pending(record_id="R1", **overrides):
+    fields = {"approved": "true", "outcome.reported_value": "4.8", "outcome.reported_at": "2026-02-14", **PROPOSED, **overrides}
+    return row(record_id, **fields)
+
+
+def test_render_row_shows_a_proposed_acknowledgement_apart_from_the_real_one() -> None:
+    out = rv.render_row(pending(), 1, 1, wrap=lambda s: f"[{s}]")
+    block = out[out.index("ACKNOWLEDGEMENT (proposed, not yet reviewed)") :]
+    assert "2026-05-20" in block and "[4.8] billion was below our guidance." in block and f"EDGAR: {PROPOSED_URL}" in block
+    assert "acknowledgement: none" in out  # the real acknowledgement is still empty, and says so
+    assert out.index("acknowledgement: none") < out.index("ACKNOWLEDGEMENT (proposed")
+
+
+def test_render_row_has_no_proposed_block_when_nothing_is_pending() -> None:
+    assert "proposed, not yet reviewed" not in rv.render_row(row("R1"), 1, 1)
+
+
+def test_y_on_a_pending_row_copies_the_proposal_into_the_real_columns_and_clears_the_flag(tmp_path) -> None:
+    path = seed(tmp_path, pending())
+    s = Script(keys=["y"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    r = read_csv(path)[0]
+    assert r["acknowledged_at"] == "2026-05-20" and r["acknowledgement_evidence.source_url"] == PROPOSED_URL
+    assert r["acknowledgement_evidence.excerpt"] == "Revenue of $4.8 billion was below our guidance."
+    assert r["acknowledgement_evidence.accession_number"] == "0000000123-26-000009"
+    assert r["acknowledgement_evidence.content_sha256"] == "a" * 64
+    assert r["days_to_acknowledged"] == "95"  # 2026-02-14 to 2026-05-20
+    assert r["ack_pending_review"] == "false"
+    assert all(r[c] == "" for c in ("aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence"))
+    assert r["approved"] == "true"
+
+
+def test_n_on_a_pending_row_clears_the_proposal_and_records_the_note_leaving_the_real_columns(tmp_path) -> None:
+    path = seed(tmp_path, pending(reviewer_note="checked"))
+    s = Script(keys=["n"], lines=["about a different quarter"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    r = read_csv(path)[0]
+    assert r["ack_pending_review"] == "false" and r["aid_ack_proposed_at"] == "" and r["aid_ack_proposed_evidence"] == ""
+    assert r["acknowledged_at"] == "" and r["acknowledgement_evidence.excerpt"] == ""
+    assert r["approved"] == "true"
+    assert r["reviewer_note"] == f"checked; acknowledgement proposal rejected (2026-05-20, {PROPOSED_URL}): about a different quarter"
+
+
+def test_y_on_a_row_that_is_not_pending_still_just_approves(tmp_path) -> None:
+    path = seed(tmp_path, row("R1"))
+    rv.run(path, read_key=Script(keys=["y"]).key, read_line=Script().line, write=Script().write)
+    r = read_csv(path)[0]
+    assert r["approved"] == "true" and r["acknowledged_at"] == ""
+
+
+def test_filter_ack_pending_shows_only_pending_rows(tmp_path) -> None:
+    path = seed(tmp_path, row("R1"), pending("R2"), row("R3"))
+    s = Script(keys=["s"])
+    rv.run(path, filters=["ack-pending"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "done: 1 rows reviewed." in s.out
+    assert not rv.parse_filter("ack-pending")(row("R1")) and rv.parse_filter("ack-pending")(pending())
+
+
+def test_accept_without_the_evidence_json_still_fills_date_excerpt_and_url() -> None:
+    r = rv.accept_acknowledgement(pending(aid_ack_proposed_evidence=""))
+    assert (r["acknowledged_at"], r["acknowledgement_evidence.source_url"]) == ("2026-05-20", PROPOSED_URL)
+    assert r["acknowledgement_evidence.excerpt"].startswith("Revenue of $4.8 billion")

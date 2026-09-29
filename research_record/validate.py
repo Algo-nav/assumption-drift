@@ -45,7 +45,7 @@ __all__ = ["Issue", "DEFAULT_RAW_DIR", "validate_path", "validate_row", "unflatt
 DEFAULT_RAW_DIR = Path("data/raw")
 
 #: A review CSV's own columns: never part of a `ResearchRecord`, and never read as one.
-_REVIEW_ONLY_COLUMNS = frozenset({"approved", "hand_verified", "reviewer_note", "conflict", "empty_block"})
+_REVIEW_ONLY_COLUMNS = frozenset({"approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review"})
 
 
 @dataclass(frozen=True)

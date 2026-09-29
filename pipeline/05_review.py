@@ -67,6 +67,13 @@ verdict with an empty one. This is for the case where 03_structure or 04_outcome
 for a draft that is already queued: the normal run above only appends what is new, it never revisits a row
 once it is in the file.
 
+A row with a human edit is not rewritten, but an acknowledgement 04 finds for it is not dropped either: it
+goes into `aid_ack_proposed_at`, `aid_ack_proposed_excerpt`, `aid_ack_proposed_url` (and
+`aid_ack_proposed_evidence`, the whole evidence block as JSON, so accepting it can fill every real column) with
+`ack_pending_review=true`, and the row's real acknowledgement columns stay as they were. `rr review` shows the
+proposal; `y` copies it into the real columns, `n` clears it and notes the rejection so a later refresh does
+not propose the same one again.
+
 One column inside that list is a further exception to the exception: every `*.content_sha256` column
 (`assumption.evidence.content_sha256`, `outcome.evidence.content_sha256`,
 `acknowledgement_evidence.content_sha256`) is recomputed on EVERY row this refresh touches, whatever its
@@ -103,9 +110,10 @@ from research_record.text import html_to_text
 
 REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
-FLAG_COLUMNS = ["conflict", "empty_block"]
+FLAG_COLUMNS = ["conflict", "empty_block", "ack_pending_review"]
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note"]
+               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note",
+               "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -240,6 +248,7 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         reviewer_note="",
         conflict="true" if draft.get("conflict") else "false",
         empty_block="false",
+        ack_pending_review="false",
         aid_proposed_status=proposed_status(record, withdrawn=withdrawal is not None),
         aid_capture_method=draft.get("capture_method") or "",
         aid_heading=draft.get("heading") or "",
@@ -267,6 +276,7 @@ def build_empty_block_row(block: dict[str, Any]) -> dict[str, str]:
         hand_verified="false",
         conflict="false",
         empty_block="true",
+        ack_pending_review="false",
         aid_capture_method="section",
         aid_heading=block.get("heading") or "",
         aid_lead_in=block.get("lead_in") or "",
@@ -391,6 +401,32 @@ def recompute_content_sha256(row: dict[str, str], raw_dir: Path | None = None) -
     return updated
 
 
+ACK_COLUMNS = ("acknowledged_at", "acknowledgement_evidence.excerpt", "acknowledgement_evidence.source_url")
+ACK_EVIDENCE_PREFIX = "acknowledgement_evidence."
+
+
+def propose_acknowledgement(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
+    """`row` (a human-touched one) with what 04 now finds for it written into the proposal columns, its
+    real acknowledgement columns untouched, `ack_pending_review` set. Nothing changes when 04 finds no
+    acknowledgement, when it is the one the row already has, or when a reviewer already rejected this very
+    one (the rejection note carries "(date, url)"). A pending proposal 04 no longer stands behind, or that
+    the row now already has, is cleared."""
+    at, url = fresh["acknowledged_at"], fresh["acknowledgement_evidence.source_url"]
+    if not at:
+        return row
+    already = row.get("acknowledged_at") == at and row.get("acknowledgement_evidence.source_url") == url
+    rejected = f"({at}, {url})" in row.get("reviewer_note", "")
+    if already or rejected:
+        if row.get("ack_pending_review") == "true" and already:
+            return {**row, "ack_pending_review": "false", "aid_ack_proposed_at": "", "aid_ack_proposed_excerpt": "",
+                    "aid_ack_proposed_url": "", "aid_ack_proposed_evidence": ""}
+        return row
+    evidence = {c[len(ACK_EVIDENCE_PREFIX):]: fresh[c] for c in COLUMNS if c.startswith(ACK_EVIDENCE_PREFIX)}
+    return {**row, "ack_pending_review": "true", "aid_ack_proposed_at": at,
+            "aid_ack_proposed_excerpt": fresh["acknowledgement_evidence.excerpt"], "aid_ack_proposed_url": url,
+            "aid_ack_proposed_evidence": json.dumps(evidence, sort_keys=True)}
+
+
 def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None = None) -> tuple[list[dict[str, str]], Counter]:
     """Rewrite the pipeline-owned columns on every row of the company's CSV that nobody has touched yet, from
     the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (it is not a
@@ -409,8 +445,19 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
     refreshed: list[dict[str, str]] = []
     for row in rows:
         draft = drafts.get(row["record_id"])
-        if row.get("empty_block") == "true" or not untouched_by_a_human(row) or draft is None:
+        if row.get("empty_block") == "true" or draft is None:
             refreshed.append(row)
+            stats["kept"] += 1
+            continue
+        if not untouched_by_a_human(row):
+            # Never rewrite a human-touched row, but never drop what 04 found for it either: park it.
+            try:
+                proposed = propose_acknowledgement(row, build_row(draft, outcomes.get(row["record_id"]), today))
+            except (ValidationError, KeyError, ValueError) as exc:
+                proposed = row
+                print(f"  {row['record_id']}: could not rebuild, left as it was: {str(exc)[:160]}", file=sys.stderr)
+            stats["ack_proposed"] += proposed != row
+            refreshed.append(proposed)
             stats["kept"] += 1
             continue
         try:
@@ -451,7 +498,9 @@ def main(argv: list[str] | None = None) -> int:
             rows, stats = refresh_pipeline_fields(company, today)
             print(f"  {company.ticker}: {len(rows):,} rows ({stats['changed']} changed, {stats['unchanged']} unchanged, "
                   f"{stats['kept']} kept as-is (human-touched, an empty-block flag, or no longer drafted), {stats['invalid']} could not rebuild, "
-                  f"{stats['content_sha256_recomputed']} content_sha256 recomputed)")
+                  f"{stats['content_sha256_recomputed']} content_sha256 recomputed); "
+                  f"{stats['ack_proposed']} newly proposed acknowledgement(s), "
+                  f"{sum(r.get('ack_pending_review') == 'true' for r in rows)} ack-pending in all")
         return 0
 
     print("rows per company per status ('status' is the schema field, always open for a draft;")

@@ -24,11 +24,18 @@ prints the EDGAR URL again, and asks whether to mark that row hand-verified on t
   verify-no      only rows where aid_verify == "no"
   no-note        only rows with an empty reviewer_note
   ids=A,B,C      only rows whose record_id is A, B, or C
+  ack-pending    only rows with `ack_pending_review=true`: 04 found an acknowledgement for a row that was
+                 already reviewed, and it waits in the `aid_ack_proposed_*` columns
 
 Multiple specs combine with AND. Rows that do not match are never shown and never written to
 differently than they already were. When any filter is active, approving a row requires a non-empty
 reviewer_note: if `y` is pressed and the note is still empty, the tool prompts for one and saves it
 before approving.
+
+On a row with `ack_pending_review=true` the proposed acknowledgement is shown apart from the real one, and
+the keys mean something narrower: `y` copies the proposal into the real acknowledgement columns and clears
+the flag (approval is left as it is), `n` clears the proposal and records the reason in `reviewer_note`
+with the proposal's date and URL, so a later refresh does not propose the same one again.
 
 A row with an `aid_suggested_note` (written by pipeline/03c_suggest.py, on a row 03b_verify flagged
 "no") shows it, and `y` on that row prompts for a note with the suggestion as the default: press
@@ -44,10 +51,12 @@ so it can be driven by a script or a test without a real terminal.
 from __future__ import annotations
 
 import csv
+import json
 import os
 import re
 import sys
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Callable, TextIO
 
@@ -65,6 +74,10 @@ OUTCOME_EXCERPT_COLUMN = "outcome.evidence.excerpt"
 ACK_DATE_COLUMN = "acknowledged_at"
 ACK_EXCERPT_COLUMN = "acknowledgement_evidence.excerpt"
 ACK_URL_COLUMN = "acknowledgement_evidence.source_url"
+ACK_PENDING = "ack_pending_review"
+PROPOSED_AT, PROPOSED_EXCERPT, PROPOSED_URL, PROPOSED_EVIDENCE = (
+    "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence")
+ACK_EVIDENCE_PREFIX = "acknowledgement_evidence."
 
 HAND_VERIFY_EVERY = 10  # SCOPE 4.3: at least 10% of approved rows per company
 
@@ -127,6 +140,42 @@ def reject(row: dict[str, str], note: str) -> dict[str, str]:
     return {**row, APPROVED: "false", REVIEWER_NOTE: note}
 
 
+def is_ack_pending(row: dict[str, str]) -> bool:
+    return row.get(ACK_PENDING) == "true" and row.get(EMPTY_BLOCK) != "true"
+
+
+def _clear_proposal(row: dict[str, str]) -> dict[str, str]:
+    return {**row, ACK_PENDING: "false", PROPOSED_AT: "", PROPOSED_EXCERPT: "", PROPOSED_URL: "", PROPOSED_EVIDENCE: ""}
+
+
+def accept_acknowledgement(row: dict[str, str]) -> dict[str, str]:
+    """The proposal copied into the real acknowledgement columns (the date, every evidence column, and
+    days_to_acknowledged from the row's own outcome date), the proposal and the flag cleared. Approval is
+    not touched. A row missing the evidence JSON (an older proposal) still gets its date, excerpt and URL."""
+    try:
+        evidence = json.loads(row.get(PROPOSED_EVIDENCE) or "{}")
+    except json.JSONDecodeError:
+        evidence = {}
+    evidence.setdefault("excerpt", row.get(PROPOSED_EXCERPT, ""))
+    evidence.setdefault("source_url", row.get(PROPOSED_URL, ""))
+    updated = {**row, ACK_DATE_COLUMN: row.get(PROPOSED_AT, "")}
+    updated.update({f"{ACK_EVIDENCE_PREFIX}{k}": v for k, v in evidence.items() if f"{ACK_EVIDENCE_PREFIX}{k}" in row})
+    try:
+        gap = (date.fromisoformat(updated[ACK_DATE_COLUMN]) - date.fromisoformat(row[OUTCOME_DATE_COLUMN])).days
+        updated["days_to_acknowledged"] = str(gap)
+    except (KeyError, ValueError):
+        pass
+    return _clear_proposal(updated)
+
+
+def reject_acknowledgement(row: dict[str, str], reason: str) -> dict[str, str]:
+    """The proposal cleared, the reason added to `reviewer_note` with the proposal's (date, url), which is
+    what tells a later refresh not to propose the same acknowledgement again. Approval is not touched."""
+    note = f"acknowledgement proposal rejected ({row.get(PROPOSED_AT, '')}, {row.get(PROPOSED_URL, '')}): {reason}".rstrip(": ")
+    existing = row.get(REVIEWER_NOTE, "").strip()
+    return {**_clear_proposal(row), REVIEWER_NOTE: f"{existing}; {note}" if existing else note}
+
+
 def hand_verify(row: dict[str, str]) -> dict[str, str]:
     return {**row, HAND_VERIFIED: "true"}
 
@@ -161,6 +210,8 @@ def parse_filter(spec: str) -> Callable[[dict[str, str]], bool]:
         return lambda row: row.get(AID_VERIFY_COLUMN) == "no"
     if spec == "no-note":
         return lambda row: not row.get(REVIEWER_NOTE)
+    if spec == "ack-pending":
+        return lambda row: row.get(ACK_PENDING) == "true"
     if spec.startswith("ids="):
         ids = {part.strip() for part in spec[len("ids="):].split(",") if part.strip()}
         return lambda row: row.get(RECORD_ID) in ids
@@ -216,6 +267,11 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
                   f"  EDGAR: {row.get(ACK_URL_COLUMN, '') or '(none)'}"]
     else:
         lines += ["", "acknowledgement: none"]
+    if is_ack_pending(row):
+        lines += ["", "ACKNOWLEDGEMENT (proposed, not yet reviewed)",
+                  f"  {row.get(PROPOSED_AT, '') or '(no date)'}",
+                  f"  {highlight_numbers(row.get(PROPOSED_EXCERPT, ''), wrap) or '(none)'}",
+                  f"  EDGAR: {row.get(PROPOSED_URL, '') or '(none)'}"]
     lines += [
         "",
         f"proposed: {row.get('aid_proposed_status', '')}  verify: {row.get('aid_verify', '') or '(not checked)'}"
@@ -231,6 +287,7 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
 
 
 PROMPT = "[y] approve  [n] reject  [e] edit  [s] skip  [v] hand-verify  [q] quit"
+ACK_PROMPT = "[y] accept proposed acknowledgement  [n] reject it, with a note  [e] edit  [s] skip  [v] hand-verify  [q] quit"
 
 
 # --- reading a key without needing Enter, where the terminal allows it --------
@@ -276,9 +333,13 @@ def run(
         idx = indices[pos]
         row = rf.rows[idx]
         write(render_row(row, pos + 1, len(indices), wrap))
-        write(PROMPT)
+        write(ACK_PROMPT if is_ack_pending(row) else PROMPT)
         key = read_key()
-        if key == "y":
+        if key in ("y", "n") and is_ack_pending(row):
+            rf.rows[idx] = accept_acknowledgement(row) if key == "y" else reject_acknowledgement(row, read_line("Reason: ").strip())
+            rf.save()
+            pos += 1
+        elif key == "y":
             if row.get(EMPTY_BLOCK) == "true":
                 write("empty block, use s")
                 continue

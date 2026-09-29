@@ -41,14 +41,15 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 59
+    assert len(cols) == len(set(cols)) == 64
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-17:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "aid_proposed_status",
+    assert cols[-22:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "aid_proposed_status",
                           "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note",
-                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note"]
-    assert set(review.schema_columns()) == set(cols[:-17])
+                          "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note", "aid_ack_proposed_at", "aid_ack_proposed_excerpt",
+                          "aid_ack_proposed_url", "aid_ack_proposed_evidence"]
+    assert set(review.schema_columns()) == set(cols[:-22])
 
 
 # --- the words code writes -------------------------------------------------
@@ -608,7 +609,9 @@ def test_refresh_pipeline_fields_never_touches_a_hand_verified_row(dirs, parts) 
     seed(dirs, [revised], [{**outcome_row, "acknowledgement": ack}])
     rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
     assert stats["kept"] == 1 and stats["changed"] == 0
-    assert rows[0] == before  # untouched, byte for byte
+    # untouched except for the parked acknowledgement: every column but the proposal ones is byte for byte
+    proposal = {c for c in review.COLUMNS if c.startswith("aid_ack_proposed_") or c == "ack_pending_review"}
+    assert {c: v for c, v in rows[0].items() if c not in proposal} == {c: v for c, v in before.items() if c not in proposal}
 
 
 def test_refresh_pipeline_fields_never_touches_aid_verify_columns(dirs, parts) -> None:
@@ -683,3 +686,74 @@ def test_a_withdrawn_row_reaches_the_csv_and_the_summary_counts_it(dirs, parts, 
     rows = review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")
     assert sorted(r["aid_proposed_status"] for r in rows) == ["missed", "withdrawn"] and {r["status"] for r in rows} == {"open"}
     assert "proposed: {'missed': 1, 'withdrawn': 1}" in capsys.readouterr().out
+
+
+# --- an acknowledgement 04 finds for a human-touched row is proposed, not dropped ------------------
+
+
+def touched_row(dirs, parts, **edits):
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update({"approved": "true", **edits})
+    review.write_csv(path, edited)
+    seed(dirs, [draft], [{**outcome_row, "acknowledgement": ack}])
+    return ack
+
+
+def test_refresh_proposes_a_new_acknowledgement_on_an_approved_row_and_leaves_the_real_columns_alone(dirs, parts) -> None:
+    ack = touched_row(dirs, parts)
+    before = review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")[0]
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    row = rows[0]
+    assert stats["ack_proposed"] == 1 and row["ack_pending_review"] == "true"
+    assert row["aid_ack_proposed_at"] == ack["acknowledged_at"]
+    assert row["aid_ack_proposed_excerpt"] == ack["evidence"]["excerpt"]
+    assert row["aid_ack_proposed_url"] == ack["evidence"]["source_url"]
+    evidence = json.loads(row["aid_ack_proposed_evidence"])
+    assert evidence["accession_number"] == ack["evidence"]["accession_number"] and evidence["excerpt"] == ack["evidence"]["excerpt"]
+    for column in ("acknowledged_at", "days_to_acknowledged", "approved", "reviewer_note", *(c for c in review.COLUMNS if c.startswith("acknowledgement_evidence."))):
+        assert row[column] == before[column] == ("true" if column == "approved" else "")
+
+
+def test_refresh_proposes_on_a_row_with_only_a_note_or_a_hand_verification_too(dirs, parts) -> None:
+    touched_row(dirs, parts, reviewer_note="checked", approved="false")
+    rows, _ = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert rows[0]["ack_pending_review"] == "true" and rows[0]["approved"] == "false"
+
+
+def test_refresh_does_not_propose_what_the_row_already_has(dirs, parts) -> None:
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [{**outcome_row, "acknowledgement": ack}])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true")
+    review.write_csv(path, edited)
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["ack_proposed"] == 0 and rows[0]["ack_pending_review"] == "false" and rows[0]["aid_ack_proposed_at"] == ""
+
+
+def test_refresh_does_not_re_propose_an_acknowledgement_the_reviewer_rejected(dirs, parts) -> None:
+    ack = touched_row(dirs, parts)
+    note = f"acknowledgement proposal rejected ({ack['acknowledged_at']}, {ack['evidence']['source_url']}): wrong metric"
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(reviewer_note=note)
+    review.write_csv(path, edited)
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["ack_proposed"] == 0 and rows[0]["ack_pending_review"] == "false"
+
+
+def test_refresh_leaves_a_row_alone_when_04_found_no_acknowledgement(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true")
+    review.write_csv(path, edited)
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["ack_proposed"] == 0 and rows[0]["ack_pending_review"] == "false"
