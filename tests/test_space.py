@@ -180,3 +180,20 @@ def test_report_structure(record_data) -> None:
     assert "4 guidance statements, 2 companies, filings Feb 2024 to Feb 2025, generated 2026-09-29" in html
     assert html.count('class="total"') == 1 and "@media print" in html and "max-width:600px" in html
     assert html.count("<section class=\"company\"") == 2
+
+
+def test_summary_table_has_six_columns_on_desktop_and_a_phone_rule(record_data) -> None:
+    html = page(sample(record_data))
+    table = html[html.index('<table class="summary">') : html.index("</table>")]
+    head = table[: table.index("</thead>")]
+    assert len(re.findall(r"<th[ >]", head)) - 1 == 6  # the empty corner cell aside
+    for row in re.findall(r"<tr[^>]*>.*?</tr>", table[table.index("<tbody>") :], flags=re.S):
+        assert row.count("<td") == 6
+    for short in ("Stmts", "Met", "Better", "Worse", "Worse ack&#x27;d"):
+        assert f'<span class="short">{short}</span>' in head
+    assert 'title="Better than guided"' in head and 'title="Worse acknowledged"' in head
+    mobile = html[html.index("@media (max-width:600px)") :]
+    mobile = mobile[: mobile.index("@media print")]
+    assert ".col-resolved{display:none}" in mobile
+    assert "table-layout:fixed" in mobile and "width:100%" in mobile and "font-size:15px" in mobile
+    assert "overflow-x:auto" in mobile

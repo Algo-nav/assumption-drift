@@ -149,24 +149,40 @@ def _company_section(name: str, records: list[ResearchRecord], index: int) -> st
     return "\n".join(parts)
 
 
+# (full header, phone header, class). Resolved is dropped on phones: it is met plus missed, said in the small print.
+_SUMMARY_COLUMNS = [
+    ("Statements", "Stmts", ""),
+    ("Resolved", "Resolved", "col-resolved"),
+    ("Met", "Met", ""),
+    ("Better than guided", "Better", ""),
+    ("Worse than guided", "Worse", ""),
+    ("Worse acknowledged", "Worse ack'd", ""),
+]
+
+
 def _summary_row(label: str, records: list[ResearchRecord], *, total: bool = False) -> str:
     ack = figures.acknowledgement_summary(records)
     met = sum(1 for r in records if r.status == "met")
     missed = sum(1 for r in records if r.status == "missed")
     cells = [len(records), met + missed, met, ack["better"], ack["worse"], ack["worse_acknowledged"]]
-    tds = "".join(f"<td>{c:,}</td>" for c in cells)
+    tds = "".join(
+        f'<td{f" class=\"{c}\"" if c else ""}>{v:,}</td>' for v, (_, _, c) in zip(cells, _SUMMARY_COLUMNS)
+    )
     return f'<tr{" class=\"total\"" if total else ""}><th scope="row">{escape(label)}</th>{tds}</tr>'
 
 
 def _summary_table(records: list[ResearchRecord], names: list[str]) -> str:
-    head = ["Statements", "Resolved", "Met", "Better than guided", "Worse than guided", "Worse acknowledged"]
-    ths = "".join(f"<th>{h}</th>" for h in head)
+    ths = "".join(
+        f'<th{f" class=\"{c}\"" if c else ""} title="{escape(full, quote=True)}">'
+        f'<span class="full">{escape(full)}</span><span class="short">{escape(short)}</span></th>'
+        for full, short, c in _SUMMARY_COLUMNS
+    )
     rows = [_summary_row(short_name(n), [r for r in records if r.company == n]) for n in names]
     rows.append(_summary_row("Total", records, total=True))
     return (
-        f'<table class="summary"><thead><tr><th></th>{ths}</tr></thead>\n<tbody>\n'
+        f'<div class="tablewrap"><table class="summary"><thead><tr><th></th>{ths}</tr></thead>\n<tbody>\n'
         + "\n".join(rows)
-        + "\n</tbody></table>\n"
+        + "\n</tbody></table></div>\n"
         '<p class="note">Resolved is met plus missed. Withdrawn and unresolved rows count under statements only.</p>'
     )
 
@@ -191,6 +207,7 @@ table.summary thead th{font-size:13px;color:var(--mute);border-bottom-color:var(
 table.summary th:first-child{text-align:left;padding-left:0}
 table.summary tbody th{font-family:var(--serif);font-size:17px}
 table.summary tr.total th,table.summary tr.total td{font-weight:700;border-bottom:0}
+.short{display:none}
 .note{color:var(--mute);font-size:13px;margin:4px 0 0}
 figure{margin:40px 0 0}
 img.plot{display:block;width:100%;height:auto}
@@ -231,8 +248,19 @@ main{padding:32px 16px}
 h1{font-size:30px}
 .top{display:block}
 .gap{text-align:left;white-space:normal;margin-top:4px}
-table.summary th,table.summary td{padding-left:6px;font-size:14px}
-table.summary thead th{font-size:11px}
+.tablewrap{overflow-x:auto;background:
+linear-gradient(to right,var(--paper) 30%,rgba(251,250,247,0)) left center/40px 100% no-repeat local,
+linear-gradient(to left,var(--paper) 30%,rgba(251,250,247,0)) right center/40px 100% no-repeat local,
+linear-gradient(to right,rgba(217,214,206,.9),rgba(217,214,206,0)) left center/14px 100% no-repeat scroll,
+linear-gradient(to left,rgba(217,214,206,.9),rgba(217,214,206,0)) right center/14px 100% no-repeat scroll}
+table.summary{table-layout:fixed;width:100%;font-size:15px}
+table.summary th,table.summary td{padding-left:4px}
+table.summary tbody th{font-size:15px;overflow-wrap:anywhere}
+table.summary thead th{font-size:12px;line-height:1.25}
+table.summary th:first-child{width:27%}
+.col-resolved{display:none}
+.full{display:none}
+.short{display:inline}
 nav.tabs{gap:16px}
 }
 @media print{
