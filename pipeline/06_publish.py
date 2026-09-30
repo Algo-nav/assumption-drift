@@ -370,6 +370,7 @@ def main(argv: list[str] | None = None) -> int:
         records, result, figures.acknowledgement_summary(records),
         strip_plot=FIGURES_DIR / figures.FIGURE_FILES[0], card_text=card_text, hf_user=hf_user,
         generated_at=generated_at, space_dir=SPACE_DIR,
+        filings_from=date.fromisoformat(config["edgar"]["date_from"]), filings_to=date.fromisoformat(config["edgar"]["date_to"]),
     )
     print(f"  wrote {index_path}")
 

@@ -50,7 +50,8 @@ def _number(value: float, unit: str) -> str:
     return f"{value:g} {unit}"
 
 
-def guided_line(record: ResearchRecord) -> str:
+def guided_parts(record: ResearchRecord) -> tuple[str, str]:
+    """The guided range and the reported value as two strings, for "guided X, reported Y"."""
     a, o = record.assumption, record.outcome
     low, high = a.target_low, a.target_high
     if low is not None and high is not None:
@@ -60,7 +61,28 @@ def guided_line(record: ResearchRecord) -> str:
     else:
         guided = f"at most {_number(high, a.unit)}"  # type: ignore[arg-type]
     reported = _number(o.reported_value, a.unit) if o and o.reported_value is not None else "nothing"
+    return guided, reported
+
+
+def guided_line(record: ResearchRecord) -> str:
+    guided, reported = guided_parts(record)
     return f"guided {guided}, reported {reported}"
+
+
+_NUMBER_TOKEN = re.compile(r"^\(?[-$]?[\d,.]+\)?%?$")
+_TABLE_FILLER = {"up", "down", "pts", "pt", "%", "--", "n/a", "nm"}
+
+
+def is_table_line(excerpt: str) -> bool:
+    """True for a row lifted from a multi-column table ("Operating expenses $1,624 $1,028 $970 Up 58% Up 67%"):
+    at least three numbers, and no words beyond a short row label and the Up/Down/pts filler."""
+    numbers, words = 0, 0
+    for token in excerpt.split():
+        if _NUMBER_TOKEN.match(token):
+            numbers += 1
+        elif token.lower() not in _TABLE_FILLER:
+            words += 1
+    return numbers >= 3 and words <= 4
 
 
 def _link(evidence: Evidence, label: str) -> str:
@@ -68,24 +90,35 @@ def _link(evidence: Evidence, label: str) -> str:
 
 
 def _card(record: ResearchRecord, kind: str) -> str:
+    # The class stays "card" (SCOPE 5.6 and tests count them); the styling is a ruled row, not a box.
     a, o = record.assumption, record.outcome
     assert o is not None
+    guided, reported = guided_parts(record)
     if record.acknowledgement_evidence is not None and record.acknowledged_at is not None:
         ack = (
-            f'<p class="label">Acknowledged {record.acknowledged_at.isoformat()}</p>'
-            f'<blockquote>{escape(record.acknowledgement_evidence.excerpt)}</blockquote>'
+            f'<p class="ack">Acknowledged {record.acknowledged_at.isoformat()}: '
+            f'&ldquo;{escape(record.acknowledgement_evidence.excerpt)}&rdquo;</p>'
         )
     else:
-        ack = '<p class="never">Never referred to again.</p>'
+        ack = '<p class="ack">Never referred to again.</p>'
+    if is_table_line(o.evidence.excerpt):
+        outcome = (
+            '<div class="raw"><span class="rawlabel">table line as filed</span>'
+            f'<pre>{escape(o.evidence.excerpt)}</pre></div>'
+        )
+    else:
+        outcome = f"<blockquote>{escape(o.evidence.excerpt)}</blockquote>"
     return f"""\
 <article class="card {kind}">
+<div class="top">
 <h4>{escape(a.metric)}, {escape(a.target_period)}</h4>
+<p class="gap">guided {escape(guided)}, reported <span class="rep">{escape(reported)}</span></p>
+</div>
 <p class="label">Guidance, {a.stated_at.isoformat()}</p>
 <blockquote>{escape(a.evidence.excerpt)}</blockquote>
 <p class="label">Outcome, {o.reported_at.isoformat()}</p>
-<blockquote>{escape(o.evidence.excerpt)}</blockquote>
-<p class="line">{escape(guided_line(record))}</p>
-<p class="links">{_link(a.evidence, "Guidance filing on EDGAR")} · {_link(o.evidence, "Outcome filing on EDGAR")}</p>
+{outcome}
+<p class="links">{_link(a.evidence, "Guidance filing on EDGAR")} <span class="sep">/</span> {_link(o.evidence, "Outcome filing on EDGAR")}</p>
 {ack}
 </article>"""
 
@@ -96,85 +129,165 @@ def _kind(record: ResearchRecord) -> str | None:
     return polarity.record_direction(record)
 
 
+def short_name(company: str) -> str:
+    """"NVIDIA Corporation" -> "NVIDIA", "Salesforce, Inc." -> "Salesforce"."""
+    return re.sub(r"[,.]?\s+(?:Corporation|Corp\.?|Incorporated|Inc\.?|Company|Co\.?)$", "", company).strip() or company
+
+
 def _company_section(name: str, records: list[ResearchRecord], index: int) -> str:
     newest_first = sorted(records, key=lambda r: (r.assumption.stated_at, r.record_id), reverse=True)
     worse = [r for r in newest_first if _kind(r) == "worse"]
     better = [r for r in newest_first if _kind(r) == "better"]
     parts = [f'<section class="company" id="company-{index}" data-company="{escape(name, quote=True)}">', f"<h2>{escape(name)}</h2>"]
-    parts.append(f"<h3>Worse than guided ({len(worse):,})</h3>")
+    parts.append(f'<h3 class="smallcaps">Worse than guided ({len(worse):,}), newest first</h3>')
     parts += [_card(r, "worse") for r in worse] or ["<p>No rows worse than guided in the release.</p>"]
     if better:
-        parts.append(f'<details class="better-section"><summary>Better than guided ({len(better):,})</summary>')
+        parts.append(f'<details class="better-section"><summary class="smallcaps">Better than guided ({len(better):,})</summary>')
         parts += [_card(r, "better") for r in better]
         parts.append("</details>")
     parts.append("</section>")
     return "\n".join(parts)
 
 
+def _summary_row(label: str, records: list[ResearchRecord], *, total: bool = False) -> str:
+    ack = figures.acknowledgement_summary(records)
+    met = sum(1 for r in records if r.status == "met")
+    missed = sum(1 for r in records if r.status == "missed")
+    cells = [len(records), met + missed, met, ack["better"], ack["worse"], ack["worse_acknowledged"]]
+    tds = "".join(f"<td>{c:,}</td>" for c in cells)
+    return f'<tr{" class=\"total\"" if total else ""}><th scope="row">{escape(label)}</th>{tds}</tr>'
+
+
+def _summary_table(records: list[ResearchRecord], names: list[str]) -> str:
+    head = ["Statements", "Resolved", "Met", "Better than guided", "Worse than guided", "Worse acknowledged"]
+    ths = "".join(f"<th>{h}</th>" for h in head)
+    rows = [_summary_row(short_name(n), [r for r in records if r.company == n]) for n in names]
+    rows.append(_summary_row("Total", records, total=True))
+    return (
+        f'<table class="summary"><thead><tr><th></th>{ths}</tr></thead>\n<tbody>\n'
+        + "\n".join(rows)
+        + "\n</tbody></table>\n"
+        '<p class="note">Resolved is met plus missed. Withdrawn and unresolved rows count under statements only.</p>'
+    )
+
+
 CSS = """\
-:root{--ink:#27272a;--mute:#6b6b74;--line:#d4d4d8;--bg:#fafafa;--card:#fff;--accent:#5b6ee1}
+:root{--paper:#FBFAF7;--ink:#1A1A1A;--mute:#5B5B5B;--rule:#D9D6CE;--accent:#3B4CCA;
+--serif:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:46rem;margin:0 auto;padding:1rem}
-h1{font-size:1.5rem;margin:.5rem 0}
-h2{font-size:1.25rem;margin:1.5rem 0 .25rem}
-h3{font-size:1.05rem;margin:1.25rem 0 .5rem}
-h4{font-size:1rem;margin:0 0 .5rem}
-a{color:var(--accent)}
-.lede{color:var(--mute);margin:.25rem 0 1rem}
-.headline{font-size:1.6rem;font-weight:700;color:var(--accent);margin:.75rem 0 0}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;margin:1rem 0}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.6rem .75rem}
-.stat b{display:block;font-size:1.6rem;color:var(--accent)}
-.stat span{color:var(--mute);font-size:.85rem}
-img.plot{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
-label{display:block;margin:1.25rem 0 .25rem;font-weight:600}
-select{width:100%;font:inherit;padding:.5rem;border:1px solid var(--line);border-radius:6px;background:var(--card)}
-.card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:.75rem;margin:.75rem 0}
-.card.better{border-left-color:var(--line)}
-.label{margin:.5rem 0 .1rem;color:var(--mute);font-size:.85rem}
-blockquote{margin:0;padding-left:.75rem;border-left:2px solid var(--line);overflow-wrap:anywhere}
-.line{font-weight:600;margin:.6rem 0 .25rem}
-.links{margin:.25rem 0;font-size:.9rem}
-.never{margin:.5rem 0 0;font-style:italic}
-details.better-section{margin:1rem 0}
-summary{cursor:pointer;font-weight:600}
-ul.limits{padding-left:1.1rem}
-footer{margin:2rem 0 1rem;color:var(--mute);font-size:.9rem}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);font-variant-numeric:tabular-nums}
+main{max-width:880px;margin:0 auto;padding:56px 24px 48px}
+a{color:var(--ink);text-decoration-color:var(--rule);text-underline-offset:3px}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;margin:0}
+.smallcaps{font-variant:small-caps;letter-spacing:.06em;color:var(--mute)}
+.masthead .label-top{font-variant:small-caps;letter-spacing:.14em;color:var(--mute);margin:0 0 12px}
+h1{font-size:40px;line-height:1.15;font-weight:700}
+.dateline{color:var(--mute);margin:16px 0 24px}
+hr,.rule{border:0;border-top:1px solid var(--rule);margin:0}
+table.summary{width:100%;border-collapse:collapse;margin:32px 0 8px}
+table.summary th,table.summary td{padding:8px 0 8px 12px;text-align:right;border-bottom:1px solid var(--rule);font-weight:400;vertical-align:bottom}
+table.summary thead th{font-size:13px;color:var(--mute);border-bottom-color:var(--ink)}
+table.summary th:first-child{text-align:left;padding-left:0}
+table.summary tbody th{font-family:var(--serif);font-size:17px}
+table.summary tr.total th,table.summary tr.total td{font-weight:700;border-bottom:0}
+.note{color:var(--mute);font-size:13px;margin:4px 0 0}
+figure{margin:40px 0 0}
+img.plot{display:block;width:100%;height:auto}
+figcaption{color:var(--mute);font-size:14px;margin-top:8px}
+nav.tabs{display:none;gap:24px;margin:48px 0 0;border-bottom:1px solid var(--rule)}
+html.js nav.tabs{display:flex}
+nav.tabs button{font:inherit;font-family:var(--serif);font-size:18px;background:none;border:0;border-bottom:1px solid transparent;
+margin-bottom:-1px;padding:0 0 8px;color:var(--mute);cursor:pointer}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+html.js section.company{display:none}
+html.js section.company.active{display:block}
+section.company{margin-top:32px}
+h2{font-size:26px;font-weight:700;margin-bottom:24px}
+h3.smallcaps{font-size:15px;margin:0 0 4px}
+summary.smallcaps{font-size:15px;cursor:pointer;padding:8px 0}
+details.better-section{margin-top:32px}
+.card{border-top:1px solid var(--rule);padding:20px 0}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:24px}
+h4{font-size:18px;font-weight:700}
+.gap{margin:0;text-align:right;white-space:nowrap}
+.rep{color:var(--ink)}
+.card.worse .rep{color:var(--accent);font-weight:700}
+.label{margin:14px 0 4px;color:var(--mute);font-size:13px}
+blockquote{margin:0 0 0 16px;padding-left:16px;border-left:1px solid var(--rule);overflow-wrap:anywhere}
+.raw{margin:0 0 0 16px;padding-left:16px;border-left:1px solid var(--rule)}
+.rawlabel{display:block;color:var(--mute);font-size:12px;font-variant:small-caps;letter-spacing:.06em}
+pre{margin:2px 0 0;font:13px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.links{margin:14px 0 0;font-size:14px}
+.sep{color:var(--rule);padding:0 6px}
+.ack{margin:8px 0 0;font-style:italic;color:var(--mute);font-size:15px}
+h2.limits-head{font-size:15px;font-weight:400;margin:64px 0 12px}
+ol.limits{padding-left:24px;margin:0}
+ol.limits li{margin-bottom:8px}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--rule);color:var(--mute);font-size:14px}
+footer a{color:var(--mute)}
+@media (max-width:600px){
+main{padding:32px 16px}
+h1{font-size:30px}
+.top{display:block}
+.gap{text-align:left;white-space:normal;margin-top:4px}
+table.summary th,table.summary td{padding-left:6px;font-size:14px}
+table.summary thead th{font-size:11px}
+nav.tabs{gap:16px}
+}
+@media print{
+body{background:#fff}
+nav.tabs{display:none!important}
+html.js section.company{display:block}
+.card{break-inside:avoid}
+}
 """
 
 SCRIPT = """\
 (function(){
-var sel=document.getElementById('company-select');
+document.documentElement.className+=' js';
+var tabs=document.querySelectorAll('nav.tabs button');
 var secs=document.querySelectorAll('section.company');
-function show(){for(var i=0;i<secs.length;i++){secs[i].hidden=(secs[i].id!==sel.value);}}
-sel.addEventListener('change',show);
-show();
+function show(i){
+for(var k=0;k<secs.length;k++){
+secs[k].className='company'+(k===i?' active':'');
+tabs[k].setAttribute('aria-selected',k===i?'true':'false');}
+}
+for(var j=0;j<tabs.length;j++){(function(n){tabs[n].addEventListener('click',function(){show(n);});})(j);}
+show(0);
 })();
 """
+
+
+def _month(d: date) -> str:
+    return d.strftime("%b %Y")
 
 
 def render_page(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
     strip_plot_png: bytes, limitations: list[str], hf_user: str, generated_at: date,
+    filings_from: date | None = None, filings_to: date | None = None,
 ) -> str:
     """The whole page as one string. `result` is `stats.compute()`, `summary` is
-    `figures.acknowledgement_summary()`, both already computed from `records`."""
+    `figures.acknowledgement_summary()`, both already computed from `records`. The filing range in the
+    masthead is the configured one when given, else the earliest and latest filing in the records."""
     names = sorted({r.company for r in records})
-    options = "\n".join(
-        f'<option value="company-{i}">{escape(n)}</option>' for i, n in enumerate(names)
+    if filings_from is None or filings_to is None:
+        filed = [e.filed_at for r in records for e in (r.assumption.evidence, r.outcome.evidence if r.outcome else None) if e]
+        filings_from = filings_from or min(filed, default=generated_at)
+        filings_to = filings_to or max(filed, default=generated_at)
+    tabs = "\n".join(
+        f'<button type="button" role="tab" aria-selected="{"true" if i == 0 else "false"}">{escape(short_name(n))}</button>'
+        for i, n in enumerate(names)
     )
     sections = "\n".join(_company_section(n, [r for r in records if r.company == n], i) for i, n in enumerate(names))
-    never = result["missed_never_acknowledged_share"]
-    tiles = [
-        (f"{result['rows']:,}", "rows"),
-        (f"{summary['better_acknowledged']:,} of {summary['better']:,}", "better than guided, acknowledged"),
-        (f"{never:.0%}" if never is not None else "n/a", "of misses never acknowledged"),
-    ]
-    tile_html = "\n".join(f'<div class="stat"><b>{escape(v)}</b><span>{escape(k)}</span></div>' for v, k in tiles)
     encoded = base64.b64encode(strip_plot_png).decode("ascii")
     limit_html = "\n".join(f"<li>{escape(item)}</li>" for item in limitations)
     dataset_url = DATASET_URL.format(hf_user=hf_user)
+    dateline = (
+        f"{len(records):,} guidance statements, {len(names)} companies, filings "
+        f"{_month(filings_from)} to {_month(filings_to)}, generated {generated_at.isoformat()}"
+    )
     return f"""\
 <!doctype html>
 <html lang="en">
@@ -187,24 +300,27 @@ def render_page(
 </head>
 <body>
 <main>
-<h1>{SPACE_TITLE}</h1>
-<p class="lede">Numeric guidance from SEC filings, set beside what the company later reported. Generated {generated_at.isoformat()} from the release data.</p>
-<p class="headline">{escape(figures.headline_sentence(summary))}</p>
-<div class="stats">
-{tile_html}
-</div>
+<header class="masthead">
+<p class="label-top">{SPACE_TITLE}</p>
+<h1>{escape(figures.headline_sentence(summary))}</h1>
+<p class="dateline">{escape(dateline)}</p>
+</header>
+<hr>
+{_summary_table(records, names)}
+<figure>
 <img class="plot" alt="Missed rows: days from guidance to a checkable outcome, against days to acknowledgement" src="data:image/png;base64,{encoded}">
-<label for="company-select">Company</label>
-<select id="company-select">
-{options}
-</select>
+<figcaption>Each mark is a missed row: days from guidance to a checkable outcome, against days to acknowledgement.</figcaption>
+</figure>
+<nav class="tabs" role="tablist" aria-label="Company">
+{tabs}
+</nav>
 {sections}
-<h2>Known limitations</h2>
-<ul class="limits">
+<h2 class="limits-head smallcaps">Known limitations</h2>
+<ol class="limits">
 {limit_html}
-</ul>
+</ol>
 <footer>
-<a href="{escape(dataset_url, quote=True)}">Dataset</a> · <a href="{REPO_URL}">Repository</a> · Source: SEC EDGAR
+<a href="{escape(dataset_url, quote=True)}">Dataset</a> / <a href="{REPO_URL}">Repository</a> / Source: SEC EDGAR / Data CC-BY-4.0, code MIT
 </footer>
 </main>
 <script>
@@ -217,6 +333,7 @@ def render_page(
 def write_space(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
     strip_plot: Path, card_text: str, hf_user: str, generated_at: date, space_dir: Path,
+    filings_from: date | None = None, filings_to: date | None = None,
 ) -> Path:
     """Write space/index.html and the Space's README.md (the YAML block Hugging Face reads to know the
     Space is static). Returns the index path."""
@@ -224,6 +341,7 @@ def write_space(
     page = render_page(
         records, result, summary, strip_plot_png=strip_plot.read_bytes(),
         limitations=limitations_from_card(card_text), hf_user=hf_user, generated_at=generated_at,
+        filings_from=filings_from, filings_to=filings_to,
     )
     (space_dir / "README.md").write_text(
         f"---\ntitle: {SPACE_TITLE}\nsdk: static\npinned: false\nlicense: cc-by-4.0\n---\n", encoding="utf-8"

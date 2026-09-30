@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import re
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
@@ -65,7 +66,8 @@ def test_worse_rows_are_newest_first(record_data) -> None:
 
 def test_card_content(record_data) -> None:
     html = page(sample(record_data))
-    assert "guided $5,000 million to $6,000 million, reported $4,800 million" in html
+    assert "guided $5,000 million to $6,000 million, reported $4,800 million" in re.sub(r"<[^>]+>", "", html)
+    assert '<span class="rep">$4,800 million</span>' in html
     assert "Acknowledged 2025-03-01" in html and "We came in below our range." in html
     assert "Never referred to again." in html
     assert html.count("Guidance filing on EDGAR") == 4 and html.count("Outcome filing on EDGAR") == 4
@@ -128,3 +130,53 @@ def test_headline_is_the_stat_tile_sentence_and_sections_are_named_by_direction(
     assert "3 worse than guided. 1 acknowledged." in html
     assert "Worse than guided (2)" in html and "Better than guided (1)" in html
     assert "shortfall" not in html.lower() and "beat" not in html.lower()
+
+
+def _style_and_script(html: str) -> str:
+    return "".join(re.findall(r"<(?:style|script)>(.*?)</(?:style|script)>", html, flags=re.S))
+
+
+def test_no_left_border_uses_the_accent(record_data) -> None:
+    html = page(sample(record_data))
+    accent = re.search(r"--accent:(#[0-9A-Fa-f]{6})", html).group(1).lower()
+    declarations = re.findall(r"border-left[a-z-]*:[^;}]*", html)
+    assert declarations
+    for declaration in declarations:
+        assert accent not in declaration.lower() and "var(--accent)" not in declaration, declaration
+
+
+def test_styles_and_script_make_no_external_reference(record_data) -> None:
+    html = page(sample(record_data))
+    assert space.external_urls(_style_and_script(html)) == set()
+    assert "url(" not in _style_and_script(html)
+    for tag in ('src="http', "src='http", "srcset", "<iframe", "<object", "<embed"):
+        assert tag not in html
+
+
+def test_palette_is_the_five_report_colours(record_data) -> None:
+    css = _style_and_script(page(sample(record_data)))
+    found = {c.upper() for c in re.findall(r"#[0-9A-Fa-f]{3,6}\b", css)}
+    assert found <= {"#FBFAF7", "#1A1A1A", "#5B5B5B", "#D9D6CE", "#3B4CCA", "#FFF"}, found
+    assert "box-shadow" not in css and "border-radius" not in css
+
+
+def test_table_line_is_shown_as_evidence(record_data) -> None:
+    assert space.is_table_line("Operating expenses $1,624 $1,028 $970 Up 58% Up 67%")
+    assert space.is_table_line("Gross margin 43.5 % 65.5 % 64.8 % Down 22.0 pts Down 21.3 pts")
+    assert not space.is_table_line("Fiscal 2020 GAAP earnings per share was $0.15, and non-GAAP diluted earnings per share was $2.99.")
+    records = sample(record_data)
+    data = records[1].model_dump()
+    data["outcome"]["evidence"]["excerpt"] = "Revenue $6,704 $8,288 $6,507 Down 19% Up 3%"
+    records[1] = ResearchRecord.model_validate(data)
+    html = page(records)
+    assert html.count("table line as filed") == 1
+    assert "<pre>Revenue $6,704 $8,288 $6,507 Down 19% Up 3%</pre>" in html
+
+
+def test_report_structure(record_data) -> None:
+    html = page(sample(record_data))
+    assert html.index("<h1>") < html.index('<table class="summary">') < html.index("<figure>") < html.index('<nav class="tabs"')
+    assert "<select" not in html and '<ol class="limits">' in html
+    assert "4 guidance statements, 2 companies, filings Feb 2024 to Feb 2025, generated 2026-09-29" in html
+    assert html.count('class="total"') == 1 and "@media print" in html and "max-width:600px" in html
+    assert html.count("<section class=\"company\"") == 2
