@@ -38,7 +38,7 @@ GREY_DARK = "#3f3f46"
 GREY_MID = "#8a8a92"
 GREY_LIGHT = "#d4d4d8"
 #: The one colour reserved for "missed" everywhere it appears. Never red, amber or green (SCOPE 5.5).
-ACCENT_MISSED = "#5b6ee1"
+ACCENT_MISSED = "#3B4CCA"
 
 FIGURE_FILES: tuple[str, ...] = (
     "falsifiable_vs_acknowledged.png",
