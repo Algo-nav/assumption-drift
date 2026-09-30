@@ -36,3 +36,16 @@ would currently pass straight through as if it were a third guided period. None 
 companies has triggered this, but the shape is common enough in tax rate footnotes generally that it
 will surface at 30 companies. Fix: a footnote-specific check that a sentence naming a quarter-and-its-
 year pattern is capped at exactly two periods, and rejects (rather than silently keeps) a third match.
+
+## 4. Acknowledgement candidates need a guidance reference and a period match
+
+The 10-K widening proposed four acknowledgements and all four were rejected in review, each for
+failing one of the same two checks. Fix both in the candidate filter, before anything reaches the queue:
+
+- The sentence holding the direction word (higher, lower, above, below, exceeded, ...) must also hold a
+  guidance reference: `guidance`, `outlook`, `expected range`, `we had expected`, `our prior`, or
+  `compared with our`. A direction word with no reference to what was guided is just a description of
+  results, not an acknowledgement of a miss or beat.
+- The candidate must match the row's period the way the outcome matcher (`04_outcomes.py`) does, not
+  by looser text overlap. A sentence about a different quarter or year is not an acknowledgement of
+  this row's assumption.

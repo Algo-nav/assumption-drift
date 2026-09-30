@@ -43,7 +43,7 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-09-29, the release holds **614 rows**: 103 met, 288 missed, 221 unresolved, 2 withdrawn.
+As of 2026-09-30, the release holds **614 rows**: 103 met, 288 missed, 221 unresolved, 2 withdrawn.
 Of the misses, 223 were better than guided and 65 worse than guided; median days from the guidance to the
 filing that made it checkable was 92, and
 97% of misses were never acknowledged in a later filing.
@@ -94,7 +94,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-09-29.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-09-30.
 
 ## Licence
 
