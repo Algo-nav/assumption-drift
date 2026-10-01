@@ -565,6 +565,7 @@ def test_draft_ids_are_stable_across_runs(world) -> None:
 @pytest.fixture
 def config_path(world):
     cfg = common.load_config()
+    cfg["llm"]["sync_below"] = 0  # these tests are about the batch path; the synchronous rule has its own tests in test_llm.py
     cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik}]
     path = world / "config.yaml"
     path.write_text(yaml.safe_dump(cfg))

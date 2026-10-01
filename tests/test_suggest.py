@@ -213,6 +213,7 @@ def world(tmp_path, monkeypatch):
 @pytest.fixture
 def config_path(world):
     cfg = common.load_config()
+    cfg["llm"]["sync_below"] = 0  # these tests are about the batch path; the synchronous rule has its own tests in test_llm.py
     cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik, "fiscal_year_end_month": 1}]
     path = world / "config.yaml"
     path.write_text(yaml.safe_dump(cfg))

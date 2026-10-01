@@ -103,6 +103,8 @@ llm:
   price_input_per_mtok: 1.00
   price_output_per_mtok: 5.00
   batch_discount: 0.5
+  # A stage with fewer requests than this to send goes one by one, synchronously (full price, same ledger), not as a batch.
+  sync_below: 10
 hf:
   user: "Nav772"
   dataset: "assumption-drift"

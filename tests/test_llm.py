@@ -366,3 +366,73 @@ def test_the_temperature_is_part_of_what_makes_an_answer_current(monkeypatch) ->
     before = request.fingerprint("claude-haiku-4-5")
     monkeypatch.setattr(llm, "TEMPERATURE", 1)
     assert request.fingerprint("claude-haiku-4-5") != before
+
+
+# --- a small stage is sent synchronously, not as a batch ---------------------------------------------------
+
+
+SYNC = llm.LlmConfig(model="claude-haiku-4-5", budget_usd=10.0, price_input=1.0, price_output=5.0, batch_discount=0.5, sync_below=10)
+
+
+def run_sync(client, requests, cfg=SYNC, **kw):
+    kw.setdefault("projection", projection_for(requests))
+    return llm.run_batch(client, cfg, "step", requests, canary_check=ok, sleep=lambda s: None, log=lambda m: None, **kw)
+
+
+def test_fewer_requests_than_the_threshold_are_sent_one_by_one_with_no_batch() -> None:
+    client = fakes.FakeAnthropic()
+    requests = reqs(9)
+    outcome = run_sync(client, requests)
+    assert len(client.messages.create_calls) == 9 and client.messages.batches.created == []
+    assert [c["messages"] for c in client.messages.create_calls] == [r.params(SYNC.model)["messages"] for r in requests]  # the same prompts
+    assert set(outcome.results) == {r.custom_id for r in requests} and all(r.ok for r in outcome.results.values())
+    assert set(llm.RawArchive("step").load()) == set(outcome.results)  # archived like any other answer
+    assert not llm.RawArchive("step").state_path.exists()
+
+
+def test_the_threshold_itself_and_above_goes_as_a_batch() -> None:
+    client = fakes.FakeAnthropic()
+    run_sync(client, reqs(10))
+    assert len(client.messages.create_calls) == 1 and len(client.messages.batches.created[0]) == 9
+
+
+def test_a_threshold_of_zero_never_goes_synchronous() -> None:
+    client = fakes.FakeAnthropic()
+    run_sync(client, reqs(3), cfg=CFG)
+    assert len(client.messages.create_calls) == 1 and len(client.messages.batches.created[0]) == 2
+
+
+def test_synchronous_requests_are_costed_at_full_price_in_the_same_ledger() -> None:
+    client = fakes.FakeAnthropic(input_tokens=1000, output_tokens=100)
+    run_sync(client, reqs(3))
+    assert llm.Ledger().committed_usd() == pytest.approx(3 * (1000 * 1.0 + 100 * 5.0) / 1e6)  # no batch discount
+
+
+def test_the_gate_prices_a_synchronous_stage_without_the_discount() -> None:
+    client = fakes.FakeAnthropic()
+    just_under_at_batch_price = llm.Projection(3, 1, True, 1, 1, 1.0, 6.00)  # 12.00 at full price: over the 10.00 budget
+    with pytest.raises(llm.BudgetExceeded):
+        run_sync(client, reqs(3), projection=just_under_at_batch_price)
+    assert client.messages.create_calls == []
+
+
+def test_a_rerun_of_a_synchronous_stage_sends_only_what_has_no_answer() -> None:
+    requests = reqs(3)
+    run_sync(fakes.FakeAnthropic(fail_ids=()), requests)
+    again = fakes.FakeAnthropic()
+    run_sync(again, requests)
+    assert again.messages.create_calls == []
+
+
+def test_one_bad_synchronous_answer_is_archived_as_invalid_and_does_not_stop_the_rest() -> None:
+    answers = iter(["not json", json.dumps({"items": []}), json.dumps({"items": []})])
+    client = fakes.FakeAnthropic(respond=lambda p: next(answers))
+    outcome = run_sync(client, reqs(3))
+    assert len(client.messages.create_calls) == 3
+    assert outcome.results["r-0"].status == "invalid" and outcome.results["r-1"].ok and outcome.results["r-2"].ok
+    assert any("r-0" in n for n in outcome.notes)
+
+
+def test_the_real_config_sets_the_threshold_at_ten() -> None:
+    from pipeline import common
+    assert llm.LlmConfig.from_config(common.load_config()["llm"]).sync_below == 10

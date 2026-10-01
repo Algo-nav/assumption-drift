@@ -8,6 +8,9 @@ the same rules apply to all of them:
   * input tokens counted by the API, not guessed, when credentials exist;
   * one synchronous canary request first, so a bad parameter fails on one
     request instead of on the whole batch;
+  * a stage with fewer than `llm.sync_below` requests to send (10 in config.yaml) is not worth a batch: they are
+    sent one by one, synchronously, with the same prompts, the same archive and the same ledger, at the
+    non-batch price (the batch discount does not apply to them, and the budget gate prices them without it);
   * every raw model output archived under data/batches/, so nothing is paid for
     twice and every draft can be re-derived without another call;
   * batches are resumable: re-running never submits a request that already
@@ -100,6 +103,7 @@ class LlmConfig:
     price_input: float  # USD per million tokens
     price_output: float
     batch_discount: float
+    sync_below: int = 0  # a stage with fewer requests than this is sent synchronously; 0 means always batch
 
     @classmethod
     def from_config(cls, cfg: dict[str, Any]) -> "LlmConfig":
@@ -109,6 +113,7 @@ class LlmConfig:
             price_input=float(cfg["price_input_per_mtok"]),
             price_output=float(cfg["price_output_per_mtok"]),
             batch_discount=float(cfg["batch_discount"]),
+            sync_below=int(cfg.get("sync_below", 0)),
         )
 
     def usd(self, input_tokens: int, output_tokens: int, *, batch: bool = True) -> float:
@@ -255,11 +260,11 @@ class Ledger:
             return []
 
     def committed_usd(self) -> float:
-        """Canary calls, plus per batch its latest entry: worst case once submitted, actual once ended."""
+        """Canary and synchronous calls, plus per batch its latest entry: worst case once submitted, actual once ended."""
         total = 0.0
         per_batch: dict[str, float] = {}
         for entry in self.entries():
-            if entry["kind"] == "canary":
+            if entry["kind"] in ("canary", "sync"):
                 total += entry["usd"]
             else:
                 per_batch[entry["batch_id"]] = entry["usd"]
@@ -366,6 +371,34 @@ class BatchOutcome:
     notes: list[str] = field(default_factory=list)
 
 
+def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish) -> BatchOutcome:
+    """Send each request on its own, in order. The gate prices them without the batch discount; each answer is
+    archived and costed the moment it comes back, so a failure part-way leaves what was already paid for in the
+    archive and the ledger. An answer that fails `canary_check` is archived as invalid, not raised: the rest of the
+    stage is not held up by one bad answer, and it is retried on the next run."""
+    full_price = Projection(
+        requests=projection.requests, input_tokens=projection.input_tokens, exact=projection.exact,
+        max_output_tokens=projection.max_output_tokens, expected_output_tokens=projection.expected_output_tokens,
+        usd_expected=projection.usd_expected / llm.batch_discount, usd_worst=projection.usd_worst / llm.batch_discount,
+    )
+    check_budget(full_price, llm, ledger)
+    for req in todo:
+        message = client.messages.create(**req.create_kwargs(llm.model))
+        res = _message_result(req.custom_id, message, "sync", fingerprints[req.custom_id])
+        if res.ok:
+            try:
+                canary_check(res.text or "")
+            except Exception as exc:  # noqa: BLE001 - recorded on the result, the next request still goes
+                res = Result(res.custom_id, "invalid", res.text, res.input_tokens, res.output_tokens, str(exc)[:200], "sync", res.fingerprint)
+        archive.append([res])
+        ledger.append(kind="sync", step=step, batch_id="sync", usd=llm.usd(res.input_tokens, res.output_tokens, batch=False))
+        if not res.ok:
+            outcome.notes.append(f"{res.custom_id} came back {res.status}")
+    outcome.submitted = len(todo)
+    log(f"{step}: {len(todo)} synchronous request(s) done")
+    return finish()
+
+
 def run_batch(
     client: Any,
     llm: LlmConfig,
@@ -405,6 +438,9 @@ def run_batch(
         if not todo:
             log(f"{step}: every request already has a successful result")
             return finish()
+        if len(todo) < llm.sync_below:
+            log(f"{step}: {len(todo)} request(s), fewer than {llm.sync_below}: sending them synchronously, not as a batch")
+            return _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish)
         check_budget(projection, llm, ledger)
 
         canary, batch_reqs = todo[0], todo[1:]
