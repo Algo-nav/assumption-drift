@@ -178,6 +178,19 @@ def period_signal(text: str, quarter: int | None, year: int) -> int:
     return 3 if _year_regex(year).search(text) else 2
 
 
+# Any year a sentence names: a four-digit year, or "fiscal 24" / "FY24" / "fiscal year 2024".
+_ANY_YEAR = re.compile(r"\b20\d\d\b|\b(?:fiscal(?: year)? ?|FY ?)\d{2}\b", re.IGNORECASE)
+
+
+def names_period(sentence: str, period: tuple[int | None, int]) -> bool:
+    """Does this sentence name the row's own period, by the same quarter and year tests the outcome matcher ranks
+    lines with (`period_signal`)? It must name the quarter (or the fiscal year), and a year too if it names any:
+    "fourth quarter revenue ... below our guidance" with no year at all is read as this period's, while one that
+    names fiscal 2023 under a row for FY2024 is about another period and does not count."""
+    signal = period_signal(sentence, *period)
+    return signal == 3 or (signal == 2 and not _ANY_YEAR.search(sentence))
+
+
 def title_names_period(title: str, head: str, quarter: int | None, year: int) -> bool:
     """Is this headline a results release for the period?
 
@@ -300,11 +313,16 @@ def select_lines(
     number: re.Pattern[str],
     *,
     require_number: bool = True,
+    reference: re.Pattern[str] | None = None,
+    require_period: bool = False,
 ) -> list[Line]:
     """Lines in these releases that name the metric next to a number (and `extra`, if given). Best first, then in
     order. An outcome line must state a value, so `require_number` defaults on; an acknowledgement line often
     just narrates the gap ("below our guidance") with the value itself in a sentence nearby, so the
-    acknowledgement search turns it off."""
+    acknowledgement search turns it off. The acknowledgement search also asks, of the sentence that holds the
+    direction word, that it hold a `reference` to what was guided and (`require_period`) that it name this
+    row's period: without the first it describes results and does not admit a gap, and without the second it
+    is about some other quarter or year."""
     lowered = metric.lower()  # canonical names are mixed case: "gross margin non-GAAP"
     wants_non_gaap = "non-gaap" in lowered
     wants_gaap = "gaap" in lowered and not wants_non_gaap
@@ -317,6 +335,10 @@ def select_lines(
             if len(sentence) > EXCERPT_LIMIT or (require_number and not number.search(sentence)) or not matcher.search(sentence):
                 continue
             if extra is not None and not extra.search(sentence):
+                continue
+            if reference is not None and not reference.search(sentence):
+                continue
+            if require_period and (period is None or not names_period(sentence, period)):
                 continue
             li = doc.line_of(start)
             section = _section_label(doc, li, int(cfg["section_lookback_lines"]))
@@ -560,6 +582,7 @@ def build_ack_requests(
         for side in ("below", "above")
         for direction in ("worse", "better")
     }
+    reference = re.compile("|".join(cfg["acknowledgement_guidance_reference"]), re.IGNORECASE)
     requests: list[llm.LlmRequest] = []
     index: dict[str, tuple[dict[str, Any], list[Line]]] = {}
     for cik, drafts in drafts_by_company.items():
@@ -582,7 +605,7 @@ def build_ack_requests(
             # No number is required here: the line that admits the gap often just narrates it ("below our
             # guidance") with the value itself already given in the user message, or in a sentence just before.
             lines = select_lines(store, metas, matcher, phrase_patterns[(side, direction)], a["metric"], parse_period(a["target_period"]),
-                                  cfg, number, require_number=False)
+                                  cfg, number, require_number=False, reference=reference, require_period=True)
             if not lines:
                 continue
             side_words = "above the high end of" if side == "above" else "below the low end of"

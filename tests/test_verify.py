@@ -350,3 +350,30 @@ def test_a_dry_run_leaves_an_earlier_submit_byte_for_byte_alone(world, config_pa
     monkeypatch.setattr(verify, "VERIFY_SYSTEM", verify.VERIFY_SYSTEM + "\nBe careful.")  # the archived answer no longer answers this request
     assert verify.main(["--config", str(config_path)]) == 0
     assert (world / "review" / f"{COMPANY.cik}.csv").read_bytes() == before
+
+
+# --- a truncated answer is retried at a higher cap, without making every other answer stale ----------------------
+
+
+def _req(cid, cap=verify.MAX_TOKENS):
+    return llm.LlmRequest(cid, "s", f"user {cid}", cap, {"type": "object"})
+
+
+def _result(req, status):
+    return llm.Result(req.custom_id, status, "{}", 1, 1, None, "b", req.fingerprint("m"))
+
+
+def test_what_is_still_to_send_goes_at_the_higher_cap_and_answered_rows_are_not_resent() -> None:
+    ok, cut, new = _req("v-ok"), _req("v-cut"), _req("v-new")
+    archived = {"v-ok": _result(ok, "succeeded"), "v-cut": _result(cut, "truncated")}
+    have, todo = verify.plan_requests([ok, cut, new], archived, "m")
+    assert set(have) == {"v-ok"}
+    assert {r.custom_id: r.max_tokens for r in todo} == {"v-cut": verify.RETRY_MAX_TOKENS, "v-new": verify.RETRY_MAX_TOKENS}
+
+
+def test_a_row_answered_at_the_retry_cap_is_done_and_the_others_keep_their_fingerprints() -> None:
+    cut = _req("v-cut")
+    retried = verify.with_retry_cap(cut)
+    have, todo = verify.plan_requests([cut], {"v-cut": _result(retried, "succeeded")}, "m")
+    assert set(have) == {"v-cut"} and todo == []
+    assert verify.MAX_TOKENS == 220  # unchanged: raising it would resend every archived row

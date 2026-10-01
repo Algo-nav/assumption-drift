@@ -38,6 +38,11 @@ class Company:
     #: "end": FY2026 is the year that ENDS in 2026 (NVIDIA, Salesforce). "start": it is the year that STARTS
     #: in 2026 (Target's "fiscal 2022" ends January 28, 2023). One month cannot tell these apart.
     fiscal_year_named_for: str = "end"
+    #: What a parenthesised figure on a TAX RATE line means for this filer. False (the default): it is a rate that is
+    #: unusually large or worth calling out, so it is read as positive unless the evidence says negative, benefit or
+    #: loss. True: this filer prints a rate that is a benefit or unusually low in parentheses, so the sign the model
+    #: read is kept. Only the tax rate is ever affected; every other rate keeps the one global rule.
+    tax_rate_parens_negative: bool = False
 
     def period_end(self, year: int, quarter: int | None = None) -> date | None:
         """The last day of the month a fiscal period ends in, or None if the fiscal calendar is unknown."""
@@ -74,8 +79,11 @@ def _company(entry: dict[str, Any]) -> Company:
         raise ValueError(f"{entry.get('ticker')}: fiscal_year_end_month must be a month from 1 to 12, got {month!r}")
     if named_for not in ("end", "start"):
         raise ValueError(f"{entry.get('ticker')}: fiscal_year_named_for must be 'end' or 'start', got {named_for!r}")
+    parens = entry.get("tax_rate_parens_negative", False)
+    if not isinstance(parens, bool):
+        raise ValueError(f"{entry.get('ticker')}: tax_rate_parens_negative must be true or false, got {parens!r}")
     return Company(name=entry["name"], ticker=entry["ticker"].upper(), cik=str(entry["cik"]).zfill(10),
-                   fiscal_year_end_month=month, fiscal_year_named_for=named_for)
+                   fiscal_year_end_month=month, fiscal_year_named_for=named_for, tax_rate_parens_negative=parens)
 
 
 def companies(config: dict[str, Any], only: list[str] | None = None) -> list[Company]:

@@ -64,6 +64,7 @@ Writes  data/drafts/{cik}.jsonl          validated draft assumptions
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import re
 import sys
@@ -88,6 +89,8 @@ from pipeline.common import (
 )
 from research_record.schema import Assumption, Evidence
 from research_record.text import html_to_text, sentence_spans
+
+candidates_step = importlib.import_module("pipeline.02_candidates")
 
 STEP = "03_structure"
 MAX_TOKENS_SENTENCE = 700
@@ -611,7 +614,9 @@ _PAREN_NUMBER = re.compile(r"\(\s*[^()]*\d[^()]*\)")
 _PARENS_CAN_BE_NEGATIVE = re.compile(r"\bnegative\b|\bbenefit\b|\bloss\b", re.IGNORECASE)
 
 
-def fix_parens_sign(metric: str, low: float | None, high: float | None, evidence: str, kinds: dict[str, str]) -> tuple[float | None, float | None, str | None]:
+def fix_parens_sign(
+    metric: str, low: float | None, high: float | None, evidence: str, kinds: dict[str, str], *, tax_rate_parens_negative: bool = False
+) -> tuple[float | None, float | None, str | None]:
     """Parentheses are accounting notation for a negative number, but on a rate (a margin, a tax rate,
     comparable sales) a company also prints one around a figure that is unusual or worth calling out, with no
     loss meant by it: a GAAP tax provision of "(146%)" is a rate over 100%, not a rate of -146%. Flip such a
@@ -619,9 +624,11 @@ def fix_parens_sign(metric: str, low: float | None, high: float | None, evidence
     other income are dollar amounts where a loss is a common, real thing to guide to, so their parentheses are
     always left negative. What decides which rule applies is the metric's own kind, from config.yaml's
     metric_kinds ("percent" or not), never a hardcoded list of metric names that could drift out of sync with it.
+    The one exception is the tax rate, whose rule is the filer's own: a company with `tax_rate_parens_negative: true`
+    in config.yaml prints a benefit or an unusually low rate in parentheses, and keeps the sign the model read.
 
     Returns (low, high, note): note says the rule fired, or is None if nothing changed."""
-    if kinds.get(metric) != "percent":
+    if kinds.get(metric) != "percent" or (metric == "tax rate" and tax_rate_parens_negative):
         return low, high, None
     if not ((low is not None and low < 0) or (high is not None and high < 0)):
         return low, high, None
@@ -633,6 +640,52 @@ def fix_parens_sign(metric: str, low: float | None, high: float | None, evidence
     note = (f"{metric!r} is a rate: a parenthesised figure in the evidence was read as positive, not negative, "
             f"because the evidence has no 'negative', 'benefit' or 'loss' wording")
     return new_low, new_high, note
+
+
+# A cell with no figure: a bare "N/A", or an em or en dash that is a cell of its own (a hyphen is a range's dash).
+_EMPTY_CELL = re.compile(r"^(?:n/?a|[\u2014\u2013])$", re.IGNORECASE)
+_VALUE_CELL = re.compile(r"^(?:[~$(\-]|\+)*\$?\d|^(?:approximately|approx\.?|about|slightly)$", re.IGNORECASE)
+
+
+def leading_empty_cells(evidence: str) -> int:
+    """How many empty cells (N/A) sit directly before the first figure of the evidence: "Non-GAAP operating margin
+    N/A ~17.7%" has one. Cells are what whitespace and line breaks separate, so a row printed on one line and one
+    broken into a label line, an N/A line and a value line count the same."""
+    tokens = evidence.split()
+    for i, token in enumerate(tokens):
+        if _VALUE_CELL.match(token):
+            count = 0
+            while i - 1 - count >= 0 and _EMPTY_CELL.match(tokens[i - 1 - count]):
+                count += 1
+            return count
+    return 0
+
+
+def _period_label(period: tuple[int | None, int]) -> str:
+    quarter, year = period
+    return f"Q{quarter} FY{year}" if quarter else f"FY{year}"
+
+
+def fix_na_column_period(period: str, candidate: dict[str, Any], evidence: str) -> tuple[str, str | None]:
+    """A value that sits after an N/A cell belongs to the table's column it sits under, not to the row's first column.
+    Salesforce prints a quarter column and a full-year column side by side, and for a metric guided only for the year
+    the quarter cell is N/A ("Non-GAAP operating margin N/A ~17.7%"): the figure is in the second column, the header
+    says which period that is, and the row's own text does not. When the evidence has k empty cells before its figure,
+    the header has more than k periods, and the model's period is one of the k columns that were empty, the period
+    is the header's period at column k+1 instead. Anything else (no header, no N/A, a period the header does not
+    name) is left as the model said it.
+
+    Returns (period, note): note says the rule fired, or is None if nothing changed."""
+    header = candidate.get("table_header")
+    skipped = leading_empty_cells(evidence)
+    if not header or not skipped:
+        return period, None
+    columns = [_period_label(p) for p in candidates_step.parse_periods(header)]
+    if len(columns) <= skipped or period not in columns[:skipped]:
+        return period, None
+    bound = columns[skipped]
+    return bound, (f"the figure follows {skipped} N/A cell{'s' if skipped > 1 else ''}, so it sits under the table's "
+                   f"{bound} column and not {period}, the column that is N/A")
 
 
 _EXPENSE_OF = re.compile(r"\bexpense of\b", re.IGNORECASE)
@@ -962,7 +1015,10 @@ def derive_drafts(
                     raise ValueError(f"metric {metric!r} is not in the metrics list")
                 excerpt = evidence_text(cand, item)
                 check_not_bare_value(excerpt, cand.get("heading"))
+                period, period_note = fix_na_column_period(period, cand, excerpt)
                 check_period(period, excerpt)
+                if metric == "tax rate":
+                    candidates_step.check_tax_footnote_periods(excerpt)
                 metric = with_heading_basis(metric, cand, excerpt, metrics)
                 check_unit_kind(metric, item["unit"], kinds)
                 check_not_a_change(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
@@ -970,9 +1026,10 @@ def derive_drafts(
                 stated = with_one_sided_low(item, excerpt)
                 stated = with_absolute_percent_spread(metric, stated, kinds)
                 low, high = resolve_range(stated)
-                low, high, parens_note = fix_parens_sign(metric, low, high, excerpt, kinds)
+                low, high, parens_note = fix_parens_sign(
+                    metric, low, high, excerpt, kinds, tax_rate_parens_negative=company.tax_rate_parens_negative)
                 low, high, expense_note = fix_expense_of_sign(metric, low, high, excerpt)
-                parens_note = parens_note or expense_note
+                parens_note = "; ".join(n for n in (period_note, parens_note, expense_note) if n) or None
                 check_range_language(stated, excerpt)
                 check_numbers_in_evidence(stated, excerpt)
                 check_not_past_tense(excerpt)

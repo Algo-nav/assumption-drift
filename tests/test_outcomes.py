@@ -36,7 +36,7 @@ DOCS = [
       "Cost of revenues $ 300 $ 250",
       "Initiates first quarter fiscal 2025 revenue guidance of $5.2 billion to $5.4 billion."]),
     ("0013", "2024-08-01", "Example Corp Announces Financial Results for First Quarter Fiscal 2025",
-     ["First quarter revenue of $5.3 billion.", "Last quarter revenue of $4.8 billion was below our guidance."]),
+     ["First quarter revenue of $5.3 billion.", "Fourth quarter revenue of $4.8 billion was below our guidance."]),
 ]
 
 
@@ -408,7 +408,7 @@ def test_only_a_missed_row_is_searched_for_an_acknowledgement(world) -> None:
     assert reqs == []
     reqs, index = outcomes.build_ack_requests({COMPANY.cik: [draft()]}, {"D1": out_miss}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
     (cid,) = index
-    assert cid == "k-D1" and [l.sentence for l in index[cid][1]] == ["Last quarter revenue of $4.8 billion was below our guidance."]
+    assert cid == "k-D1" and [l.sentence for l in index[cid][1]] == ["Fourth quarter revenue of $4.8 billion was below our guidance."]
     assert "Actually reported: 4.8 USD billions, on 2024-05-01" in reqs[0].user
 
 
@@ -426,7 +426,7 @@ def test_the_earliest_confirmed_line_is_the_acknowledgement(world) -> None:
     res = {"k-D1": llm.Result("k-D1", "succeeded", json.dumps({"indices": [1]}), 1, 1, None, "b")}
     found, rejects = outcomes.derive_acknowledgements(index, res, {COMPANY.cik: store()})
     assert found["D1"]["acknowledged_at"] == "2024-08-01" and rejects == []
-    assert found["D1"]["evidence"]["excerpt"] == "Last quarter revenue of $4.8 billion was below our guidance."
+    assert found["D1"]["evidence"]["excerpt"] == "Fourth quarter revenue of $4.8 billion was below our guidance."
 
 
 def test_an_empty_or_out_of_range_answer_is_no_acknowledgement(world) -> None:
@@ -455,7 +455,7 @@ def test_a_better_row_is_acknowledged_with_its_own_vocabulary(world) -> None:
         "Second quarter GAAP and Adjusted EPS1 of $1.80 was more than 4 times higher than a year ago and "
         "above the high end of the Company's guidance range, reflecting a meaningful profit recovery from last year's inventory actions."
     ])
-    d = draft(metric="EPS GAAP", unit="USD", low=1.3, high=1.7)
+    d = draft(metric="EPS GAAP", unit="USD", period="Q2 FY2023", low=1.3, high=1.7)
     out = {"reported_value": 1.8, "reported_at": "2024-05-01"}
     assert outcomes.missed(d, out) and rubric.direction(1.3, 1.7, 1.8, True) == "better"
     reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
@@ -483,13 +483,13 @@ def test_a_cost_above_its_range_is_worse_and_is_found_with_cost_vocabulary(world
     """Operating expenses above the range is worse than guided. "higher than expected" is a side word for
     above, so the search finds it; "did not meet" (an outcome word for a lower-is-better cost that ran
     over) would find it too."""
-    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter operating expenses of $6.4 billion were higher than expected."])
+    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter operating expenses of $6.4 billion were higher than expected, above our outlook."])
     d = draft(metric="operating expenses GAAP")
     out = {"reported_value": 6.4, "reported_at": "2024-05-01"}
     assert rubric.direction(5.0, 6.0, 6.4, False) == "worse"
     reqs, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
     assert len(reqs) == 1 and "(that is worse than guided for operating expenses GAAP)" in reqs[0].user
-    assert any("higher than expected" in l.sentence for l in index["k-D1"][1])
+    assert any("higher than expected, above our outlook" in l.sentence for l in index["k-D1"][1])
 
 
 def test_a_cost_below_its_range_is_better(world) -> None:
@@ -507,7 +507,7 @@ def test_words_for_the_other_side_do_not_leak_into_a_search(world) -> None:
     out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
     _, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
     sentences = [l.sentence for l in index["k-D1"][1]]
-    assert "Last quarter revenue of $4.8 billion was below our guidance." in sentences
+    assert "Fourth quarter revenue of $4.8 billion was below our guidance." in sentences
     assert not any("exceeded expectations" in s for s in sentences)
 
 
@@ -713,9 +713,9 @@ def test_a_10k_line_is_the_acknowledgement_when_it_is_the_one_confirmed(world) -
 
 
 def test_only_filings_after_the_outcome_and_within_the_window_are_read_for_an_acknowledgement(world) -> None:
-    before = add_filing(world, "0021", "2024-04-20", "10-Q", ["Revenue of $4.8 billion for the quarter was below our guidance."])
-    inside = add_filing(world, "0022", "2025-06-01", "10-K", ["Revenue of $4.8 billion for the quarter was below our guidance."])  # 396 days after
-    beyond = add_filing(world, "0023", "2025-06-20", "10-K", ["Revenue of $4.8 billion for the quarter was below our guidance."])  # 415 days after
+    before = add_filing(world, "0021", "2024-04-20", "10-Q", ["Revenue of $4.8 billion for the fourth quarter was below our guidance."])
+    inside = add_filing(world, "0022", "2025-06-01", "10-K", ["Revenue of $4.8 billion for the fourth quarter was below our guidance."])  # 396 days after
+    beyond = add_filing(world, "0023", "2025-06-20", "10-K", ["Revenue of $4.8 billion for the fourth quarter was below our guidance."])  # 415 days after
     accessions = {l.accession for l in ack_requests()[1]["k-D1"][1]}
     assert inside in accessions and before not in accessions and beyond not in accessions
 
@@ -876,7 +876,7 @@ def test_submit_runs_the_withdrawal_stage_and_puts_the_withdrawal_on_the_row(wor
     assert rows["D4"]["withdrawal"] is None
     assert set(llm.RawArchive("04_withdrawals").load()) == {"w-D1", "w-D3"}  # D4 was never sent
     out = capsys.readouterr().out
-    assert "04_withdrawals: 2 requests" in out and "budget $10.00" in out  # the cost gate is printed before the stage
+    assert "04_withdrawals: 2 requests" in out and "budget $20.00" in out  # the cost gate is printed before the stage
     assert "EXMP: 3 drafts" in out and "2 withdrawn" in out
 
 
@@ -979,3 +979,77 @@ def test_stopping_for_a_missing_credential_or_the_budget_writes_nothing(world, c
     two_drafts(world)
     monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(authenticated=False))
     assert outcomes.main(["--config", str(config_path), "--submit"]) == 3 and not (world / "outcomes").exists()
+
+
+# --- backlog 4: an acknowledgement needs a guidance reference and the row's own period -----------------------
+#
+# The 10-K widening proposed four acknowledgements and review rejected all four, each for one of these two reasons.
+
+
+def ack_sentences(world, *lines, d=None, out=MISS):
+    """The sentences the acknowledgement search would send, for a row guided to 5.0-6.0 and reported at 4.8."""
+    add_filing(world, "0021", "2024-06-10", "10-Q", list(lines))
+    _, index = ack_requests(d, out)
+    return [l.sentence for l in index["k-D1"][1]] if "k-D1" in index else []
+
+
+@pytest.fixture
+def ack_world(world):
+    # The fixture's own 8-K that admits the miss is not wanted here: only the 10-Q each test writes is.
+    (world / "raw" / COMPANY.cik / "0000000123-24-000013.html").write_bytes(b"<html><body><p>First quarter revenue of $5.3 billion.</p></body></html>")
+    return world
+
+
+@pytest.mark.parametrize("reference", [
+    "guidance", "outlook", "expected range", "we had expected", "our prior", "compared with our",
+])
+def test_a_direction_word_with_a_guidance_reference_is_kept(ack_world, reference) -> None:
+    line = f"Fourth quarter revenue of $4.8 billion was below {reference} for the quarter."
+    assert ack_sentences(ack_world, line) == [line]
+
+
+def test_a_direction_word_with_no_guidance_reference_is_dropped(ack_world) -> None:
+    """Describes results ("lower"), does not admit a gap against anything guided."""
+    assert ack_sentences(ack_world, "Fourth quarter revenue of $4.8 billion was below the prior year, and lower than last quarter.") == []
+
+
+def test_the_reference_has_to_be_in_the_sentence_that_holds_the_direction_word(ack_world) -> None:
+    lines = ["Our fourth quarter outlook was reviewed in March.", "Fourth quarter revenue of $4.8 billion was below the prior year."]
+    assert ack_sentences(ack_world, *lines) == []
+
+
+@pytest.mark.parametrize("sentence", [
+    "First quarter revenue of $4.8 billion was below our guidance.",    # a different quarter
+    "Third quarter revenue of $4.8 billion was below our guidance.",
+    "Fourth quarter fiscal 2023 revenue was below our guidance.",       # the same quarter, another year
+    "Fourth quarter FY23 revenue was below our guidance.",
+    "Revenue of $4.8 billion was below our guidance.",                  # no period at all
+])
+def test_a_sentence_about_another_period_is_not_an_acknowledgement(ack_world, sentence) -> None:
+    assert ack_sentences(ack_world, sentence) == []
+
+
+@pytest.mark.parametrize("sentence", [
+    "Fourth quarter revenue of $4.8 billion was below our guidance.",
+    "Fourth quarter fiscal 2024 revenue of $4.8 billion was below our guidance.",
+    "Q4 FY24 revenue was below our guidance.",
+    # names the row's year as well as another: the row's own period is in it
+    "Fourth quarter fiscal 2024 revenue was below our guidance, against fiscal 2023.",
+])
+def test_a_sentence_naming_the_rows_own_period_is_kept(ack_world, sentence) -> None:
+    assert ack_sentences(ack_world, sentence) == [sentence]
+
+
+def test_a_fiscal_year_row_needs_a_full_year_sentence_for_its_year(ack_world) -> None:
+    d = draft(period="FY2024")
+    kept = "Full year fiscal 2024 revenue of $4.8 billion was below our guidance."
+    assert ack_sentences(ack_world, kept, "Full year fiscal 2023 revenue was below our guidance.", "Fourth quarter revenue was below our guidance.", d=d) == [kept]
+
+
+def test_names_period_by_the_outcome_matchers_quarter_and_year_tests() -> None:
+    q4 = (4, 2024)
+    assert outcomes.names_period("Fourth quarter revenue", q4) and outcomes.names_period("Q4 FY24 revenue", q4)
+    assert outcomes.names_period("Fourth quarter fiscal 2024 revenue, against fiscal 2023", q4)
+    assert not outcomes.names_period("Fourth quarter fiscal 2023 revenue", q4)
+    assert not outcomes.names_period("Second quarter revenue", q4) and not outcomes.names_period("Revenue", q4)
+    assert outcomes.names_period("Full year revenue", (None, 2024)) and not outcomes.names_period("Full year fiscal 2023 revenue", (None, 2024))

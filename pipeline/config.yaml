@@ -13,7 +13,28 @@ edgar:
 companies:
   - {name: "NVIDIA Corporation", ticker: "NVDA", cik: "0001045810", fiscal_year_end_month: 1}
   - {name: "Target Corporation", ticker: "TGT", cik: "0000027419", fiscal_year_end_month: 1, fiscal_year_named_for: start}
-  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524", fiscal_year_end_month: 1}
+  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524", fiscal_year_end_month: 1, tax_rate_parens_negative: true}
+  # The ten added next. Each fiscal_year_end_month and fiscal_year_named_for was confirmed from the company's latest
+  # cached 10-K ("For the fiscal year ended ..."): Apple Sep 27 2025 (last Saturday of September), Microsoft Jun 30 2026,
+  # Amazon / Meta / Alphabet / JPMorgan Dec 31 2025, AMD Dec 27 2025 (last Saturday of December), Broadcom Nov 2 2025
+  # (Sunday closest to October 31, so month 10), Costco Aug 31 2025 (Sunday nearest the end of August), Home Depot
+  # Feb 1 2026 (Sunday nearest January 31) and that year is called "fiscal 2025", so named for the year it starts.
+  - {name: "Apple Inc.", ticker: "AAPL", cik: "0000320193", fiscal_year_end_month: 9}
+  - {name: "Microsoft Corporation", ticker: "MSFT", cik: "0000789019", fiscal_year_end_month: 6}
+  - {name: "Amazon.com, Inc.", ticker: "AMZN", cik: "0001018724", fiscal_year_end_month: 12}
+  - {name: "Meta Platforms, Inc.", ticker: "META", cik: "0001326801", fiscal_year_end_month: 12}
+  - {name: "Alphabet Inc.", ticker: "GOOGL", cik: "0001652044", fiscal_year_end_month: 12}
+  - {name: "Advanced Micro Devices, Inc.", ticker: "AMD", cik: "0000002488", fiscal_year_end_month: 12}
+  - {name: "Broadcom Inc.", ticker: "AVGO", cik: "0001730168", fiscal_year_end_month: 10}
+  - {name: "Costco Wholesale Corporation", ticker: "COST", cik: "0000909832", fiscal_year_end_month: 8}
+  - {name: "The Home Depot, Inc.", ticker: "HD", cik: "0000354950", fiscal_year_end_month: 1, fiscal_year_named_for: start}
+  - {name: "JPMorgan Chase & Co.", ticker: "JPM", cik: "0000019617", fiscal_year_end_month: 12}
+  # The next four, same rule: Qualcomm Sep 28 2025 (last Sunday of September), Adobe Nov 28 2025 ("fiscal 2025"), Micron
+  # Aug 28 2025 (Thursday closest to August 31), Lowe's Jan 30 2026 (called "2025", so named for the year it starts).
+  - {name: "QUALCOMM Incorporated", ticker: "QCOM", cik: "0000804328", fiscal_year_end_month: 9}
+  - {name: "Adobe Inc.", ticker: "ADBE", cik: "0000796343", fiscal_year_end_month: 11}
+  - {name: "Micron Technology, Inc.", ticker: "MU", cik: "0000723125", fiscal_year_end_month: 8}
+  - {name: "Lowe's Companies, Inc.", ticker: "LOW", cik: "0000060667", fiscal_year_end_month: 1, fiscal_year_named_for: start}
 # The only metrics a draft may be about. Haiku must pick from this list or return nothing, so a
 # figure for anything else (gross profit, growth rates, segment revenue) never becomes a row.
 # Capital return, buybacks and dividends are deliberately not here.
@@ -77,7 +98,7 @@ higher_is_better:
 
 llm:
   model: "claude-haiku-4-5"
-  budget_usd: 10   # one budget across 03_structure and 04_outcomes, not one each
+  budget_usd: 20   # one budget across 03_structure and 04_outcomes, not one each
   # Haiku 4.5 list prices in USD per million tokens, and the Message Batches discount.
   price_input_per_mtok: 1.00
   price_output_per_mtok: 5.00
@@ -235,3 +256,13 @@ outcomes:
       - 'revised'
     better:
       - 'better than'
+  # The sentence that holds one of those direction words must also refer to what was guided, or it only describes
+  # results ("revenue was higher") and does not admit a gap. And it must name the row's own period (the same quarter
+  # and year tests the outcome search ranks lines with), or it is about some other quarter or year.
+  acknowledgement_guidance_reference:
+    - 'guidance'
+    - 'outlook'
+    - 'expected range'
+    - 'we had expected'
+    - 'our prior'
+    - 'compared with our'

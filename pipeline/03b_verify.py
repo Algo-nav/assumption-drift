@@ -38,6 +38,7 @@ Writes  data/review/{cik}.csv       aid_verify, aid_verify_reason, aid_verify_cl
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import importlib
 import sys
 from collections import Counter
@@ -51,6 +52,9 @@ review = importlib.import_module("pipeline.05_review")
 
 STEP = "03b_verify"
 MAX_TOKENS = 220
+#: Whatever is sent now goes at this cap, because an answer at MAX_TOKENS was cut off for some rows (a canary included). The cap is part of a request's fingerprint, so
+#: raising MAX_TOKENS itself would make every answer already archived stale and send the whole file again.
+RETRY_MAX_TOKENS = 600
 EXPECTED_OUTPUT_TOKENS = 55
 REASON_LIMIT = 200
 
@@ -158,6 +162,21 @@ def build_requests(targets: list[Company], review_dir: Path | None = None) -> tu
     return requests, index
 
 
+def with_retry_cap(request: llm.LlmRequest) -> llm.LlmRequest:
+    return dataclasses.replace(request, max_tokens=RETRY_MAX_TOKENS)
+
+
+def plan_requests(requests: list[llm.LlmRequest], archived: dict[str, llm.Result], model: str) -> tuple[dict[str, llm.Result], list[llm.LlmRequest]]:
+    """(answers in hand, requests still to send). A row answered at either cap is done, so the answers archived at
+    MAX_TOKENS stay valid. Whatever is still to send goes at RETRY_MAX_TOKENS: a row that was cut off at the lower
+    cap, and a new row that might be, are both given room."""
+    retried = {r.custom_id: with_retry_cap(r) for r in requests}
+    base = llm.current_results(archived, requests, model)
+    retry = llm.current_results(archived, list(retried.values()), model)
+    have = {cid: res for cid, res in {**base, **retry}.items() if res.ok}
+    return have, [retried[r.custom_id] for r in requests if r.custom_id not in have]
+
+
 def derive_verdicts(index: dict[str, tuple[Company, str]], results: dict[str, llm.Result]) -> dict[str, tuple[str, str, str]]:
     """record_id -> (aid_verify, aid_verify_reason, aid_verify_class), from archived results. Pure: no model
     call. class is blank when the answer is "yes": it is only meaningful for a "no"."""
@@ -230,8 +249,7 @@ def main(argv: list[str] | None = None) -> int:
     requests, index = build_requests(targets)
 
     archive, ledger = llm.RawArchive(STEP), llm.Ledger()
-    have = llm.current_results(archive.load(), requests, cfg.model)
-    todo = [r for r in requests if not (r.custom_id in have and have[r.custom_id].ok)]
+    have, todo = plan_requests(requests, archive.load(), cfg.model)
     print(f"{STEP}: {len(requests):,} rows to check ({len(requests) - len(todo):,} already answered, {len(todo):,} to send)")
 
     client = llm.make_client()
@@ -251,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
         except llm.BudgetExceeded as exc:
             print(f"STOPPED: {exc}", file=sys.stderr)
             return 4
-        results = llm.current_results(archive.load(), requests, cfg.model)
+        results, _ = plan_requests(requests, archive.load(), cfg.model)
         for note in outcome.notes:
             print(f"note: {note}")
         if outcome.pending_batch:

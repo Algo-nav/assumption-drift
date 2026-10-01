@@ -171,6 +171,26 @@ def parse_periods(line: str) -> list[tuple[int | None, int]]:
     return periods
 
 
+_TAX_RATE = re.compile(r"\btax (?:rates?|provision)\b", re.IGNORECASE)
+
+
+def check_tax_footnote_periods(sentence: str) -> None:
+    """A tax rate footnote that names a quarter and the fiscal year it falls in ("our effective tax rate for the third
+    quarter of fiscal 2024 and fiscal year 2024 was ...") has exactly two periods, each with its own number. A third
+    period in such a sentence (a stray year, a footnote reference shaped like a label) is not a third guided period:
+    the sentence is refused, not read with the extra one. Raises ValueError; a sentence that is not about a tax rate,
+    or does not have the quarter-and-its-year shape, is not checked here (`parse_periods` stays general-purpose)."""
+    if not _TAX_RATE.search(sentence):
+        return
+    periods = list(dict.fromkeys(parse_periods(sentence)))
+    years_of_quarters = {year for quarter, year in periods if quarter is not None}
+    if not any(quarter is None and year in years_of_quarters for quarter, year in periods):
+        return
+    if len(periods) != 2:
+        named = ", ".join(f"Q{q} {y}" if q else f"FY{y}" for q, y in periods)
+        raise ValueError(f"a tax rate footnote naming a quarter and its fiscal year has exactly two periods, found {len(periods)} ({named})")
+
+
 def period_labels(line: str) -> int:
     return len(parse_periods(line))
 

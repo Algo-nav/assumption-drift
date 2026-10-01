@@ -43,9 +43,9 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-09-30, the release holds **614 rows**: 103 met, 288 missed, 221 unresolved, 2 withdrawn.
-Of the misses, 223 were better than guided and 65 worse than guided; median days from the guidance to the
-filing that made it checkable was 92, and
+As of 2026-10-01, the release holds **611 rows**: 103 met, 285 missed, 221 unresolved, 2 withdrawn.
+Of the misses, 221 were better than guided and 64 worse than guided; median days from the guidance to the
+filing that made it checkable was 92.0, and
 97% of misses were never acknowledged in a later filing.
 
 By company:
@@ -53,7 +53,7 @@ By company:
 | company | rows | met | missed | withdrawn | unresolved | never-acknowledged share |
 | --- | --- | --- | --- | --- | --- | --- |
 | NVIDIA Corporation | 212 | 58 | 79 | 0 | 75 | 100% |
-| Salesforce, Inc. | 320 | 18 | 171 | 0 | 131 | 99% |
+| Salesforce, Inc. | 317 | 18 | 168 | 0 | 131 | 99% |
 | Target Corporation | 82 | 27 | 38 | 2 | 15 | 79% |
 
 ![Missed rows: when the gap was acknowledged](figures/falsifiable_vs_acknowledged.png)
@@ -94,7 +94,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-09-30.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-01.
 
 ## Licence
 
