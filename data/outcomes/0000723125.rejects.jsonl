@@ -1,0 +1,9 @@
+{"draft_id": "01E47FT600EQRGP9WH7KE7XVD8", "output": {"index": 2, "value": null, "unit": "none"}, "reason": "index 2 or value None is not usable"}
+{"draft_id": "01ERDSJK00NNPK0MHCFYR5QJ9B", "output": {"index": 3, "value": 5.14, "unit": "USD per share"}, "reason": "reported 5.14 is 13.2x the guidance 0.39: likely a unit or row mix-up"}
+{"draft_id": "01ERDSJK00V77QWM778S9676DR", "output": {"index": 4, "value": 6.06, "unit": "USD per share"}, "reason": "reported 6.06 is 12.9x the guidance 0.47: likely a unit or row mix-up"}
+{"draft_id": "01ERDSJK00WASQHWAVYA9D6KMS", "output": {"index": 3, "value": 5.14, "unit": "USD per share"}, "reason": "reported 5.14 is 8.2x the guidance 0.63: likely a unit or row mix-up"}
+{"draft_id": "01ERDSJK00N36X3C95A48GAN2F", "output": {"index": 4, "value": 6.06, "unit": "USD per share"}, "reason": "reported 6.06 is 8.5x the guidance 0.71: likely a unit or row mix-up"}
+{"draft_id": "01EVD296007FCB6ANSK6PXEN31", "output": {"index": 2, "value": 2054, "unit": "USD millions"}, "reason": "cannot convert 'USD millions' to 'percent'"}
+{"draft_id": "01EZTP4Q00Y8BNCQKRBQCSVJJK", "output": {"index": 3, "value": 5.14, "unit": "USD per share"}, "reason": "reported 5.14 is 9.6x the guidance 0.535: likely a unit or row mix-up"}
+{"draft_id": "01EZTP4Q00RQVBSDHHH3XX10BP", "output": {"index": 4, "value": 6.06, "unit": "USD per share"}, "reason": "reported 6.06 is 6.3x the guidance 0.955: likely a unit or row mix-up"}
+{"draft_id": "01FQAJ6K00Z45FDD61EPPHJ1EF", "output": {"index": 2, "value": null, "unit": "none"}, "reason": "index 2 or value None is not usable"}
