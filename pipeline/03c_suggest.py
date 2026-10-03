@@ -26,7 +26,9 @@ fine) or is worth a closer look, and writes one line to `aid_suggested_note`:
 
 This is pure code, no model call, and it never touches `aid_verify`, `aid_verify_reason` or
 `aid_verify_class` themselves, or any reviewer column (`approved`, `hand_verified`,
-`reviewer_note`). A row that does not currently qualify (a "yes", not yet checked, or already
+`reviewer_note`). A row whose `aid_flag_note` says its period closes before it was stated (03_structure's guard) is suggested the next
+fiscal period ("likely Q4 FY2020"), whatever 03b_verify said, as a CHECK: it is never a false alarm and never an approval.
+A row that does not currently qualify (a "yes", not yet checked, or already
 carrying a reviewer_note) has its aid_suggested_note cleared to blank: this is a suggestion, not a
 record of one, and it is only ever right for the row's *current* state.
 
@@ -49,6 +51,7 @@ from typing import Any
 from pipeline.common import CONFIG_PATH, REVIEW_DIR, companies, load_config
 
 candidates = importlib.import_module("pipeline.02_candidates")
+structure = importlib.import_module("pipeline.03_structure")
 review = importlib.import_module("pipeline.05_review")
 
 SUGGESTED_NOTE = "aid_suggested_note"
@@ -58,8 +61,23 @@ SUGGESTED_NOTE = "aid_suggested_note"
 
 
 def qualifies(row: dict[str, str]) -> bool:
-    """aid_verify is "no" and nobody has written a reviewer_note yet."""
-    return row.get("aid_verify") == "no" and not row.get("reviewer_note", "").strip()
+    """aid_verify is "no" and nobody has written a reviewer_note yet, or 03_structure flagged the period as closing
+    before the guidance was stated (whatever 03b_verify said)."""
+    unreviewed = not row.get("reviewer_note", "").strip()
+    return unreviewed and (row.get("aid_verify") == "no" or has_period_flag(row))
+
+
+def has_period_flag(row: dict[str, str]) -> bool:
+    return structure.PERIOD_BEFORE_STATED in row.get("aid_flag_note", "")
+
+
+def suggest_next_period(row: dict[str, str]) -> str:
+    """For a draft whose period closed before it was stated: the next fiscal quarter (or year) is the likely one. It is
+    a suggestion to look at, never a correction: the row keeps its period and nothing is approved."""
+    period = row.get("assumption.target_period", "")
+    nxt = structure.next_fiscal_period(period)
+    return (f"CHECK: {period} closed before this was stated; likely {nxt}, the next fiscal period. "
+            "Check the filing, correct the period by hand if so") if nxt else "CHECK: period closes before stated"
 
 
 # --- wrong_period: does the header already say this period? -------------------
@@ -152,6 +170,8 @@ def suggest_not_guidance(row: dict[str, str], forward: re.Pattern[str], number: 
 
 
 def suggest_note(row: dict[str, str], forward: re.Pattern[str], number: re.Pattern[str]) -> str:
+    if has_period_flag(row):
+        return suggest_next_period(row)
     klass = row.get("aid_verify_class", "")
     if klass == "wrong_period":
         return suggest_wrong_period(row)

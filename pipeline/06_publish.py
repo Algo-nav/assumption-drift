@@ -200,7 +200,8 @@ pretty_name: {dataset}
 
 
 def render_card(
-    result: dict[str, Any], *, dataset: str, generated_at: date, hf_user: str, filing_date_from: date, filing_date_to: date
+    result: dict[str, Any], *, dataset: str, generated_at: date, hf_user: str, filing_date_from: date, filing_date_to: date,
+    unpublished: list[str] | tuple[str, ...] = (),
 ) -> str:
     """The dataset card (SCOPE.md 5.4), sections in order: what this is, how a row is built, the
     resolution rubric, provenance guarantee, known limitations, how to cite, licence, behind a Hugging
@@ -215,6 +216,9 @@ def render_card(
     lower = _join_names_plain(_families(m for m, up in table.items() if not up))
     companies_named = _join_names([row["company"] for row in result["company_table"]])
     filing_range = f"{filing_date_from:%B %Y} and {filing_date_to:%B %Y}"
+    one = len(unpublished) == 1
+    left_out = (f"\n{_join_names(list(unpublished))} {'was' if one else 'were'} in the company list but issued no numeric "
+                f"guidance the metric list covers, so {'it has' if one else 'they have'} no rows here.") if unpublished else ""
 
     return _frontmatter(dataset) + f"""\
 # {dataset}
@@ -224,7 +228,7 @@ def render_card(
 {companies_named} made numeric forward guidance statements in their own SEC filings, filed between
 {filing_range}. This dataset pairs each one with what the company later reported for that same metric
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
-It is a problem statement in data form, not a model and not a demonstration of one.
+It is a problem statement in data form, not a model and not a demonstration of one.{left_out}
 
 ## How a row is built
 
@@ -344,7 +348,9 @@ def main(argv: list[str] | None = None) -> int:
               "Nothing was written.", file=sys.stderr)
         return 2
 
-    targets = companies(config, args.company)
+    chosen = companies(config, args.company)
+    targets = [c for c in chosen if c.publish]  # a company with publish: false is in no release file, figure, Space or table
+    unpublished = [c.name for c in companies(config) if not c.publish]
     records, invalid = build_records(targets, REVIEW_DIR)
     print(f"06_publish: {len(records):,} approved row(s) across {len(targets)} company(ies), {invalid:,} left out as invalid")
 
@@ -361,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
     card_text = render_card(
         result, dataset=DATASET_NAME, generated_at=generated_at, hf_user=hf_user,
         filing_date_from=date.fromisoformat(config["edgar"]["date_from"]),
-        filing_date_to=date.fromisoformat(config["edgar"]["date_to"]),
+        filing_date_to=date.fromisoformat(config["edgar"]["date_to"]), unpublished=unpublished,
     )
     card_path.write_text(card_text, encoding="utf-8")
     print(f"  wrote {card_path}")

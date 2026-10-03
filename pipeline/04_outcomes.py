@@ -191,24 +191,33 @@ def names_period(sentence: str, period: tuple[int | None, int]) -> bool:
     return signal == 3 or (signal == 2 and not _ANY_YEAR.search(sentence))
 
 
-def title_names_period(title: str, head: str, quarter: int | None, year: int) -> bool:
+def title_names_period(title: str, head: str, quarter: int | None, year: int, derived_year: int | None = None) -> bool:
     """Is this headline a results release for the period?
 
     The quarter must be in the headline; fiscal-year results ride with the fourth quarter.
     A headline that names a year must name this one. One that names none (Target's interim
-    releases say only "Reports Second Quarter Earnings") is checked against the start of the
-    release. The period is never taken from the body alone: Salesforce opens with guidance
+    releases say only "Reports Second Quarter Earnings", Lowe's "Reports Fourth Quarter Sales and
+    Earnings Results") reports the fiscal year the company's own calendar puts that quarter in on
+    the filing date (`derived_year`, from `Company.fiscal_year_reported`); where there is no
+    calendar to work it out from, it is checked against the start of the release. The period is never taken from the body alone: Salesforce opens with guidance
     bullets, so a Q3 release names "fourth quarter FY26" without reporting it.
     """
     if _NOT_RESULTS.search(title) or not _quarter_regex(4 if quarter is None else quarter).search(title):
         return False
     named = {int(y) for y in re.findall(r"\b(20\d\d)\b", title)} | {2000 + int(y) for y in re.findall(r"\bFY ?(\d\d)\b", title, re.IGNORECASE)}
-    return year in named if named else bool(_year_regex(year).search(head))
+    if named:
+        return year in named
+    return year == derived_year if derived_year is not None else bool(_year_regex(year).search(head))
 
 
-def release_names_period(doc: "DocText", period: tuple[int | None, int], head_chars: int) -> bool:
-    title = structure_step.document_title(doc.text)
-    return bool(title) and title_names_period(title, doc.text[:head_chars], *period)
+def release_names_period(doc: "DocText", period: tuple[int | None, int], head_chars: int, company: Company | None = None) -> bool:
+    """Does this release's headline (wrapped over up to three lines) name the period? `company` supplies the fiscal
+    calendar for a headline that names a quarter and no year."""
+    title = structure_step.document_title(doc.text, wrap=True)
+    if not title:
+        return False
+    derived = company.fiscal_year_reported(period[0], date.fromisoformat(doc.meta["filed_at"])) if company else None
+    return title_names_period(title, doc.text[:head_chars], *period, derived_year=derived)
 
 
 def metric_pattern(metric: str, groups: list[dict[str, str]]) -> re.Pattern[str] | None:
@@ -254,6 +263,7 @@ class DocStore:
     def __init__(self, company: Company) -> None:
         folder = common.RAW_DIR / company.cik
         metas = [common.read_meta(p) for p in folder.glob("*.meta.json")] if folder.exists() else []
+        self.company = company
         self.folder = folder
         self.all_metas = sorted(
             (m for m in metas if m and m.get("http_status") == 200 and (folder / f"{m['accession']}.html").exists()),
@@ -302,6 +312,10 @@ def _units_note(doc: DocText, line_index: int, lookback: int) -> str | None:
     return None
 
 
+# What a full-year result line says about its period: "fiscal 2022", "full year", "for the year", "for fiscal ...".
+_FULL_YEAR_LINE = re.compile(r"\bfiscal (?:year )?20\d\d\b|\bfull[- ]year\b|\bfor the year\b|\bfor fiscal\b", re.IGNORECASE)
+
+
 def select_lines(
     store: DocStore,
     metas: list[dict[str, Any]],
@@ -332,15 +346,22 @@ def select_lines(
         doc = store.get(meta)
         for k, (start, end) in enumerate(doc.spans):
             sentence = doc.text[start:end]
-            if len(sentence) > EXCERPT_LIMIT or (require_number and not number.search(sentence)) or not matcher.search(sentence):
+            li = doc.line_of(start)
+            if len(sentence) > EXCERPT_LIMIT or (require_number and not number.search(sentence)):
                 continue
+            if not matcher.search(sentence):
+                # A full-year row also takes a line that states the year and a number when the line above it is what
+                # names the metric: the label and the figure are on separate lines in a results table.
+                label = doc.lines[li - 1] if li > 0 else ""
+                if not (period and period[0] is None and extra is None and _FULL_YEAR_LINE.search(sentence)
+                        and number.search(sentence) and matcher.search(label)):
+                    continue
             if extra is not None and not extra.search(sentence):
                 continue
             if reference is not None and not reference.search(sentence):
                 continue
             if require_period and (period is None or not names_period(sentence, period)):
                 continue
-            li = doc.line_of(start)
             section = _section_label(doc, li, int(cfg["section_lookback_lines"]))
             tag = f"{section or ''} {sentence}".lower()
             score = 2
@@ -406,8 +427,11 @@ def build_outcome_requests(
     number: re.Pattern[str],
     *,
     today: date,
+    as_of: date | None = None,
 ) -> tuple[list[llm.LlmRequest], dict[str, tuple[dict[str, Any], list[Line]]], dict[str, str]]:
-    """(requests, custom_id -> (draft, lines), draft_id -> why there is no request)."""
+    """(requests, custom_id -> (draft, lines), draft_id -> why there is no request). `as_of` is the date a period must
+    have closed by to expect an outcome (the last filing date in config.yaml); a draft whose period closes after it
+    is "period not closed", not "no release found". Defaults to `today`."""
     requests: list[llm.LlmRequest] = []
     index: dict[str, tuple[dict[str, Any], list[Line]]] = {}
     reasons: dict[str, str] = {}
@@ -426,9 +450,11 @@ def build_outcome_requests(
             stated = date.fromisoformat(a["stated_at"])
             horizon = min(today, stated + timedelta(days=int(cfg["search_days"]))).isoformat()
             later = [m for m in store.metas if a["stated_at"] < m["filed_at"] <= horizon]
-            named = [m for m in later if release_names_period(store.get(m), period, int(cfg["head_chars"]))]
+            named = [m for m in later if release_names_period(store.get(m), period, int(cfg["head_chars"]), store.company)]
             if not named:
-                reasons[d["draft_id"]] = "no later 8-K release for that period found"
+                close = store.company.period_end(period[1], period[0])
+                reasons[d["draft_id"]] = ("period not closed" if close is not None and close > (as_of or today)
+                                          else "no later 8-K release for that period found")
                 continue
             lines = select_lines(store, named[: int(cfg["max_docs"])], matcher, None, a["metric"], period, cfg, number)
             if not lines:
@@ -504,6 +530,25 @@ def column_confirmed(
     return bool(header and period is not None and period in candidates_step.parse_periods(header))
 
 
+_DOWN = re.compile(r"\b(?:decreased|decreases|declined|declines|fell|down|lower)\b", re.IGNORECASE)
+_UP = re.compile(r"\b(?:increased|increases|grew|rose|up|higher)\b", re.IGNORECASE)
+
+
+def comparable_sales_sign(metric: str, value: float, sentence: str) -> float:
+    """Comparable sales are reported as a change ("comparable sales decreased 0.7 percent", "U.S. Comparable Sales
+    Decreased 0.7%"), so the sign is in the verb and the number is unsigned. A positive value on a line that only says
+    the sales went down, or a negative one on a line that only says they went up, is turned round by code, whatever the
+    model made of the verb. A line with both words, or neither, is left as the model read it."""
+    if metric != "comparable sales" or value == 0:
+        return value
+    down, up = bool(_DOWN.search(sentence)), bool(_UP.search(sentence))
+    if down and not up:
+        return -abs(value)
+    if up and not down:
+        return abs(value)
+    return value
+
+
 def derive_outcomes(
     index: dict[str, tuple[dict[str, Any], list[Line]]],
     results: dict[str, llm.Result],
@@ -539,6 +584,7 @@ def derive_outcomes(
                                   "or anticipates) with no past-tense reporting verb, so it does not report a result")
             a = d["assumption"]
             value = convert(float(payload["value"]), payload["unit"], a["unit"])
+            value = comparable_sales_sign(a["metric"], value, line.sentence)
             mid = [x for x in (a["target_low"], a["target_high"]) if x is not None]
             centre = sum(mid) / len(mid)
             if centre > 0 and value > 0 and not (1 / ratio <= value / centre <= ratio):
@@ -827,7 +873,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"04_outcomes: {sum(len(v) for v in drafts.values()):,} drafts to look at")
 
     client, ledger = llm.make_client(), llm.Ledger()
-    requests, o_index, reasons = build_outcome_requests(drafts, stores, ocfg, number, today=today)
+    requests, o_index, reasons = build_outcome_requests(drafts, stores, ocfg, number, today=today, as_of=date.fromisoformat(config["edgar"]["date_to"]))
     print(f"  {len(requests):,} drafts have a matching later release with candidate lines; "
           f"{len(reasons):,} have no request, with a reason recorded")
 

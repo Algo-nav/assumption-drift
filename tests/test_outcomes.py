@@ -1054,3 +1054,88 @@ def test_names_period_by_the_outcome_matchers_quarter_and_year_tests() -> None:
     assert not outcomes.names_period("Fourth quarter fiscal 2023 revenue", q4)
     assert not outcomes.names_period("Second quarter revenue", q4) and not outcomes.names_period("Revenue", q4)
     assert outcomes.names_period("Full year revenue", (None, 2024)) and not outcomes.names_period("Full year fiscal 2023 revenue", (None, 2024))
+
+
+# --- "period not closed" is not "no later 8-K found" ---------------------------------------------------------------
+
+
+def test_a_period_that_has_not_closed_by_the_last_filing_date_says_so(world) -> None:
+    from datetime import date as d
+    st = outcomes.DocStore(DATED)  # fiscal year ends in June
+    open_period = draft(did="D1", period="Q4 FY2030")                  # closes 2030-06-30
+    closed_no_release = draft(did="D2", period="Q2 FY2023", stated="2023-01-05")  # closed 2022-12-31, nothing reports it
+    _, _, reasons = outcomes.build_outcome_requests({COMPANY.cik: [open_period, closed_no_release]}, {COMPANY.cik: st}, OCFG, NUMBER,
+                                                    today=d(2030, 1, 1), as_of=TODAY)
+    assert reasons["D1"] == "period not closed" and reasons["D2"] == "no later 8-K release for that period found"
+
+
+def test_as_of_is_the_last_filing_date_not_the_day_the_script_runs(world) -> None:
+    from datetime import date as d
+    late = draft(did="D1", period="Q4 FY2026")  # closes 2026-06-30
+    st = outcomes.DocStore(DATED)
+    for as_of, expected in [(d(2026, 6, 29), "period not closed"), (d(2026, 6, 30), "no later 8-K release for that period found")]:
+        _, _, reasons = outcomes.build_outcome_requests({COMPANY.cik: [late]}, {COMPANY.cik: st}, OCFG, NUMBER, today=d(2030, 1, 1), as_of=as_of)
+        assert reasons["D1"] == expected
+
+
+def test_a_company_with_no_calendar_never_says_period_not_closed(world) -> None:
+    _, _, reasons = requests_for(draft(did="D1", period="Q4 FY2030"))  # COMPANY has no fiscal_year_end_month
+    assert reasons["D1"] == "no later 8-K release for that period found"
+
+
+# --- full-year rows: the year and a number on a line whose label is the line above ---------------------------------
+#
+# From the diagnostic (HD and LOW releases of February 2020 to 2026). Their results are table rows, the label on one
+# line ("Operating margin (3)") and the figures on the next ("10.1 % 11.3 % 12.7 % 13.5 %"); the figure line names
+# neither the metric nor the year. The rule below selects a line that names the year and a number when the line above
+# names the metric. It does not reach a figure line that names no year, and these tests say so.
+
+
+def selected(world, lines, metric, period):
+    add_filing(world, "0031", "2024-06-10", "8-K", list(lines))
+    matcher = outcomes.metric_pattern(metric, OCFG["metric_terms"])
+    return [l.sentence for l in outcomes.select_lines(store(), [m for m in store().metas if m["accession"].endswith("0031")], matcher, None, metric, period, OCFG, NUMBER)]
+
+
+@pytest.mark.parametrize("lines, expected", [
+    (["Effective tax rate", "For fiscal 2022 the rate was 23.9 percent"], ["For fiscal 2022 the rate was 23.9 percent"]),
+    (["Effective tax rate", "Full year 24.1 percent"], ["Full year 24.1 percent"]),
+    (["Effective tax rate", "For the year 23.8 percent"], ["For the year 23.8 percent"]),
+    (["Effective tax rate", "For fiscal 2022 23.9 percent"], ["For fiscal 2022 23.9 percent"]),
+    (["Operating margin (3)", "10.1 % 11.3 % 12.7 % 13.5 %"], []),                       # HD: the figure line names no year
+    (["Sales were strong", "For fiscal 2022 the rate was 23.9 percent"], []),             # the line above does not name the metric
+    (["Effective tax rate", "Net earnings were $3.4 billion"], []),                        # no year phrase
+    (["Effective tax rate", "For fiscal 2022 the company hired people"], []),              # no number
+])
+def test_a_full_year_row_takes_a_year_and_number_line_under_a_metric_label(world, lines, expected) -> None:
+    assert selected(world, lines, "tax rate", (None, 2022)) == expected
+
+
+def test_the_extra_lines_are_for_full_year_rows_only(world) -> None:
+    assert selected(world, ["Effective tax rate", "For fiscal 2022 the rate was 23.9 percent"], "tax rate", (3, 2022)) == []
+
+
+@pytest.mark.parametrize("sentence, metric_in", [
+    ("Sales for the fourth quarter were $16.0 billion compared to $15.6 billion in the fourth quarter of 2018, and comparable sales increased 2.5 percent.", True),
+    ("— U.S. Comparable Sales Decreased 0.7% —", True),
+])
+def test_comparable_sales_increased_and_decreased_lines_are_selected(world, sentence, metric_in) -> None:
+    (got,) = selected(world, [sentence], "comparable sales", (4, 2022))
+    assert got.strip("\u2014 ") == sentence.strip("\u2014 ")
+
+
+@pytest.mark.parametrize("value, sentence, expected", [
+    (0.7, "— U.S. Comparable Sales Decreased 0.7% —", -0.7),
+    (-2.5, "comparable sales increased 2.5 percent", 2.5),
+    (2.5, "comparable sales increased 2.5 percent", 2.5),
+    (-0.7, "comparable sales declined 0.7 percent", -0.7),
+    (1.0, "comparable sales increased 2.0 percent in the quarter but decreased in stores", 1.0),   # both words: left as read
+    (1.0, "comparable sales were 1.0 percent", 1.0),
+    (0.0, "comparable sales decreased", 0.0),
+])
+def test_comparable_sales_take_their_sign_from_the_verb(value, sentence, expected) -> None:
+    assert outcomes.comparable_sales_sign("comparable sales", value, sentence) == expected
+
+
+def test_the_sign_rule_is_for_comparable_sales_only() -> None:
+    assert outcomes.comparable_sales_sign("revenue", 5.0, "revenue decreased") == 5.0

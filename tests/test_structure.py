@@ -361,6 +361,7 @@ EXPECTED_METRICS = [
     "revenue", "gross margin GAAP", "gross margin non-GAAP", "operating expenses GAAP", "operating expenses non-GAAP",
     "operating margin GAAP", "operating margin non-GAAP",  # added after the second pilot, where margins came back as operating income
     "operating income", "EPS GAAP", "EPS non-GAAP", "tax rate", "other income and expense", "comparable sales", "free cash flow",
+    "total expenses", "capital expenditures",  # added after the fourteen-company run, where Meta's came back as opex and other income
 ]
 
 

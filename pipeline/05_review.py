@@ -111,8 +111,8 @@ from research_record.text import html_to_text
 REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
 FLAG_COLUMNS = ["conflict", "empty_block", "ack_pending_review"]
-AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note",
-               "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note",
+AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_value_column",
+               "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note",
                "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence"]
 
 
@@ -254,6 +254,7 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         aid_heading=draft.get("heading") or "",
         aid_lead_in=draft.get("lead_in") or "",
         aid_table_header=draft.get("table_header") or "",
+        aid_value_column=draft.get("value_column") or "",
         aid_outcome_note="" if record.outcome else (outcome_row or {}).get("outcome_reason") or "outcome search not run",
         aid_flag_note=draft.get("parens_note") or "",
         aid_withdrawal_note=(f"filed {withdrawal['withdrawn_at']}, before the period closed on {withdrawal['period_close']} "
@@ -351,7 +352,8 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
 # them separately (recompute_content_sha256) on EVERY row, human-touched or not: see that function.
 PIPELINE_OWNED_PREFIXES = ("assumption.", "claim", "invalidation_condition", "outcome.", "acknowledgement_evidence.",
                             "acknowledged_at", "days_to_", "aid_proposed_status", "aid_capture_method", "aid_heading",
-                            "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note")
+                            "aid_lead_in", "aid_table_header", "aid_value_column", "aid_outcome_note", "aid_flag_note",
+                            "aid_withdrawal_note")
 
 
 def is_pipeline_owned(column: str) -> bool:
@@ -368,9 +370,10 @@ def untouched_by_a_human(row: dict[str, str]) -> bool:
 
 
 def refresh_row(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
-    """`row` with every pipeline-owned column replaced by `fresh`'s value. Everything else -- the reviewer
-    columns, the flags, the rest of the schema -- is kept exactly as it was."""
-    return {**row, **{c: fresh[c] for c in COLUMNS if is_pipeline_owned(c)}}
+    """`row` with every pipeline-owned column replaced by `fresh`'s value, and the `conflict` flag, which comes from the
+    draft and goes stale when a later 03 run stops finding the conflict (Micron's, once the table's columns set the basis).
+    Everything else -- the reviewer columns, the other flags, the rest of the schema -- is kept exactly as it was."""
+    return {**row, **{c: fresh[c] for c in COLUMNS if is_pipeline_owned(c)}, "conflict": fresh["conflict"]}
 
 
 #: Every evidence block a row can carry, as the prefix its content_sha256 column sits under.

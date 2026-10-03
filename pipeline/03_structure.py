@@ -175,7 +175,7 @@ What counts
 - Forward guidance only: a number the company itself expects, targets or forecasts for a future period. Anything in the past tense, or about a period that has already finished, returns nothing ("revenue was $89.0 billion", "returned $1.95 billion to shareholders", "grew 18%"). If the text is not forward guidance, return an empty list.
 - Only these metrics, spelled exactly as written: {listed}. A figure for any other metric returns nothing. That includes gross profit, growth rates, segment revenue, remaining performance obligation, and capital return, share repurchases and dividends.
 - "gross margin", "operating margin", "operating expenses" and "EPS" each have a GAAP and a non-GAAP entry: use the one the text names, and if a line gives both ("GAAP and non-GAAP gross margins are expected to be 74.8% and 75.0%, respectively") make one item for each. The other metrics have one entry each; if the text gives one figure for GAAP and non-GAAP together ("both expected to be income of approximately $20 million") make one item, and if it gives different figures use the GAAP one.
-- Margins and rates are percentages of revenue: "gross margin", "operating margin" and "tax rate", unit percent. "Operating margin" is never "operating income". Amounts are dollars: "revenue", "operating income", "operating expenses", "other income and expense" and "free cash flow". Growth in one of them ("free cash flow growth 9% - 10%") is neither the amount nor the margin, so it returns nothing.
+- Margins and rates are percentages of revenue: "gross margin", "operating margin" and "tax rate", unit percent. "Operating margin" is never "operating income". Amounts are dollars: "revenue", "operating income", "operating expenses", "other income and expense", "free cash flow", "total expenses" and "capital expenditures". "Total expenses" (all of the company's costs and expenses) is not "operating expenses", and "capital expenditures" (including principal payments on finance leases) is not "other income and expense" or "free cash flow". Growth in one of them ("free cash flow growth 9% - 10%") is neither the amount nor the margin, so it returns nothing.
 - The period must be explicit somewhere in the text you are shown: the line, the lead-in line, the section heading, the lines around it, or the title. If you cannot tell which period a figure is for, return nothing for it. Do not guess the period.
 - The number must be explicit. "Strong growth" and "a low-single digit decline" have no number, so they give nothing.
 
@@ -319,11 +319,30 @@ def custom_id(candidate: dict[str, Any]) -> str:
 _TITLE_WORDS = re.compile(r"\b(results|reports|announces|earnings)\b", re.IGNORECASE)
 
 
-def document_title(text: str) -> str | None:
-    """The release headline, if one is near the top: the first line that reads like one."""
-    for line in text.split("\n")[:25]:
+_NAMES_A_QUARTER = re.compile(r"\bquarter\b|\b(?:F|FQ)?Q[1-4]\b|\b[1-4]Q\b", re.IGNORECASE)
+HEADLINE_LINES = 3  # a headline that wraps is spread over at most this many lines
+HEADLINE_CHARS = 300
+
+
+def document_title(text: str, *, wrap: bool = False) -> str | None:
+    """The release headline, if one is near the top: the first line that reads like one.
+
+    With `wrap`, a headline that has not named a quarter yet is continued onto the lines after it, up to three lines
+    in all and 300 characters: Micron's "MICRON TECHNOLOGY, INC. REPORTS RESULTS FOR THE" ends there, and "FIRST
+    QUARTER OF FISCAL 2025" is the next line. Once the headline names a quarter it stops, so a subtitle further down
+    ("Raises fourth quarter outlook") is never read as part of it. Only the outcome search wraps; the prompt in
+    `build_prompt` shows the first line alone, as it always did, so no archived answer is made stale by this."""
+    lines = text.split("\n")
+    for i, line in enumerate(lines[:25]):
         if _TITLE_WORDS.search(line) and 4 <= len(line.split()) <= 30:
-            return line
+            if not wrap:
+                return line
+            headline = line
+            for extra in lines[i + 1 : i + HEADLINE_LINES]:
+                if _NAMES_A_QUARTER.search(headline) or not extra.strip():
+                    break
+                headline = f"{headline} {extra.strip()}"
+            return headline[:HEADLINE_CHARS]
     return None
 
 
@@ -474,6 +493,44 @@ def resolve_range(item: dict[str, Any]) -> tuple[float | None, float | None]:
     if low is not None and high is not None and low > high:
         raise ValueError(f"range is reversed ({low} > {high})")
     return (None if low is None else _round(low)), (None if high is None else _round(high))
+
+
+_AMOUNT_WORD = {"thousand": 1e3, "k": 1e3, "million": 1e6, "m": 1e6, "billion": 1e9, "b": 1e9}
+_UNIT_BASE = {"USD": 1.0, "USD per share": 1.0, "USD thousands": 1e3, "USD millions": 1e6, "USD billions": 1e9}
+_AMOUNT = r"\$\s*(?P<{n}>\d[\d,]*(?:\.\d+)?)\s*(?P<{w}>billion|million|thousand|B|M|K)?\b"
+# "$1.211 billion \u00b1 $15 million", "$0.42 \u00b1 $0.07", "$18.90 plus or minus $0.40": a currency centre, then a currency spread.
+_CURRENCY_PLUS_MINUS = re.compile(
+    _AMOUNT.format(n="centre", w="cw") + r"\s*(?:\u00b1|\+\s*/\s*-|plus or minus)\s*" + _AMOUNT.format(n="spread", w="sw"), re.IGNORECASE
+)
+
+
+def with_currency_spread_absolute(metric: str, item: dict[str, Any], evidence: str, kinds: dict[str, str]) -> tuple[dict[str, Any], str | None]:
+    """A plus or minus followed by a currency amount ("$0.42 \u00b1 $0.07", "$1.13 billion \u00b1 $25 million") is an absolute
+    spread in dollars, never a percent of the centre, and it is worked out in the metric's own unit: $25 million on a
+    figure given in USD billions is 0.025. The model is told this, and it gets it right on the pilot filings, but a
+    spread read as a percent (0.42 \u00b1 0.07% is 0.4197 to 0.4203) or left unscaled (1.13 \u00b1 25 billion) would be a wrong
+    range that nothing downstream notices, so it is settled here from the printed text. Only a dollar or per-share
+    metric, and only when the centre figure in the evidence is the item's own value; anything else is left as it was.
+
+    Returns (item, note): note says what was changed, or is None if the item already agreed with the text."""
+    if kinds.get(metric) not in ("dollars", "per share") or item.get("plus_minus_kind", "none") == "none":
+        return item, None
+    base = _UNIT_BASE.get(item.get("unit", ""))
+    centre = item.get("value_low")
+    if base is None or centre is None or item.get("value_high") != centre:
+        return item, None
+    for m in _CURRENCY_PLUS_MINUS.finditer(evidence):
+        if round(float(m["centre"].replace(",", "")), 6) != round(centre, 6):
+            continue
+        centre_word = _AMOUNT_WORD.get((m["cw"] or "").lower(), 1.0)
+        spread_word = _AMOUNT_WORD.get((m["sw"] or "").lower(), centre_word if m["sw"] is None and item["unit"] != "USD per share" else 1.0)
+        spread = float(m["spread"].replace(",", "")) * spread_word / base
+        if item["plus_minus_kind"] == "absolute" and item.get("plus_minus") is not None and abs(item["plus_minus"] - spread) < 1e-9 * max(1.0, abs(spread)):
+            return item, None
+        return {**item, "plus_minus": _round(spread), "plus_minus_kind": "absolute"}, (
+            f"the plus or minus is a currency amount in the evidence, so it is absolute: {m['spread']}"
+            f"{' ' + m['sw'] if m['sw'] else ''} is {_round(spread):g} in {item['unit']}")
+    return item, None
 
 
 def with_absolute_percent_spread(metric: str, item: dict[str, Any], kinds: dict[str, str]) -> dict[str, Any]:
@@ -688,6 +745,37 @@ def fix_na_column_period(period: str, candidate: dict[str, Any], evidence: str) 
                    f"{bound} column and not {period}, the column that is N/A")
 
 
+PERIOD_BEFORE_STATED = "period closes before stated; likely next quarter"
+_FISCAL_PERIOD = re.compile(r"^(?:Q([1-4]) )?FY(\d{4})$")
+
+
+def next_fiscal_period(period: str) -> str | None:
+    """The fiscal period after this one: Q3 FY2020 is followed by Q4 FY2020, Q4 FY2020 by Q1 FY2021, FY2020 by FY2021."""
+    m = _FISCAL_PERIOD.match(period)
+    if not m:
+        return None
+    year = int(m.group(2))
+    if not m.group(1):
+        return f"FY{year + 1}"
+    quarter = int(m.group(1))
+    return f"Q{quarter + 1} FY{year}" if quarter < 4 else f"Q1 FY{year + 1}"
+
+
+def period_closes_before_stated(company: Company, period: str, stated_at: date) -> str | None:
+    """A guidance statement cannot be about a period that was already over when it was made. Micron's March 2020 release
+    guides the third quarter, and a draft labelled Q2 FY2020 (which closed on February 29) is the quarter before the one
+    it is about: the label is off by one. The draft is kept, not rejected or corrected: the note puts it in front of a
+    reviewer, and 03c_suggest names the next fiscal quarter as the likely one. Nothing here approves anything, and
+    nothing is known without the company's fiscal calendar.
+
+    Returns the flag text, or None when the period is still open at `stated_at` (or cannot be dated)."""
+    m = _FISCAL_PERIOD.match(period)
+    if not m:
+        return None
+    close = company.period_end(int(m.group(2)), int(m.group(1)) if m.group(1) else None)
+    return PERIOD_BEFORE_STATED if close is not None and close < stated_at else None
+
+
 _EXPENSE_OF = re.compile(r"\bexpense of\b", re.IGNORECASE)
 
 
@@ -790,6 +878,96 @@ _GAAP_WORD = re.compile(r"(?<!non-)(?<!non )\bgaap\b", re.IGNORECASE)
 def named_bases(text: str) -> set[str]:
     """Which of "GAAP" and "non-GAAP" the text names. "Adjusted" counts as non-GAAP."""
     return {b for b, pattern in (("GAAP", _GAAP_WORD), ("non-GAAP", _NON_GAAP_WORD)) if pattern.search(text)}
+
+
+_COLUMN_WORD = re.compile(r"non[- ]?gaap|gaap|adjustments?", re.IGNORECASE)
+_VALUE_AMOUNT = r"\(?[~$]?\s?\d[\d,]*(?:\.\d+)?\)?\s?(?:%|billion|million|thousand)?"
+# One cell of a value row: a bare dash, or an amount with an optional range end, an optional plus or minus, and the footnote
+# letters a reconciliation table prints after an adjustment ("$66 million B", "$0.14 A, B, C, D").
+_VALUE_CELL_IN_ROW = re.compile(
+    r"[\u2014\u2013](?![\w$])|"
+    + _VALUE_AMOUNT + r"(?:\s*(?:[-\u2013]|to)\s*" + _VALUE_AMOUNT + r")?"
+    r"(?:\s*(?:\u00b1|\+/-|plus or minus)\s*" + _VALUE_AMOUNT + r")?(?:\s+[A-D](?:\s*,\s*[A-D])*(?![\w]))?",
+    re.IGNORECASE,
+)
+
+
+def basis_columns(candidate: dict[str, Any]) -> list[str] | None:
+    """The basis of each column of a section's table, left to right ("GAAP", "Adjustments", "non-GAAP"), when its header
+    names both GAAP and non-GAAP; otherwise None. A header is the section heading, or, where the cells were broken onto
+    separate lines (Micron: "GAAP (1) Outlook" above "Non-GAAP (2) Outlook"), the short lines just before the heading and
+    the heading. A heading that names both on its own ("GAAP Outlook Adjustments Non-GAAP Outlook") is the whole header."""
+    if not is_block(candidate):
+        return None
+
+    def words(text: str) -> list[str]:
+        return ["non-GAAP" if w.lower().startswith("non") else "Adjustments" if w.lower().startswith("adj") else "GAAP"
+                for w in _COLUMN_WORD.findall(text)]
+
+    heading = words(candidate.get("heading") or "")
+    if "GAAP" in heading and "non-GAAP" in heading:
+        return heading
+    before = [t for t in (candidate.get("context_before") or [])[-2:] if len(t.split()) <= 6]
+    found = words(" ".join(before + [candidate.get("heading") or ""]))
+    return found if "GAAP" in found and "non-GAAP" in found else None
+
+
+def value_cells(line: str) -> list[str]:
+    """The cells of one value row, left to right: "$891 million \u00b1 $25 million $66 million B $825 million \u00b1 $25 million" is three."""
+    return [m.group().strip() for m in _VALUE_CELL_IN_ROW.finditer(line) if m.group().strip() and not re.fullmatch(r"\(\d\)", m.group().strip())]
+
+
+def locate_column(columns: list[str], item: dict[str, Any], evidence: str) -> int | None:
+    """The 0-based column of the table the item's figure sits in, or None: the figure is found among the cells of the
+    evidence row that has exactly as many cells as the header has columns, and it has to be in exactly one of them."""
+    if item.get("value_low") is None:
+        return None
+    wanted = round(abs(item["value_low"]), 6)
+    for line in reversed(evidence.split("\n")):
+        cells = value_cells(line)
+        hits = [i for i, c in enumerate(cells) if wanted in numbers_in(c)]
+        if hits and len(cells) == len(columns):
+            return hits[0] if len(hits) == 1 else None
+    return None
+
+
+def value_column_text(candidate: dict[str, Any], item: dict[str, Any], evidence: str) -> str | None:
+    """Where the figure sits, for the reviewer and for 03b_verify, which sees only the excerpt and the heading and
+    would otherwise read Micron's GAAP column under the heading "Non-GAAP (2) Outlook" as the wrong basis:
+    "GAAP | non-GAAP: the figure is in column 1, GAAP". None when the section has no basis header or the column
+    cannot be told."""
+    columns = basis_columns(candidate)
+    hit = locate_column(columns, item, evidence) if columns else None
+    return None if hit is None else f"{' | '.join(columns)}: the figure is in column {hit + 1}, {columns[hit]}"
+
+
+def with_column_basis(metric: str, candidate: dict[str, Any], item: dict[str, Any], evidence: str, metrics: list[str]) -> tuple[str, str | None, bool]:
+    """GAAP or non-GAAP from the table's own column header, by code, overriding the section heading and the model.
+    Micron prints "GAAP | non-GAAP" (and, in its reconciliation, "GAAP | Adjustments | non-GAAP") side by side, so one
+    row holds one figure per basis and the heading, which names whichever column it sits over, says nothing about the
+    others. The item's figure is found among the cells of its row; when the row has exactly as many cells as the header
+    has columns, that column's basis is the metric's. A figure in an Adjustments column is not guidance and is refused.
+    Only a metric with both a GAAP and a non-GAAP entry is touched, and only when the figure sits in one column (a figure
+    printed in two columns keeps the basis the model gave it).
+
+    Returns (metric, note, applied): `applied` says the header decided, so the heading rule must not run after it."""
+    columns = basis_columns(candidate)
+    suffix = next((x for x in (" GAAP", " non-GAAP") if metric.endswith(x)), None)
+    if columns is None or suffix is None:
+        return metric, None, False
+    base = metric[: -len(suffix)]
+    if f"{base} GAAP" not in metrics or f"{base} non-GAAP" not in metrics or item.get("value_low") is None:
+        return metric, None, False
+    hit = locate_column(columns, item, evidence)
+    if hit is None:
+        return metric, None, False
+    basis = columns[hit]
+    if basis == "Adjustments":
+        raise ValueError("the figure is in the table's Adjustments column, which is a reconciling item and not guidance")
+    new = f"{base} {basis}"
+    note = (f"basis taken from the table's column header ({' | '.join(columns)}): the figure is in column {hit + 1}, {basis}"
+            + (f", not {metric.rsplit(' ', 1)[1]} as the model said" if new != metric else ""))
+    return new, note if new != metric else None, True
 
 
 def with_heading_basis(metric: str, candidate: dict[str, Any], evidence: str, metrics: list[str]) -> str:
@@ -1017,19 +1195,24 @@ def derive_drafts(
                 check_not_bare_value(excerpt, cand.get("heading"))
                 period, period_note = fix_na_column_period(period, cand, excerpt)
                 check_period(period, excerpt)
+                value_column = value_column_text(cand, item, excerpt)
+                before_note = period_closes_before_stated(company, period, date.fromisoformat(cand["filed_at"]))
                 if metric == "tax rate":
                     candidates_step.check_tax_footnote_periods(excerpt)
-                metric = with_heading_basis(metric, cand, excerpt, metrics)
+                metric, basis_note, from_columns = with_column_basis(metric, cand, item, excerpt, metrics)
+                if not from_columns:
+                    metric = with_heading_basis(metric, cand, excerpt, metrics)
                 check_unit_kind(metric, item["unit"], kinds)
                 check_not_a_change(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
                 check_not_relative_to_prior_period(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
                 stated = with_one_sided_low(item, excerpt)
+                stated, spread_note = with_currency_spread_absolute(metric, stated, excerpt, kinds)
                 stated = with_absolute_percent_spread(metric, stated, kinds)
                 low, high = resolve_range(stated)
                 low, high, parens_note = fix_parens_sign(
                     metric, low, high, excerpt, kinds, tax_rate_parens_negative=company.tax_rate_parens_negative)
                 low, high, expense_note = fix_expense_of_sign(metric, low, high, excerpt)
-                parens_note = "; ".join(n for n in (period_note, parens_note, expense_note) if n) or None
+                parens_note = "; ".join(n for n in (before_note, period_note, basis_note, spread_note, parens_note, expense_note) if n) or None
                 check_range_language(stated, excerpt)
                 check_numbers_in_evidence(stated, excerpt)
                 check_not_past_tense(excerpt)
@@ -1047,7 +1230,7 @@ def derive_drafts(
                 "cik": company.cik, "ticker": company.ticker, "company": company.name,
                 "custom_id": cid, "capture_method": cand["capture_method"], "char_start": cand["char_start"],
                 "heading": cand.get("heading"), "lead_in": cand.get("lead_in"), "table_header": cand.get("table_header"),
-                "item_index": n, "conflict": False, "assumption": assumption.model_dump(mode="json"),
+                "value_column": value_column, "item_index": n, "conflict": False, "assumption": assumption.model_dump(mode="json"),
                 "parens_note": parens_note,
             }
             if is_block(cand):
@@ -1127,6 +1310,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--per-company", type=int, metavar="N",
                         help="send N requests per company, spread evenly across its filings, half of them sections")
     parser.add_argument("--submit", action="store_true", help="really call the API; without it this is a dry run")
+    parser.add_argument("--from-archive", action="store_true",
+                        help="re-derive and WRITE the drafts from the archived answers to these candidates, matched by custom_id and "
+                             "whatever prompt they were answered under. No API call, no cost. For a change that lives in the code "
+                             "after the model (a guard, a sign or range rule); a change to the prompt or the metric list "
+                             "needs --submit, because the model has not seen it")
     parser.add_argument("--wait-minutes", type=float, default=60)
     args = parser.parse_args(argv)
 
@@ -1138,6 +1326,19 @@ def main(argv: list[str] | None = None) -> int:
     requests, index, skipped = build_requests(targets, filing_types, limit=args.limit, per_company=args.per_company, metrics=metrics)
 
     archive, ledger = llm.RawArchive(STEP), llm.Ledger()
+    if args.from_archive:
+        answered = {cid: res for cid, res in archive.load().items() if cid in index and res.ok}
+        print(f"{STEP}: --from-archive: {len(answered):,} of {len(requests):,} requests have an archived answer; no API call is made")
+        drafts, rejects, dupes = derive_drafts(index, answered, metrics, config["metric_kinds"])
+        empties = find_empty_blocks(index, answered, drafts, rejects, dupes)
+        for company in targets:
+            write_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl", drafts.get(company.cik, []))
+            write_jsonl(DRAFTS_DIR / f"{company.cik}.rejects.jsonl", rejects.get(company.cik, []))
+            write_jsonl(DRAFTS_DIR / f"{company.cik}.skipped.jsonl", skipped[company.cik] + dupes.get(company.cik, []))
+            write_jsonl(DRAFTS_DIR / f"{company.cik}.empty_blocks.jsonl", empties.get(company.cik, []))
+            print(f"  {company.ticker}: {len(drafts.get(company.cik, [])):,} drafts, {len(rejects.get(company.cik, []))} rejected, "
+                  f"{len(dupes.get(company.cik, []))} duplicates dropped, {len(empties.get(company.cik, []))} outlook blocks with no draft")
+        return 0
     have = llm.current_results(archive.load(), requests, cfg.model)
     todo = [r for r in requests if not (r.custom_id in have and have[r.custom_id].ok)]
     kinds = Counter("section" if r.custom_id.startswith("b-") else "sentence" for r in requests)

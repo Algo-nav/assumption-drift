@@ -10,7 +10,7 @@ from research_record.schema import ResearchRecord
 
 HIGHER = ["revenue", "gross margin GAAP", "gross margin non-GAAP", "operating margin GAAP", "operating margin non-GAAP",
           "operating income", "EPS GAAP", "EPS non-GAAP", "comparable sales", "free cash flow", "other income and expense"]
-LOWER = ["operating expenses GAAP", "operating expenses non-GAAP", "tax rate"]
+LOWER = ["operating expenses GAAP", "operating expenses non-GAAP", "tax rate", "total expenses", "capital expenditures"]
 
 
 def test_every_metric_has_a_polarity_and_nothing_else_does() -> None:

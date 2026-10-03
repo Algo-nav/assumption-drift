@@ -41,15 +41,15 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 64
+    assert len(cols) == len(set(cols)) == 65
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-22:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "aid_proposed_status",
-                          "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_outcome_note", "aid_flag_note",
+    assert cols[-23:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "aid_proposed_status",
+                          "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_value_column", "aid_outcome_note", "aid_flag_note",
                           "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note", "aid_ack_proposed_at", "aid_ack_proposed_excerpt",
                           "aid_ack_proposed_url", "aid_ack_proposed_evidence"]
-    assert set(review.schema_columns()) == set(cols[:-22])
+    assert set(review.schema_columns()) == set(cols[:-23])
 
 
 # --- the words code writes -------------------------------------------------
@@ -466,7 +466,17 @@ def test_refresh_row_replaces_only_pipeline_owned_columns() -> None:
     fresh = {c: "new" for c in review.COLUMNS}
     merged = review.refresh_row(row, fresh)
     for c in review.COLUMNS:
-        assert merged[c] == ("new" if review.is_pipeline_owned(c) else "old")
+        assert merged[c] == ("new" if review.is_pipeline_owned(c) or c == "conflict" else "old")
+
+
+def test_refresh_row_follows_the_drafts_conflict_flag_both_ways_and_keeps_the_other_flags() -> None:
+    """Micron's conflicts went away once the table's columns set each figure's basis; the flag the CSV row was created with
+    stayed. It comes from the draft, so a refresh of an untouched row rewrites it, and nothing else in the flag group."""
+    row = {c: "" for c in review.COLUMNS} | {"conflict": "true", "empty_block": "false", "ack_pending_review": "true"}
+    fresh = {c: "" for c in review.COLUMNS} | {"conflict": "false", "empty_block": "false", "ack_pending_review": "false"}
+    merged = review.refresh_row(row, fresh)
+    assert merged["conflict"] == "false" and merged["ack_pending_review"] == "true"
+    assert review.refresh_row({**row, "conflict": "false"}, {**fresh, "conflict": "true"})["conflict"] == "true"
 
 
 def test_recompute_content_sha256_hashes_the_extracted_text_not_the_raw_bytes(dirs) -> None:

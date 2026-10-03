@@ -19,6 +19,7 @@ NVIDIA Corporation, Salesforce, Inc. and Target Corporation made numeric forward
 January 2019 and September 2026. This dataset pairs each one with what the company later reported for that same metric
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
 It is a problem statement in data form, not a model and not a demonstration of one.
+Apple Inc., Alphabet Inc., Costco Wholesale Corporation and JPMorgan Chase & Co. were in the company list but issued no numeric guidance the metric list covers, so they have no rows here.
 
 ## How a row is built
 
@@ -34,7 +35,7 @@ A row resolves mechanically from its own numbers, once the period has closed and
   is met within half a percent of itself)
 - **missed**: the reported value falls outside the guided range, on the good side of it (better than
   guided) or the bad side (worse than guided). Which side is good depends on the metric. Higher is better
-  for revenue, gross margin, operating margin, operating income, EPS, other income and expense, comparable sales and free cash flow. Lower is better for operating expenses and tax rate
+  for revenue, gross margin, operating margin, operating income, EPS, other income and expense, comparable sales and free cash flow. Lower is better for operating expenses, tax rate, total expenses and capital expenditures
 - **withdrawn**: the company explicitly withdrew or suspended the guidance in a later filing, before
   the period closed
 - **unresolved**: the period has not closed yet, or no later filing reports the metric
@@ -43,7 +44,7 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-01, the release holds **611 rows**: 103 met, 285 missed, 221 unresolved, 2 withdrawn.
+As of 2026-10-02, the release holds **611 rows**: 103 met, 285 missed, 221 unresolved, 2 withdrawn.
 Of the misses, 221 were better than guided and 64 worse than guided; median days from the guidance to the
 filing that made it checkable was 92.0, and
 97% of misses were never acknowledged in a later filing.
@@ -94,7 +95,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-01.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-02.
 
 ## Licence
 

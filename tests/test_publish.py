@@ -218,7 +218,7 @@ def test_render_card_defines_acknowledged_under_the_rubric(sample_result) -> Non
     assert "Acknowledged means" in rubric_section
     flat = " ".join(rubric_section.split())
     assert "better than guided" in flat and "worse than guided" in flat
-    assert "Lower is better for operating expenses and tax rate" in flat
+    assert "Lower is better for operating expenses, tax rate, total expenses and capital expenditures" in flat
     assert not re.search(r"\bbeats?\b|shortfalls?", text, re.IGNORECASE)
 
 
@@ -357,3 +357,41 @@ def test_main_prints_how_many_rows_and_how_many_were_invalid(world, config_path,
     assert publish.main(["--config", str(config_path)]) == 0
     out = capsys.readouterr().out
     assert "0 approved row(s)" in out and "1 left out as invalid" in out
+
+
+# --- publish: false keeps a company out of everything published, and the card says why ----------------------
+
+
+def test_the_card_names_unpublished_companies_in_one_sentence(sample_result) -> None:
+    text = render(sample_result, unpublished=["Apple Inc.", "Alphabet Inc.", "JPMorgan Chase & Co."])
+    sentence = "Apple Inc., Alphabet Inc. and JPMorgan Chase & Co. were in the company list but issued no numeric guidance the metric list covers, so they have no rows here."
+    assert text.count(sentence) == 1
+    assert "—" not in sentence  # the card's register: no em-dashes
+    assert "issued no numeric guidance" not in render(sample_result)  # nothing is said when nobody is left out
+    assert "Costco Wholesale Corporation was in the company list but issued no numeric guidance the metric list covers, so it has no rows here." in render(sample_result, unpublished=["Costco Wholesale Corporation"])
+
+
+def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
+    base = {"name": "A", "ticker": "a", "cik": "1"}
+    assert common._company(base).publish is True and common._company({**base, "publish": False}).publish is False
+    with pytest.raises(ValueError, match="publish"):
+        common._company({**base, "publish": "no"})
+    listed = {c.ticker: c.publish for c in common.companies(common.load_config())}
+    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM"]
+
+
+def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table(world, config_path, record_data, monkeypatch) -> None:
+    seed(world, COMPANY, [csv_row(record_data)])
+    seed(world, OTHER, [csv_row(record_data, record_id="01ARZ3NDEKTSV4RRFFQ69G5FAW", company="Other Corp", ticker="OTHR", cik=OTHER.cik)])
+    cfg = yaml.safe_load(config_path.read_text())
+    cfg["companies"].append({"name": OTHER.name, "ticker": OTHER.ticker, "cik": OTHER.cik, "fiscal_year_end_month": 1, "publish": False})
+    config_path.write_text(yaml.safe_dump(cfg))
+    assert publish.main(["--config", str(config_path)]) == 0
+    release = (world / "release" / "assumption_drift.jsonl").read_text()
+    assert COMPANY.name in release and "Other Corp" not in release
+    card = (world / "card" / "README.md").read_text()
+    assert "Other Corp was in the company list but issued no numeric guidance" in card
+    assert "Other Corp" not in (world / "space" / "index.html").read_text().replace("Other Corp was in the company list", "")
+    # --company cannot bring it back
+    assert publish.main(["--config", str(config_path), "--company", "OTHR"]) == 0
+    assert "Other Corp" not in (world / "release" / "assumption_drift.jsonl").read_text()

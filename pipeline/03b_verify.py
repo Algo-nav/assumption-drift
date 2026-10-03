@@ -78,6 +78,7 @@ You are given a metric, a number or a range, a unit, a period, and an excerpt of
 
 Context you are also given, which is not itself part of the claim to check
 - Fiscal calendar: the company's fiscal year end month and which calendar year its label names. A company often states a period as a calendar date ("the three months ended April 30, 2019") rather than a fiscal label ("Q1 FY2020"). Work out which fiscal quarter and year that calendar date falls in from the fiscal year end month, the way the company itself would label it, and judge the period against that, not against whether the words match.
+- Table columns: when the section's table puts GAAP and non-GAAP (and sometimes an Adjustments column between them) side by side, this lists the columns left to right and says which column the claim's figure was taken from. A section heading names only one of them (Micron's "Non-GAAP (2) Outlook" sits over the second column, with "GAAP (1) Outlook" in the first), so judge the claim's basis, GAAP or non-GAAP, by the column the figure is in, not by the heading.
 - Section heading, lead-in line, table header: text that was near the excerpt in the filing but is not itself the excerpt. A period, or which of two "respectively" values belongs to this claim, is often only stated in one of these and never repeated in the excerpt itself. Use them to read the excerpt correctly; do not fail a claim only because the excerpt does not repeat something its heading, lead-in or table header already establishes.
 
 Rules for reading the numbers
@@ -144,6 +145,8 @@ def build_prompt(row: dict[str, str], company: Company) -> str:
         parts.append(f"Lead-in line: {row['aid_lead_in']}")
     if row.get("aid_table_header"):
         parts.append(f"Table header: {row['aid_table_header']}")
+    if row.get("aid_value_column"):
+        parts.append(f"Table columns: {row['aid_value_column']}")
     parts.append(f'Excerpt: "{row.get("assumption.evidence.excerpt", "")}"')
     return "\n".join(parts)
 

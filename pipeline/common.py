@@ -43,12 +43,35 @@ class Company:
     #: loss. True: this filer prints a rate that is a benefit or unusually low in parentheses, so the sign the model
     #: read is kept. Only the tax rate is ever affected; every other rate keeps the one global rule.
     tax_rate_parens_negative: bool = False
+    #: False keeps the company out of the release, the figures, the Space and the card's table (06_publish): it is still
+    #: fetched, drafted and reviewed like any other. Set for a company that issues no numeric guidance the metric
+    #: list covers, and named on the card for that reason.
+    publish: bool = True
+
+    def fiscal_year_reported(self, quarter: int | None, filed_at: date) -> int | None:
+        """The fiscal year a release filed on `filed_at` reports for a headline that names `quarter` (None: the fiscal
+        year's own results, which ride with the fourth quarter) and no year. See `_fiscal_year_reported`."""
+        return _fiscal_year_reported(self, 4 if quarter is None else quarter, filed_at)
 
     def period_end(self, year: int, quarter: int | None = None) -> date | None:
         """The last day of the month a fiscal period ends in, or None if the fiscal calendar is unknown."""
         if self.fiscal_year_end_month is None:
             return None
         return period_end(self.fiscal_year_end_month, self.fiscal_year_named_for, year, quarter)
+
+
+def _fiscal_year_reported(company: "Company", quarter: int, filed_at: date, max_days: int = 150) -> int | None:
+    """The fiscal year whose `quarter` ended most recently before `filed_at`, if it ended within `max_days` of it.
+    A release headed "Fourth Quarter" with no year, filed 2020-02-26 by a company whose fiscal 2019 ended January 31,
+    2020, reports fiscal 2019. None when the fiscal calendar is unknown or nothing ended that recently."""
+    if company.fiscal_year_end_month is None:
+        return None
+    best: tuple[date, int] | None = None
+    for year in range(filed_at.year - 2, filed_at.year + 2):
+        end = company.period_end(year, quarter)
+        if end is not None and end < filed_at and (best is None or end > best[0]):
+            best = (end, year)
+    return best[1] if best and (filed_at - best[0]).days <= max_days else None
 
 
 def period_end(month: int, named_for: str, year: int, quarter: int | None = None) -> date:
@@ -82,8 +105,11 @@ def _company(entry: dict[str, Any]) -> Company:
     parens = entry.get("tax_rate_parens_negative", False)
     if not isinstance(parens, bool):
         raise ValueError(f"{entry.get('ticker')}: tax_rate_parens_negative must be true or false, got {parens!r}")
+    publish = entry.get("publish", True)
+    if not isinstance(publish, bool):
+        raise ValueError(f"{entry.get('ticker')}: publish must be true or false, got {publish!r}")
     return Company(name=entry["name"], ticker=entry["ticker"].upper(), cik=str(entry["cik"]).zfill(10),
-                   fiscal_year_end_month=month, fiscal_year_named_for=named_for, tax_rate_parens_negative=parens)
+                   fiscal_year_end_month=month, fiscal_year_named_for=named_for, tax_rate_parens_negative=parens, publish=publish)
 
 
 def companies(config: dict[str, Any], only: list[str] | None = None) -> list[Company]:

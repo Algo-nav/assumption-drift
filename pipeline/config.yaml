@@ -19,16 +19,16 @@ companies:
   # Amazon / Meta / Alphabet / JPMorgan Dec 31 2025, AMD Dec 27 2025 (last Saturday of December), Broadcom Nov 2 2025
   # (Sunday closest to October 31, so month 10), Costco Aug 31 2025 (Sunday nearest the end of August), Home Depot
   # Feb 1 2026 (Sunday nearest January 31) and that year is called "fiscal 2025", so named for the year it starts.
-  - {name: "Apple Inc.", ticker: "AAPL", cik: "0000320193", fiscal_year_end_month: 9}
+  - {name: "Apple Inc.", ticker: "AAPL", cik: "0000320193", fiscal_year_end_month: 9, publish: false}
   - {name: "Microsoft Corporation", ticker: "MSFT", cik: "0000789019", fiscal_year_end_month: 6}
   - {name: "Amazon.com, Inc.", ticker: "AMZN", cik: "0001018724", fiscal_year_end_month: 12}
   - {name: "Meta Platforms, Inc.", ticker: "META", cik: "0001326801", fiscal_year_end_month: 12}
-  - {name: "Alphabet Inc.", ticker: "GOOGL", cik: "0001652044", fiscal_year_end_month: 12}
+  - {name: "Alphabet Inc.", ticker: "GOOGL", cik: "0001652044", fiscal_year_end_month: 12, publish: false}
   - {name: "Advanced Micro Devices, Inc.", ticker: "AMD", cik: "0000002488", fiscal_year_end_month: 12}
   - {name: "Broadcom Inc.", ticker: "AVGO", cik: "0001730168", fiscal_year_end_month: 10}
-  - {name: "Costco Wholesale Corporation", ticker: "COST", cik: "0000909832", fiscal_year_end_month: 8}
+  - {name: "Costco Wholesale Corporation", ticker: "COST", cik: "0000909832", fiscal_year_end_month: 8, publish: false}
   - {name: "The Home Depot, Inc.", ticker: "HD", cik: "0000354950", fiscal_year_end_month: 1, fiscal_year_named_for: start}
-  - {name: "JPMorgan Chase & Co.", ticker: "JPM", cik: "0000019617", fiscal_year_end_month: 12}
+  - {name: "JPMorgan Chase & Co.", ticker: "JPM", cik: "0000019617", fiscal_year_end_month: 12, publish: false}
   # The next four, same rule: Qualcomm Sep 28 2025 (last Sunday of September), Adobe Nov 28 2025 ("fiscal 2025"), Micron
   # Aug 28 2025 (Thursday closest to August 31), Lowe's Jan 30 2026 (called "2025", so named for the year it starts).
   - {name: "QUALCOMM Incorporated", ticker: "QCOM", cik: "0000804328", fiscal_year_end_month: 9}
@@ -53,6 +53,8 @@ metrics:
   - "other income and expense"
   - "comparable sales"
   - "free cash flow"
+  - "total expenses"
+  - "capital expenditures"
 
 # What each metric is measured in. A draft whose unit is the wrong kind for its metric is rejected
 # in code, whatever the model said: a margin is never dollars, and operating income or free cash
@@ -75,11 +77,13 @@ metric_kinds:
   "other income and expense": dollars
   "comparable sales": percent
   "free cash flow": dollars
+  "total expenses": dollars
+  "capital expenditures": dollars
 
 # Which way is good for each metric, so "better" and "worse" than guided can be told from above and
 # below the range (research_record.rubric.direction). Higher is better for revenue, margins, income,
 # EPS, comparable sales, free cash flow and other income and expense; lower is better for operating
-# expenses and the tax rate. One rule per metric, the same for every company.
+# expenses, total expenses, capital expenditures and the tax rate. One rule per metric, the same for every company.
 higher_is_better:
   "revenue": true
   "gross margin GAAP": true
@@ -95,6 +99,8 @@ higher_is_better:
   "other income and expense": true
   "comparable sales": true
   "free cash flow": true
+  "total expenses": false
+  "capital expenditures": false
 
 llm:
   model: "claude-haiku-4-5"
@@ -212,6 +218,7 @@ outcomes:
     - {when: 'gross margin', match: 'gross margin'}
     - {when: 'operating margin|operating income margin', match: 'operating (?:income )?margin|operating income rate'}
     - {when: 'operating income', match: 'operating income|income from operations|operating profit'}
+    - {when: 'total expenses', match: 'total (?:costs and )?expenses'}
     - {when: 'operating expense|opex', match: 'operating expenses'}
     - {when: 'eps|earnings per share|per share', match: 'earnings per share|eps|per diluted share|diluted earnings'}
     - {when: 'tax rate', match: 'tax rate'}

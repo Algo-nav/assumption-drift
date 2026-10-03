@@ -1,4 +1,3 @@
-{"draft_id": "01DBEDCT00TTZ0V8TD21C588HC", "output": {"index": 8, "value": null, "unit": "none"}, "reason": "index 8 or value None is not usable"}
 {"draft_id": "01FPXP70003WYE4KPN7QB8EZRJ", "output": {"index": 3, "value": 97059, "unit": "USD millions"}, "reason": "reported 97.059 is 77.6x the guidance 1.25: likely a unit or row mix-up"}
 {"draft_id": "01FWHY1A00KZSKKKK760ZRSBNW", "output": {"index": 3, "value": 97059, "unit": "USD millions"}, "reason": "reported 97.059 is 77.6x the guidance 1.25: likely a unit or row mix-up"}
 {"draft_id": "01G3A7DP00HAP4NKBN666567K9", "output": {"index": 3, "value": 97059, "unit": "USD millions"}, "reason": "reported 97.059 is 77.6x the guidance 1.25: likely a unit or row mix-up"}
