@@ -41,15 +41,15 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 65
+    assert len(cols) == len(set(cols)) == 68
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-23:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "aid_proposed_status",
+    assert cols[-26:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "change_pending_review", "aid_proposed_status",
                           "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_value_column", "aid_outcome_note", "aid_flag_note",
                           "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note", "aid_ack_proposed_at", "aid_ack_proposed_excerpt",
-                          "aid_ack_proposed_url", "aid_ack_proposed_evidence"]
-    assert set(review.schema_columns()) == set(cols[:-23])
+                          "aid_ack_proposed_url", "aid_ack_proposed_evidence", "aid_proposed_change", "aid_derived_snapshot"]
+    assert set(review.schema_columns()) == set(cols[:-26])
 
 
 # --- the words code writes -------------------------------------------------
@@ -620,7 +620,7 @@ def test_refresh_pipeline_fields_never_touches_a_hand_verified_row(dirs, parts) 
     rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
     assert stats["kept"] == 1 and stats["changed"] == 0
     # untouched except for the parked acknowledgement: every column but the proposal ones is byte for byte
-    proposal = {c for c in review.COLUMNS if c.startswith("aid_ack_proposed_") or c == "ack_pending_review"}
+    proposal = {c for c in review.COLUMNS if c.startswith("aid_ack_proposed_") or c in ("ack_pending_review", "change_pending_review", "aid_proposed_change", "aid_derived_snapshot")}
     assert {c: v for c, v in rows[0].items() if c not in proposal} == {c: v for c, v in before.items() if c not in proposal}
 
 
@@ -767,3 +767,111 @@ def test_refresh_leaves_a_row_alone_when_04_found_no_acknowledgement(dirs, parts
     review.write_csv(path, edited)
     rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
     assert stats["ack_proposed"] == 0 and rows[0]["ack_pending_review"] == "false"
+
+
+# --- a re-derive that changes a row a person has touched is proposed, not applied --------------------------------------
+#
+# The twelve period-before-stated flags and the six Salesforce tax-rate signs on approved rows (the first use of this)
+# arrive as proposals in `aid_proposed_change`; the real columns, and the approval, stay as they were.
+
+
+def cols(**values):
+    base = {c: "" for c in review.COLUMNS}
+    base.update(values)
+    return base
+
+
+FLAG = "period closes before stated; likely next quarter"
+TAX_OLD = dict(**{"assumption.target_low": "146.0", "assumption.target_high": "146.0", "claim": "guides 146", "invalidation_condition": "outside 146",
+                  "aid_flag_note": "'tax rate' is a rate: a parenthesised figure was read as positive", "aid_proposed_status": "met"})
+TAX_NEW = dict(**{"assumption.target_low": "-146.0", "assumption.target_high": "-146.0", "claim": "guides -146", "invalidation_condition": "outside -146",
+                  "aid_flag_note": "", "aid_proposed_status": "missed"})
+
+
+def test_a_new_flag_on_a_row_with_no_snapshot_is_proposed_and_the_real_columns_stay() -> None:
+    row = cols(approved="true", **{"assumption.target_period": "Q2 FY2020"})
+    fresh = cols(aid_flag_note=FLAG, **{"assumption.target_period": "Q2 FY2020"})
+    out = review.propose_change(row, fresh)
+    assert out["change_pending_review"] == "true" and json.loads(out["aid_proposed_change"]) == {"aid_flag_note": FLAG}
+    assert out["aid_flag_note"] == "" and out["approved"] == "true"
+    assert json.loads(out["aid_derived_snapshot"])["aid_flag_note"] == FLAG  # the baseline from now on
+
+
+def test_a_sign_flip_is_proposed_with_what_is_written_from_it_and_nothing_else() -> None:
+    out = review.propose_change(cols(approved="true", **TAX_OLD), cols(**TAX_NEW))
+    assert json.loads(out["aid_proposed_change"]) == {
+        "assumption.target_low": "-146.0", "assumption.target_high": "-146.0", "claim": "guides -146",
+        "invalidation_condition": "outside -146", "aid_flag_note": "", "aid_proposed_status": "missed"}
+    assert out["assumption.target_low"] == "146.0" and out["claim"] == "guides 146"  # not applied
+
+
+def test_without_a_snapshot_a_difference_a_person_could_have_made_is_not_proposed() -> None:
+    """Three NVDA rows were corrected by hand from FY2021 to Q2 FY2021: the draft still says FY2021."""
+    row = cols(approved="true", **{"assumption.target_period": "Q2 FY2021", "assumption.target_low": "5.0"})
+    fresh = cols(**{"assumption.target_period": "FY2021", "assumption.target_low": "5.5"})
+    out = review.propose_change(row, fresh)
+    assert out["change_pending_review"] == "" and out["aid_proposed_change"] == ""
+
+
+def test_with_a_snapshot_only_what_the_pipeline_changed_is_proposed() -> None:
+    derived = cols(**{"assumption.target_period": "FY2021", "assumption.target_low": "5.0"})
+    edited = cols(approved="true", aid_derived_snapshot=review.derived_snapshot(derived), **{"assumption.target_period": "Q2 FY2021", "assumption.target_low": "5.0"})
+    assert review.propose_change(edited, derived)["change_pending_review"] == ""            # the person's edit is not a change
+    changed = review.propose_change(edited, cols(**{"assumption.target_period": "FY2021", "assumption.target_low": "5.5"}))
+    assert json.loads(changed["aid_proposed_change"]) == {"assumption.target_low": "5.5"}   # the pipeline's own change is
+    assert changed["assumption.target_period"] == "Q2 FY2021"
+
+
+def test_a_rejected_change_is_not_proposed_again_and_a_pending_one_nobody_stands_behind_is_cleared() -> None:
+    row = cols(approved="true")
+    fresh = cols(aid_flag_note=FLAG)
+    pending = review.propose_change(row, fresh)
+    rejected = {**row, "reviewer_note": f"proposed change rejected [{review.change_hash({'aid_flag_note': FLAG})}]: not a miss"}
+    assert review.propose_change(rejected, fresh)["change_pending_review"] == ""
+    gone = review.propose_change(pending, cols())  # the flag is no longer derived
+    assert gone["change_pending_review"] == "false" and gone["aid_proposed_change"] == ""
+    already = review.propose_change(pending, cols(aid_flag_note=FLAG) | {"aid_flag_note": FLAG})  # row now has it
+    assert already["change_pending_review"] == "true"  # still different from the row's own (blank) note
+    assert review.propose_change({**pending, "aid_flag_note": FLAG}, fresh)["change_pending_review"] == "false"
+
+
+def test_build_row_records_the_derived_snapshot_and_no_pending_change(parts) -> None:
+    draft, outcome_row, _ = parts
+    row = review.build_row(draft, outcome_row, TODAY)
+    assert row["change_pending_review"] == "false" and row["aid_proposed_change"] == ""
+    assert json.loads(row["aid_derived_snapshot"])["assumption.target_low"] == row["assumption.target_low"]
+
+
+def test_refresh_turns_a_changed_draft_on_a_human_touched_row_into_a_proposal(dirs, parts) -> None:
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true", reviewer_note="checked")
+    review.write_csv(path, edited)
+    before = review.read_csv(path)[0]
+    revised = copy.deepcopy(draft)
+    revised["assumption"] = {**revised["assumption"], "target_low": -6000.0, "target_high": -5000.0}
+    revised["parens_note"] = "a flag the pipeline now raises"
+    seed(dirs, [revised], [outcome_row])
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    row = rows[0]
+    assert stats["change_proposed"] == 1 and row["change_pending_review"] == "true"
+    changes = json.loads(row["aid_proposed_change"])
+    assert changes["assumption.target_low"] == "-6000.0" and changes["aid_flag_note"] == "a flag the pipeline now raises"
+    for column in ("assumption.target_low", "assumption.target_high", "claim", "aid_flag_note", "approved", "reviewer_note"):
+        assert row[column] == before[column]
+    again, stats2 = review.refresh_pipeline_fields(COMPANY, TODAY)  # nothing new: the same proposal stays, once
+    assert stats2["change_proposed"] == 0 and again[0]["aid_proposed_change"] == row["aid_proposed_change"]
+
+
+def test_an_untouched_row_is_refreshed_directly_with_no_proposal(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    revised = copy.deepcopy(draft)
+    revised["assumption"] = {**revised["assumption"], "target_low": -6000.0, "target_high": -5000.0}
+    seed(dirs, [revised], [outcome_row])
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats["changed"] == 1 and rows[0]["change_pending_review"] == "false" and rows[0]["assumption.target_low"] == "-6000.0"

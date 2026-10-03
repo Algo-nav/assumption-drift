@@ -110,10 +110,11 @@ from research_record.text import html_to_text
 
 REVIEWER = "navneet"
 REVIEWER_COLUMNS = ["approved", "hand_verified", "reviewer_note"]
-FLAG_COLUMNS = ["conflict", "empty_block", "ack_pending_review"]
+FLAG_COLUMNS = ["conflict", "empty_block", "ack_pending_review", "change_pending_review"]
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_value_column",
                "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note",
-               "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence"]
+               "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence",
+               "aid_proposed_change", "aid_derived_snapshot"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -235,6 +236,20 @@ def withdrawal_of(outcome_row: dict[str, Any] | None) -> dict[str, Any] | None:
     return found if before_close else None
 
 
+#: The columns a re-derive can change on a row a person has already touched, and so the only ones a proposal can carry:
+#: the assumption's own fields (not its evidence), the claim and invalidation condition written from them, the flag note and
+#: the conflict flag. `aid_proposed_status` rides along when the numbers change (it is what the rubric says of them).
+PROPOSABLE = ([c for c in COLUMNS if c.startswith("assumption.") and not c.startswith("assumption.evidence.")]
+              + ["claim", "invalidation_condition", "aid_flag_note", "conflict"])
+_NUMBER_COLUMNS = ("assumption.target_low", "assumption.target_high")
+
+
+def derived_snapshot(row: dict[str, str]) -> str:
+    """The values the pipeline itself last derived for the proposable columns, as JSON. It is what tells a change the
+    pipeline made on a re-derive from a difference a person made by editing the row."""
+    return json.dumps({c: row.get(c, "") for c in PROPOSABLE}, sort_keys=True)
+
+
 def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: date) -> dict[str, str]:
     record = build_record(draft, outcome_row, today)
     withdrawal = withdrawal_of(outcome_row)
@@ -249,6 +264,7 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         conflict="true" if draft.get("conflict") else "false",
         empty_block="false",
         ack_pending_review="false",
+        change_pending_review="false",
         aid_proposed_status=proposed_status(record, withdrawn=withdrawal is not None),
         aid_capture_method=draft.get("capture_method") or "",
         aid_heading=draft.get("heading") or "",
@@ -260,6 +276,7 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         aid_withdrawal_note=(f"filed {withdrawal['withdrawn_at']}, before the period closed on {withdrawal['period_close']} "
                              f"({withdrawal['evidence']['source_url']}): {withdrawal['evidence']['excerpt']}") if withdrawal else "",
     )
+    row["aid_derived_snapshot"] = derived_snapshot(row)
     return row
 
 
@@ -353,7 +370,7 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
 PIPELINE_OWNED_PREFIXES = ("assumption.", "claim", "invalidation_condition", "outcome.", "acknowledgement_evidence.",
                             "acknowledged_at", "days_to_", "aid_proposed_status", "aid_capture_method", "aid_heading",
                             "aid_lead_in", "aid_table_header", "aid_value_column", "aid_outcome_note", "aid_flag_note",
-                            "aid_withdrawal_note")
+                            "aid_withdrawal_note", "aid_derived_snapshot")
 
 
 def is_pipeline_owned(column: str) -> bool:
@@ -430,6 +447,57 @@ def propose_acknowledgement(row: dict[str, str], fresh: dict[str, str]) -> dict[
             "aid_ack_proposed_evidence": json.dumps(evidence, sort_keys=True)}
 
 
+def _signs_flipped(old: str, new: str) -> bool:
+    try:
+        a, b = float(old), float(new)
+    except ValueError:
+        return False
+    return a != b and abs(a) == abs(b)
+
+
+def change_hash(changes: dict[str, str]) -> str:
+    """Names one proposed change, so a rejection can be remembered: the same change is not proposed twice.
+    research_record/reviewer.py computes the same hash for the note it writes on `n`."""
+    return hashlib.sha1(json.dumps(changes, sort_keys=True).encode("utf-8")).hexdigest()[:10]
+
+
+def propose_change(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]:
+    """`row` (one a person has touched) with what a re-derive now says about it written into `aid_proposed_change`, its
+    real columns untouched, `change_pending_review` set. A column is proposed when the fresh value differs from the row's
+    AND the pipeline changed it: the fresh value differs from `aid_derived_snapshot`, the values the pipeline last
+    derived, so a person's own edit is never offered back as a change.
+
+    A row with no snapshot (it predates this) has no such baseline. Then only what a person's edit is unlikely to have
+    produced is proposed: a flag note, the conflict flag, and a sign flipped on the target numbers (with the claim and
+    invalidation condition written from them). Nothing is proposed again once a reviewer has rejected that very change
+    (the note carries `[hash]`), and a pending one the pipeline no longer stands behind, or the row now already has,
+    is cleared. The snapshot is brought up to date either way."""
+    snapshot_text = row.get("aid_derived_snapshot") or ""
+    pending = row.get("change_pending_review") == "true"
+    try:
+        pending_columns = set(json.loads(row.get("aid_proposed_change") or "{}")) if pending else set()
+    except json.JSONDecodeError:
+        pending_columns = set()
+    differing = [c for c in PROPOSABLE if fresh.get(c, "") != row.get(c, "")]
+    if snapshot_text:
+        snapshot = json.loads(snapshot_text)
+        changed = [c for c in differing if snapshot.get(c) != fresh.get(c, "") or c in pending_columns]
+    else:
+        flipped = any(_signs_flipped(row.get(c, ""), fresh.get(c, "")) for c in _NUMBER_COLUMNS)
+        changed = [c for c in differing if c in ("aid_flag_note", "conflict")
+                   or (flipped and c in (*_NUMBER_COLUMNS, "claim", "invalidation_condition"))]
+    if any(c in changed for c in _NUMBER_COLUMNS) and fresh.get("aid_proposed_status", "") != row.get("aid_proposed_status", ""):
+        changed.append("aid_proposed_status")
+    base = {**row, "aid_derived_snapshot": derived_snapshot(fresh)}
+    cleared = {**base, "change_pending_review": "false", "aid_proposed_change": ""}
+    if not changed:
+        return cleared if pending else base
+    changes = {c: fresh.get(c, "") for c in changed}
+    if f"[{change_hash(changes)}]" in row.get("reviewer_note", ""):
+        return cleared if pending else base
+    return {**base, "change_pending_review": "true", "aid_proposed_change": json.dumps(changes, sort_keys=True)}
+
+
 def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None = None) -> tuple[list[dict[str, str]], Counter]:
     """Rewrite the pipeline-owned columns on every row of the company's CSV that nobody has touched yet, from
     the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (it is not a
@@ -455,11 +523,15 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
         if not untouched_by_a_human(row):
             # Never rewrite a human-touched row, but never drop what 04 found for it either: park it.
             try:
-                proposed = propose_acknowledgement(row, build_row(draft, outcomes.get(row["record_id"]), today))
+                fresh = build_row(draft, outcomes.get(row["record_id"]), today)
+                with_ack = propose_acknowledgement(row, fresh)
+                proposed = propose_change(with_ack, fresh)
+                stats["ack_proposed"] += with_ack != row
+                stats["change_proposed"] += (proposed.get("change_pending_review") == "true"
+                                             and proposed.get("aid_proposed_change") != row.get("aid_proposed_change"))
             except (ValidationError, KeyError, ValueError) as exc:
                 proposed = row
                 print(f"  {row['record_id']}: could not rebuild, left as it was: {str(exc)[:160]}", file=sys.stderr)
-            stats["ack_proposed"] += proposed != row
             refreshed.append(proposed)
             stats["kept"] += 1
             continue
@@ -503,7 +575,9 @@ def main(argv: list[str] | None = None) -> int:
                   f"{stats['kept']} kept as-is (human-touched, an empty-block flag, or no longer drafted), {stats['invalid']} could not rebuild, "
                   f"{stats['content_sha256_recomputed']} content_sha256 recomputed); "
                   f"{stats['ack_proposed']} newly proposed acknowledgement(s), "
-                  f"{sum(r.get('ack_pending_review') == 'true' for r in rows)} ack-pending in all")
+                  f"{sum(r.get('ack_pending_review') == 'true' for r in rows)} ack-pending in all; "
+                  f"{stats['change_proposed']} newly proposed change(s), "
+                  f"{sum(r.get('change_pending_review') == 'true' for r in rows)} change-pending in all")
         return 0
 
     print("rows per company per status ('status' is the schema field, always open for a draft;")

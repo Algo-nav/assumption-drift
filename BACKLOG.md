@@ -49,3 +49,22 @@ failing one of the same two checks. Fix both in the candidate filter, before any
 - The candidate must match the row's period the way the outcome matcher (`04_outcomes.py`) does, not
   by looser text overlap. A sentence about a different quarter or year is not an acknowledgement of
   this row's assumption.
+
+## 5. Outcome lines for full-year results in Lowe's and Home Depot releases: pair the label with its value line
+
+Found on the fourteen-company run (`aid_outcome_note` "the model found no line reporting that metric for that
+period", 40 Lowe's rows and 20 Home Depot rows). In both companies' fourth quarter releases the full-year
+results sit in table rows with the label on one line and the figures on the next ("Operating margin (3)", then
+"10.1 % 11.3 % 12.7 % 13.5 %"; Lowe's "Operating income 1,687 9.07 1,704 7.59 11,557 13.38 10,159 10.47" under a
+"Three Months Ended Fiscal Year Ended" header). `04_outcomes.select_lines` needs the metric and a number in one
+sentence, so it never selects such a row. The only lines it finds are the next year's guidance bullets
+("Tax rate of approximately 24.5 percent"), and the model correctly answers that none reports the result.
+The fix `select_lines` got for full-year rows (a line naming the year and a number under a line that names the
+metric) does not reach these either: the figure line names no year.
+Fix: give the outcome selector the same label-plus-value pairing the section capture already has
+(`02_candidates.find_blocks`, and `03_structure` reading a label line with its value line as one item). A figure
+line with no metric of its own is paired with the label line above it, and the pair is sent to the model as one
+line with the table's column header (`Three Months Ended | Fiscal Year Ended`, found the way
+`04_outcomes.find_result_header` already finds one) so it can pick the fiscal-year column. Fixtures are the ten
+rows of the diagnostic (five Lowe's, five Home Depot) and the Home Depot FY2022 and FY2025 and Lowe's FY2022
+releases above. Expect it to change the 04 requests for every company, so it costs a re-run of 04.

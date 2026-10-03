@@ -1,6 +1,6 @@
 """The `rr` command line.
 
-    rr review <csv> [--filter verify-no] [--filter no-note] [--filter ack-pending] [--filter ids=<comma-separated record_ids>]
+    rr review <csv> [--filter verify-no] [--filter no-note] [--filter ack-pending] [--filter change-pending] [--filter ids=<comma-separated record_ids>]
     rr validate <path>       path is a release .jsonl, or a review-queue .csv (approved rows only)
     rr stats <jsonl> [--json]
 
@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     review_parser.add_argument("csv", type=Path)
     review_parser.add_argument(
         "--filter", action="append", default=[], metavar="SPEC",
-        help="only rows matching SPEC: verify-no | no-note | ack-pending | ids=<comma-separated record_ids>; "
+        help="only rows matching SPEC: verify-no | no-note | ack-pending | change-pending | ids=<comma-separated record_ids>; "
              "repeat to combine with AND",
     )
 

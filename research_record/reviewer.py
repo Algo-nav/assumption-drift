@@ -26,6 +26,8 @@ prints the EDGAR URL again, and asks whether to mark that row hand-verified on t
   ids=A,B,C      only rows whose record_id is A, B, or C
   ack-pending    only rows with `ack_pending_review=true`: 04 found an acknowledgement for a row that was
                  already reviewed, and it waits in the `aid_ack_proposed_*` columns
+  change-pending only rows with `change_pending_review=true`: a re-derive changed an assumption field, a flag or
+                 a sign on a row that was already touched, and the new values wait in `aid_proposed_change`
 
 Multiple specs combine with AND. Rows that do not match are never shown and never written to
 differently than they already were. When any filter is active, approving a row requires a non-empty
@@ -36,6 +38,14 @@ On a row with `ack_pending_review=true` the proposed acknowledgement is shown ap
 the keys mean something narrower: `y` copies the proposal into the real acknowledgement columns and clears
 the flag (approval is left as it is), `n` clears the proposal and records the reason in `reviewer_note`
 with the proposal's date and URL, so a later refresh does not propose the same one again.
+
+On a row with `change_pending_review=true` a "PROPOSED CHANGE (not yet reviewed)" block shows each proposed
+column with its current value and its proposed value side by side; the real columns are untouched until you
+decide. `y` writes the proposed values into the real columns, clears the proposal and adds "proposed change
+applied" to `reviewer_note` (approval is left as it is: the reviewer has just seen both values), `n` clears the
+proposal and records the reason in `reviewer_note` with the change's `[hash]`, so a later refresh does not propose
+the same change again. A row with both a change and an acknowledgement pending settles the change first and stays
+on the row for the acknowledgement.
 
 A row with an `aid_suggested_note` (written by pipeline/03c_suggest.py, on a row 03b_verify flagged
 "no") shows it, and `y` on that row prompts for a note with the suggestion as the default: press
@@ -51,6 +61,7 @@ so it can be driven by a script or a test without a real terminal.
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import re
@@ -78,6 +89,8 @@ ACK_PENDING = "ack_pending_review"
 PROPOSED_AT, PROPOSED_EXCERPT, PROPOSED_URL, PROPOSED_EVIDENCE = (
     "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence")
 ACK_EVIDENCE_PREFIX = "acknowledgement_evidence."
+CHANGE_PENDING = "change_pending_review"
+PROPOSED_CHANGE = "aid_proposed_change"
 
 HAND_VERIFY_EVERY = 10  # SCOPE 4.3: at least 10% of approved rows per company
 
@@ -176,6 +189,49 @@ def reject_acknowledgement(row: dict[str, str], reason: str) -> dict[str, str]:
     return {**_clear_proposal(row), REVIEWER_NOTE: f"{existing}; {note}" if existing else note}
 
 
+def is_change_pending(row: dict[str, str]) -> bool:
+    return row.get(CHANGE_PENDING) == "true" and row.get(EMPTY_BLOCK) != "true"
+
+
+def proposed_changes(row: dict[str, str]) -> dict[str, str]:
+    """The proposed columns and their new values, {} when there is nothing readable."""
+    try:
+        changes = json.loads(row.get(PROPOSED_CHANGE) or "{}")
+    except json.JSONDecodeError:
+        return {}
+    return {k: "" if v is None else str(v) for k, v in changes.items()} if isinstance(changes, dict) else {}
+
+
+def change_hash(changes: dict[str, str]) -> str:
+    """The same name pipeline/05_review.py gives this change, so a rejection is remembered across refreshes."""
+    return hashlib.sha1(json.dumps(changes, sort_keys=True).encode("utf-8")).hexdigest()[:10]
+
+
+def _clear_change(row: dict[str, str]) -> dict[str, str]:
+    return {**row, CHANGE_PENDING: "false", PROPOSED_CHANGE: ""}
+
+
+def _add_note(row: dict[str, str], note: str) -> str:
+    existing = row.get(REVIEWER_NOTE, "").strip()
+    return f"{existing}; {note}" if existing else note
+
+
+def accept_change(row: dict[str, str]) -> dict[str, str]:
+    """The proposed values copied into the real columns (only columns this file has), the proposal and the flag
+    cleared, "proposed change applied" added to the note. Approval is not touched."""
+    changes = proposed_changes(row)
+    updated = {**row, **{c: v for c, v in changes.items() if c in row}}
+    updated[REVIEWER_NOTE] = _add_note(row, f"proposed change applied [{change_hash(changes)}]: {', '.join(sorted(changes))}")
+    return _clear_change(updated)
+
+
+def reject_change(row: dict[str, str], reason: str) -> dict[str, str]:
+    """The proposal cleared, the reason added to `reviewer_note` with the change's `[hash]`, which is what tells a
+    later refresh not to propose this very change again. The real columns and approval are not touched."""
+    note = f"proposed change rejected [{change_hash(proposed_changes(row))}]: {reason}".rstrip(": ")
+    return {**_clear_change(row), REVIEWER_NOTE: _add_note(row, note)}
+
+
 def hand_verify(row: dict[str, str]) -> dict[str, str]:
     return {**row, HAND_VERIFIED: "true"}
 
@@ -212,6 +268,8 @@ def parse_filter(spec: str) -> Callable[[dict[str, str]], bool]:
         return lambda row: not row.get(REVIEWER_NOTE)
     if spec == "ack-pending":
         return lambda row: row.get(ACK_PENDING) == "true"
+    if spec == "change-pending":
+        return lambda row: row.get(CHANGE_PENDING) == "true"
     if spec.startswith("ids="):
         ids = {part.strip() for part in spec[len("ids="):].split(",") if part.strip()}
         return lambda row: row.get(RECORD_ID) in ids
@@ -272,6 +330,15 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
                   f"  {row.get(PROPOSED_AT, '') or '(no date)'}",
                   f"  {highlight_numbers(row.get(PROPOSED_EXCERPT, ''), wrap) or '(none)'}",
                   f"  EDGAR: {row.get(PROPOSED_URL, '') or '(none)'}"]
+    if is_change_pending(row):
+        changes = proposed_changes(row)
+        width = max([len("field")] + [len(c) for c in changes])
+        now_width = min(40, max([len("now")] + [len(row.get(c, "")) for c in changes]))
+        lines += ["", "PROPOSED CHANGE (not yet reviewed)",
+                  f"  {'field':<{width}}  {'now':<{now_width}}  proposed"]
+        for column in sorted(changes):
+            now = _clip(row.get(column, "") or "(blank)", 40)
+            lines.append(f"  {column:<{width}}  {now:<{now_width}}  {_clip(changes[column] or '(blank)', 70)}")
     lines += [
         "",
         f"proposed: {row.get('aid_proposed_status', '')}  verify: {row.get('aid_verify', '') or '(not checked)'}"
@@ -286,7 +353,13 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
     return "\n".join(lines)
 
 
+def _clip(text: str, limit: int) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
 PROMPT = "[y] approve  [n] reject  [e] edit  [s] skip  [v] hand-verify  [q] quit"
+CHANGE_PROMPT = "[y] apply proposed change  [n] reject it, with a note  [e] edit  [s] skip  [v] hand-verify  [q] quit"
 ACK_PROMPT = "[y] accept proposed acknowledgement  [n] reject it, with a note  [e] edit  [s] skip  [v] hand-verify  [q] quit"
 
 
@@ -333,9 +406,14 @@ def run(
         idx = indices[pos]
         row = rf.rows[idx]
         write(render_row(row, pos + 1, len(indices), wrap))
-        write(ACK_PROMPT if is_ack_pending(row) else PROMPT)
+        write(CHANGE_PROMPT if is_change_pending(row) else ACK_PROMPT if is_ack_pending(row) else PROMPT)
         key = read_key()
-        if key in ("y", "n") and is_ack_pending(row):
+        if key in ("y", "n") and is_change_pending(row):
+            rf.rows[idx] = accept_change(row) if key == "y" else reject_change(row, read_line("Reason: ").strip())
+            rf.save()
+            if not is_ack_pending(rf.rows[idx]):  # an acknowledgement still pending is settled on the same row next
+                pos += 1
+        elif key in ("y", "n") and is_ack_pending(row):
             rf.rows[idx] = accept_acknowledgement(row) if key == "y" else reject_acknowledgement(row, read_line("Reason: ").strip())
             rf.save()
             pos += 1

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import csv
+import importlib
+import json
 
 import pytest
 
@@ -18,6 +20,7 @@ COLUMNS = [
     "acknowledged_at", "days_to_acknowledged", "acknowledgement_evidence.source_url", "acknowledgement_evidence.accession_number",
     "acknowledgement_evidence.filed_at", "acknowledgement_evidence.excerpt", "acknowledgement_evidence.content_sha256",
     "ack_pending_review", "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence",
+    "change_pending_review", "aid_proposed_change", "claim",
 ]
 
 
@@ -571,3 +574,85 @@ def test_accept_without_the_evidence_json_still_fills_date_excerpt_and_url() -> 
     r = rv.accept_acknowledgement(pending(aid_ack_proposed_evidence=""))
     assert (r["acknowledged_at"], r["acknowledgement_evidence.source_url"]) == ("2026-05-20", PROPOSED_URL)
     assert r["acknowledgement_evidence.excerpt"].startswith("Revenue of $4.8 billion")
+
+
+# --- a proposed change on an already-touched row ---------------------------------------------------------------
+
+review_step = importlib.import_module("pipeline.05_review")
+CHANGE = {"assumption.target_low": "-146.0", "assumption.target_high": "-146.0", "aid_flag_note": "", "claim": "guides -146"}
+
+
+def changed(record_id="R1", **overrides):
+    fields = {"approved": "true", "assumption.target_low": "146.0", "assumption.target_high": "146.0", "claim": "guides 146",
+              "aid_flag_note": "'tax rate' is a rate: read as positive", "change_pending_review": "true",
+              "aid_proposed_change": json.dumps(CHANGE, sort_keys=True), **overrides}
+    return row(record_id, **fields)
+
+
+def test_render_row_shows_the_old_and_new_values_side_by_side_in_a_proposed_change_block() -> None:
+    out = rv.render_row(changed(), 1, 1)
+    block = out[out.index("PROPOSED CHANGE (not yet reviewed)") :]
+    lines = block.splitlines()
+    assert lines[1].split() == ["field", "now", "proposed"]
+    target = next(l for l in lines if l.lstrip().startswith("assumption.target_low"))
+    assert target.split() == ["assumption.target_low", "146.0", "-146.0"]
+    flag = next(l for l in lines if l.lstrip().startswith("aid_flag_note"))
+    assert "(blank)" in flag and "read as positive" in flag
+    assert "target: 146.0 USD billions" in out  # the real columns still show the old values
+    assert "PROPOSED CHANGE" not in rv.render_row(row("R1"), 1, 1)
+
+
+def test_y_applies_the_proposal_to_the_real_columns_clears_it_and_notes_it(tmp_path) -> None:
+    path = seed(tmp_path, changed(reviewer_note="checked"))
+    s = Script(keys=["y"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    r = read_csv(path)[0]
+    assert (r["assumption.target_low"], r["assumption.target_high"], r["aid_flag_note"], r["claim"]) == ("-146.0", "-146.0", "", "guides -146")
+    assert r["change_pending_review"] == "false" and r["aid_proposed_change"] == "" and r["approved"] == "true"
+    assert r["reviewer_note"].startswith("checked; proposed change applied [") and "assumption.target_low" in r["reviewer_note"]
+    assert "[y] apply proposed change" in "\n".join(s.out)
+
+
+def test_n_clears_the_proposal_records_the_reason_and_leaves_every_real_column(tmp_path) -> None:
+    path = seed(tmp_path, changed())
+    s = Script(keys=["n"], lines=["Salesforce prints a large provision in parentheses"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    r = read_csv(path)[0]
+    assert r["change_pending_review"] == "false" and r["aid_proposed_change"] == ""
+    assert (r["assumption.target_low"], r["claim"], r["approved"]) == ("146.0", "guides 146", "true")
+    assert r["reviewer_note"] == f"proposed change rejected [{rv.change_hash(CHANGE)}]: Salesforce prints a large provision in parentheses"
+
+
+def test_a_rejection_is_the_note_the_refresh_looks_for_so_the_same_change_is_not_proposed_again() -> None:
+    assert rv.change_hash(CHANGE) == review_step.change_hash(CHANGE)  # the two modules name a change the same way
+    rejected = rv.reject_change(changed(), "no")
+    fresh = {c: "" for c in review_step.COLUMNS} | CHANGE | {"aid_proposed_status": "unresolved", "conflict": "false"}
+    again = review_step.propose_change({c: rejected.get(c, "") for c in review_step.COLUMNS}, fresh)
+    assert again["change_pending_review"] != "true"
+
+
+def test_filter_change_pending_shows_only_those_rows(tmp_path) -> None:
+    path = seed(tmp_path, row("R1"), changed("R2"), pending("R3"))
+    s = Script(keys=["s"])
+    rv.run(path, filters=["change-pending"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "done: 1 rows reviewed." in s.out
+    assert rv.parse_filter("change-pending")(changed()) and not rv.parse_filter("change-pending")(pending())
+
+
+def test_a_row_with_a_change_and_an_acknowledgement_pending_settles_the_change_then_stays_for_the_acknowledgement(tmp_path) -> None:
+    both = changed(**{k: v for k, v in PROPOSED.items()}, **{"outcome.reported_value": "4.8", "outcome.reported_at": "2026-02-14"})
+    path = seed(tmp_path, both)
+    s = Script(keys=["y", "y"])
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    r = read_csv(path)[0]
+    assert r["assumption.target_low"] == "-146.0" and r["acknowledged_at"] == "2026-05-20"
+    assert r["change_pending_review"] == "false" and r["ack_pending_review"] == "false"
+    shown = "\n".join(s.out)
+    assert shown.count("PROPOSED CHANGE (not yet reviewed)") == 1 and shown.count("ACKNOWLEDGEMENT (proposed") == 2
+
+
+def test_an_unreadable_proposal_applies_nothing_but_still_clears(tmp_path) -> None:
+    path = seed(tmp_path, changed(aid_proposed_change="not json"))
+    rv.run(path, read_key=Script(keys=["y"]).key, read_line=Script().line, write=Script().write)
+    r = read_csv(path)[0]
+    assert r["assumption.target_low"] == "146.0" and r["change_pending_review"] == "false"
