@@ -257,3 +257,14 @@ def test_main_with_a_company_filter_only_touches_that_company(world, config_path
     assert suggest.main(["--config", str(config_path), "--company", "EXMP"]) == 0
     assert review.read_csv(other)[0]["aid_suggested_note"] == ""  # OTHR was not targeted
     assert read_csv(world)[0]["aid_suggested_note"] == "CHECK: other"
+
+
+def test_a_verify_check_is_cleared_once_the_verdict_is_yes_but_a_period_flag_check_stays() -> None:
+    flag = suggest.structure.PERIOD_BEFORE_STATED
+    rows = [
+        row("R1", aid_verify="yes", aid_verify_class="", aid_suggested_note="CHECK: other"),
+        row("R2", aid_verify="yes", aid_verify_class="", aid_flag_note=flag, period="Q3 FY2022", aid_suggested_note="old"),
+    ]
+    by_id = {r["record_id"]: r for r in suggest.suggest_company(rows, FORWARD, NUMBER)[0]}
+    assert by_id["R1"]["aid_suggested_note"] == ""
+    assert by_id["R2"]["aid_suggested_note"].startswith("CHECK: Q3 FY2022 closed before this was")  # 03_structure's own guard, whatever 03b said

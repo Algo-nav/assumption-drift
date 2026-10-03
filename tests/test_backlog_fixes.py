@@ -694,3 +694,28 @@ def test_micron_point_spread_and_a_plain_range_are_unchanged() -> None:
     assert not rejects and (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (24.0, 27.0)
     drafts, rejects = ppm_derive(MU, "x\nOperating margin 20% to 22%", ppm_item("operating margin non-GAAP", "percent", "Q1 FY2020", 20.0, 22.0, (2, 2)))
     assert not rejects and (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (20.0, 22.0)
+
+
+# --- a parenthesised range that ends at zero or below stays negative ---------------------------------------------------
+MU_Q4_FY23_MARGIN = "Gross margin\n(6.0%) ± 2.0%\n2%\nA\n(4.0%) ± 2.0%\n(2.5%) to (2.0%)\n2%\nA\n(0.5%) to 0.0%"
+
+
+def test_a_parenthesised_range_ending_at_zero_is_left_negative() -> None:
+    assert structure.fix_parens_sign("gross margin non-GAAP", -0.5, 0.0, "(0.5%) to 0.0%", KINDS) == (-0.5, 0.0, None)
+    assert structure.fix_parens_sign("gross margin non-GAAP", -2.5, -2.0, "(2.5%) to (2.0%)", KINDS) == (-2.5, -2.0, None)
+
+
+def test_a_single_parenthesised_rate_and_a_range_that_reaches_above_zero_are_still_flipped() -> None:
+    assert structure.fix_parens_sign("tax rate", -146.0, -146.0, "(146%)", KINDS)[:2] == (146.0, 146.0)
+    assert structure.fix_parens_sign("gross margin non-GAAP", -1.0, 2.0, "(1.0%) to 2.0%", KINDS)[:2] == (1.0, 2.0)
+    assert structure.fix_parens_sign("operating margin GAAP", -2.0, -2.0, "Operating margin (2.0%)", KINDS)[:2] == (2.0, 2.0)
+
+
+def test_micron_gross_margin_non_gaap_q4_fy2023_is_minus_half_a_point_to_zero() -> None:
+    # The real excerpt (0000723125, the Q4 FY2023 table): the model read the last line as -0.5 to 0.0 and the parentheses
+    # guard flipped it to 0.0 to 0.5.
+    drafts, rejects = ppm_derive(MU, "x\n" + MU_Q4_FY23_MARGIN, ppm_item("gross margin non-GAAP", "percent", "Q4 FY2023", -0.5, 0.0, (2, 10)))
+    assert not rejects, rejects
+    a = drafts[0]["assumption"]
+    assert (a["target_low"], a["target_high"]) == (-0.5, 0.0)
+    assert "read as positive" not in (drafts[0]["parens_note"] or "")

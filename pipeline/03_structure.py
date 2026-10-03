@@ -759,6 +759,8 @@ def fix_parens_sign(
     metric_kinds ("percent" or not), never a hardcoded list of metric names that could drift out of sync with it.
     The one exception is the tax rate, whose rule is the filer's own: a company with `tax_rate_parens_negative: true`
     in config.yaml prints a benefit or an unusually low rate in parentheses, and keeps the sign the model read.
+    A range whose upper end is zero or below ("(0.5%) to 0.0%", "(2.5%) to (2.0%)") is left negative too: nobody
+    guides to a rate range of 0.0 to 0.5 by writing the low end in parentheses and the high end as plain zero.
 
     Returns (low, high, note): note says the rule fired, or is None if nothing changed."""
     if kinds.get(metric) != "percent" or (metric == "tax rate" and tax_rate_parens_negative):
@@ -767,6 +769,8 @@ def fix_parens_sign(
         return low, high, None
     if not _PAREN_NUMBER.search(evidence) or _PARENS_CAN_BE_NEGATIVE.search(evidence):
         return low, high, None
+    if low is not None and high is not None and low != high and high <= 0:
+        return low, high, None  # "(0.5%) to 0.0%": a range ending at zero or below is a negative range, not an unusual positive rate
     flipped = sorted(abs(v) for v in (low, high) if v is not None)
     new_low = flipped[0] if low is not None else None
     new_high = flipped[-1] if high is not None else None
