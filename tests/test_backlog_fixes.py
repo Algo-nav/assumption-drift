@@ -541,3 +541,156 @@ def test_the_draft_carries_it_and_the_review_row_shows_it() -> None:
     (draft,), _ = derive({**SPLIT, "filed_at": "2020-03-25"}, it, company=MU)
     assert draft["value_column"] == "GAAP | non-GAAP: the figure is in column 1, GAAP"
     assert "aid_value_column" in review.COLUMNS and review.is_pipeline_owned("aid_value_column")
+
+
+# --- an outlook block over the excerpt limit is trimmed to the sentence(s) with the figure -----------------------------
+# The two AMD 8-K blocks as 02 stored them (accessions 0000002488-19-000043 and -19-000157): the boilerplate line plus one
+# paragraph that carries the revenue and the gross margin guidance together, 572 and 432 chars.
+AMD_BLOCKS = {
+    "0000002488-19-000043": (
+        "AMD’s outlook statements are based on current expectations. The following statements are forward-looking, and actual "
+        "results could differ materially depending on market conditions and the factors set forth under “Cautionary Statement” below.\n"
+        "For the second quarter of 2019, AMD expects revenue to be approximately $1.52 billion, plus or minus $50 million, an increase "
+        "of approximately 19 percent sequentially and a decrease of approximately 13 percent year-over-year. The sequential increase is "
+        "expected to be driven by growth across all businesses. The year-over-year decrease is expected to be primarily driven by lower "
+        "graphics channel sales, negligible blockchain-related GPU revenue and lower semi-custom revenue. AMD expects non-GAAP gross "
+        "margin to be approximately 41 percent in the second quarter of 2019.",
+        41.0, "AMD expects non-GAAP gross margin to be approximately 41 percent in the second quarter of 2019."),
+    "0000002488-19-000157": (
+        "AMD’s outlook statements are based on current expectations. The following statements are forward-looking, and actual "
+        "results could differ materially depending on market conditions and the factors set forth under “Cautionary Statement” below.\n"
+        "For the fourth quarter of 2019, AMD expects revenue to be approximately $2.1 billion, plus or minus $50 million, an increase of "
+        "approximately 48 percent year-over-year and approximately 17 percent sequentially. The year-over-year and sequential increases "
+        "are expected to be driven by an increase in Ryzen, EPYC and Radeon product sales. AMD expects non-GAAP gross margin to be "
+        "approximately 44 percent in the fourth quarter of 2019.",
+        44.0, "AMD expects non-GAAP gross margin to be approximately 44 percent in the fourth quarter of 2019."),
+}
+
+
+@pytest.mark.parametrize("accession", AMD_BLOCKS)
+def test_an_over_long_outlook_line_is_trimmed_to_the_sentence_with_the_figure(accession) -> None:
+    text, figure, sentence = AMD_BLOCKS[accession]
+    assert len(text.split("\n")[1]) > structure.EXCERPT_LIMIT
+    cand = block(text, None, heading="Outlook")
+    item = {"line_first": 2, "line_last": 2, "value_low": figure, "value_high": figure}
+    excerpt = structure.evidence_text(cand, item)
+    assert excerpt == sentence and excerpt in text
+
+
+def test_two_figure_sentences_that_fit_together_are_kept_together() -> None:
+    text = "Boilerplate sentence that says nothing at all about any number. " * 6 + "\nOperating margin will be 20 percent. Tax rate will be 15 percent. " + "Filler about nothing. " * 20
+    cand = block(text, None, heading="Outlook")
+    item = {"line_first": 2, "line_last": 2, "value_low": 20.0, "value_high": 15.0}
+    assert structure.evidence_text(cand, item) == "Operating margin will be 20 percent. Tax rate will be 15 percent."
+
+
+def test_a_line_with_no_sentence_printing_the_figure_still_overflows() -> None:
+    text = "x\n" + "Filler about nothing at all. " * 20
+    with pytest.raises(ValueError, match="over the 400 char"):
+        structure.evidence_text(block(text, None), {"line_first": 2, "line_last": 2, "value_low": 7.0, "value_high": 7.0})
+
+
+def test_a_line_already_within_the_limit_is_not_trimmed() -> None:
+    text = "Intro sentence with 3 in it. Second sentence with 5 in it."
+    item = {"line_first": 1, "line_last": 1, "value_low": 5.0, "value_high": 5.0}
+    assert structure.evidence_text(block(text, None), item) == text
+
+
+# --- a plus or minus printed in full decides the range, by code -------------------------------------------------------
+AMD = common.Company("Advanced Micro Devices, Inc.", "AMD", "0000002488", 1)
+NVDA = common.Company("NVIDIA Corporation", "NVDA", "0001045810", 1)
+MU = common.Company("Micron Technology, Inc.", "MU", "0000723125", 1)
+
+
+def ppm_item(metric, unit, period, low, high, lines=(2, 2), pm=None, kind="none"):
+    return {**item(metric, unit, period, low, high, lines), "plus_minus": pm, "plus_minus_kind": kind}
+
+
+def ppm_derive(company, text, *items, method="section"):
+    cand = {**block(text, None, heading="Outlook"), "cik": company.cik, "capture_method": method}
+    if method == "sentence":
+        cand.pop("block_lines", None)
+    return derive(cand, *items, company=company)
+
+
+@pytest.mark.parametrize("accession, line_two, period, model_low, model_high, low, high", [
+    ("0000002488-19-000043", AMD_BLOCKS["0000002488-19-000043"][0], "Q2 FY2019", 1.47, 1.57, 1.47, 1.57),
+    ("0000002488-19-000157", AMD_BLOCKS["0000002488-19-000157"][0], "Q4 FY2019", 2.05, 2.15, 2.05, 2.15),
+    ("0000002488-20-000006",
+     "AMD’s outlook statements are based on current expectations. The following statements are forward-looking and actual results could "
+     "differ materially depending on market conditions and the factors set forth under “Cautionary Statement” below.\n"
+     "For the first quarter of 2020, AMD expects revenue to be approximately $1.8 billion, plus or minus $50 million, an increase of "
+     "approximately 42 percent year-over-year and a decrease of approximately 15 percent sequentially. The year-over-year increase is "
+     "expected to be driven by strong growth of Ryzen, EPYC and Radeon product sales. The sequential decrease is expected to be primarily "
+     "driven by seasonality across all businesses and lower semi-custom revenue.", "Q1 FY2020", 1.75, 1.85, 1.75, 1.85),
+])
+@pytest.mark.parametrize("model", ["endpoints", "centre_and_spread_wrong", "centre_and_spread_right"])
+def test_a_printed_dollar_plus_or_minus_gives_the_range_whatever_the_model_returned(
+        accession, line_two, period, model_low, model_high, low, high, model) -> None:
+    mid = round((model_low + model_high) / 2, 6)
+    given = {"endpoints": dict(low=model_low, high=model_high),
+             "centre_and_spread_wrong": dict(low=mid, high=mid, pm=5.0, kind="percent"),
+             "centre_and_spread_right": dict(low=mid, high=mid, pm=0.05, kind="absolute")}[model]
+    drafts, rejects = ppm_derive(AMD, line_two, ppm_item("revenue", "USD billions", period, given["low"], given["high"],
+                                                      pm=given.get("pm"), kind=given.get("kind", "none")))
+    assert not rejects, rejects
+    (draft,) = drafts
+    a = draft["assumption"]
+    assert (a["target_low"], a["target_high"]) == (low, high)
+    assert "plus or minus" in a["evidence"]["excerpt"] and len(a["evidence"]["excerpt"]) <= structure.EXCERPT_LIMIT
+    assert "worked out from the printed plus or minus" in (draft["parens_note"] or "") or model == "centre_and_spread_right"
+
+
+def test_the_sentence_candidate_with_a_malformed_plus_or_minus_is_recovered_too() -> None:
+    text = AMD_BLOCKS["0000002488-19-000043"][0].split("\n")[1].split(". ")[0] + "."
+    drafts, rejects = ppm_derive(AMD, text, ppm_item("revenue", "USD billions", "Q2 FY2019", 1.47, 1.57, (1, 1), pm=0.05, kind="absolute"),
+                                method="sentence")
+    assert not rejects and (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (1.47, 1.57)
+
+
+def test_the_printed_centre_and_spread_are_what_the_numbers_check_validates() -> None:
+    with pytest.raises(ValueError, match="not in the evidence"):
+        structure.check_numbers_in_evidence({"value_low": 1.52, "value_high": 1.52, "_printed": (1.52, 99.0)}, "$1.52 billion, plus or minus $50 million")
+    structure.check_numbers_in_evidence({"value_low": 1.52, "value_high": 1.52, "_printed": (1.52, 50.0)}, "$1.52 billion, plus or minus $50 million")
+
+
+def test_a_plus_or_minus_for_a_different_figure_is_not_bound_to_the_item() -> None:
+    text = "x\nFor the second quarter, revenue is expected to be $1.52 billion, plus or minus $50 million. Non-GAAP gross margin is 41 percent."
+    out, note = structure.with_printed_plus_minus("revenue", ppm_item("revenue", "USD billions", "Q2 FY2019", 2.0, 2.0, pm=0.1, kind="absolute"),
+                                                  text, KINDS)
+    assert note is None and "_printed" not in out and out["value_low"] == 2.0
+
+
+@pytest.mark.parametrize("metric, unit, low, high, pm, kind", [
+    ("tax rate", "percent", 6.0, 6.0, 1.0, "percent"),        # the model called a point spread "percent" (relative)
+    ("tax rate", "percent", 5.0, 7.0, None, "none"),          # or returned the endpoints
+])
+def test_nvidia_percent_plus_or_minus_is_in_points(metric, unit, low, high, pm, kind) -> None:
+    text = "For the fourth quarter, the tax rate is expected to be\n6%, plus or minus 1%"
+    drafts, rejects = ppm_derive(NVDA, text, ppm_item(metric, unit, "Q4 FY2019", low, high, pm=pm, kind=kind), method="section")
+    assert not rejects, rejects
+    assert (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (5.0, 7.0)
+
+
+def test_nvidia_bps_plus_or_minus_is_a_hundredth_of_a_point() -> None:
+    text = "x\nNon-GAAP gross margin 75.0%, plus or minus 50 bps"
+    drafts, rejects = ppm_derive(NVDA, text, ppm_item("gross margin non-GAAP", "percent", "Q4 FY2026", 75.0, 75.0, pm=0.5, kind="absolute"))
+    assert not rejects, rejects
+    assert (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (74.5, 75.5)
+
+
+@pytest.mark.parametrize("low, high, expect", [(25.5, 25.5, (25.0, 26.0)), (26.5, 26.5, (26.0, 27.0))])
+def test_micron_bps_plus_or_minus_with_two_statements_binds_the_one_the_model_meant(low, high, expect) -> None:
+    # Synthetic: the archive has no Micron line in basis points (its guidance is "25.5% ± 1.5%"), so this is the shape of one.
+    text = "x\nGross margin\n25.5% ± 50 bps\n26.5% ± 50 bps"
+    drafts, rejects = ppm_derive(MU, text, ppm_item("gross margin non-GAAP", "percent", "Q1 FY2020", low, high, (2, 4), pm=0.5, kind="absolute"))
+    assert not rejects, rejects
+    assert (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == expect
+
+
+def test_micron_point_spread_and_a_plain_range_are_unchanged() -> None:
+    drafts, rejects = ppm_derive(MU, "x\nGross margin\n25.5% ± 1.5%",
+                                ppm_item("gross margin non-GAAP", "percent", "Q1 FY2020", 25.5, 25.5, (2, 3), pm=1.5, kind="absolute"))
+    assert not rejects and (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (24.0, 27.0)
+    drafts, rejects = ppm_derive(MU, "x\nOperating margin 20% to 22%", ppm_item("operating margin non-GAAP", "percent", "Q1 FY2020", 20.0, 22.0, (2, 2)))
+    assert not rejects and (drafts[0]["assumption"]["target_low"], drafts[0]["assumption"]["target_high"]) == (20.0, 22.0)

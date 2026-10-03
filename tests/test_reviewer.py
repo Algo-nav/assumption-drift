@@ -656,3 +656,155 @@ def test_an_unreadable_proposal_applies_nothing_but_still_clears(tmp_path) -> No
     rv.run(path, read_key=Script(keys=["y"]).key, read_line=Script().line, write=Script().write)
     r = read_csv(path)[0]
     assert r["assumption.target_low"] == "146.0" and r["change_pending_review"] == "false"
+
+
+# --- fast / slow ------------------------------------------------------------------
+
+FAST_COLUMNS = COLUMNS + ["company", "aid_capture_method", "aid_lead_in"]
+
+
+def frow(record_id, **overrides) -> dict[str, str]:
+    base = {c: "" for c in FAST_COLUMNS}
+    base.update(row(record_id), company="Example Corp", aid_capture_method="sentence", aid_verify="yes")
+    base.update(overrides)
+    return {c: base.get(c, "") for c in FAST_COLUMNS}
+
+
+def fseed(tmp_path, *rows):
+    path = tmp_path / "F.csv"
+    write_csv(path, list(rows), fieldnames=FAST_COLUMNS)
+    return path
+
+
+def test_a_clean_sentence_row_is_fast_and_not_slow() -> None:
+    r = frow("R1")
+    assert rv.parse_filter("fast")(r) and not rv.parse_filter("slow")(r)
+
+
+@pytest.mark.parametrize("overrides", [
+    {"aid_capture_method": "section"},
+    {"aid_verify": "no"},
+    {"aid_verify": ""},
+    {"aid_flag_note": "heading says gross margin"},
+    {"conflict": "true"},
+    {"empty_block": "true"},
+    {"change_pending_review": "true", "aid_proposed_change": '{"status": "met"}'},
+    {"ack_pending_review": "true"},
+    {"outcome.reported_value": "4.0"},  # revenue below 5.0-6.0: a worse miss
+])
+def test_any_one_disqualifier_makes_a_row_slow_not_fast(overrides) -> None:
+    r = frow("R1", **overrides)
+    assert not rv.parse_filter("fast")(r) and rv.parse_filter("slow")(r)
+
+
+def test_a_better_miss_or_a_hit_is_still_fast() -> None:
+    assert rv.parse_filter("fast")(frow("R1", **{"outcome.reported_value": "7.0"}))  # above range, revenue: better
+    assert rv.parse_filter("fast")(frow("R2", **{"outcome.reported_value": "5.5"}))  # inside range
+
+
+def test_lower_is_better_metrics_flip_which_miss_is_worse() -> None:
+    cost = {"assumption.metric": "operating expenses GAAP", "outcome.reported_value": "7.0"}  # above the range: worse
+    assert rv.row_direction(frow("R1", **cost)) == "worse" and not rv.parse_filter("fast")(frow("R1", **cost))
+    cheaper = {"assumption.metric": "operating expenses GAAP", "outcome.reported_value": "4.0"}
+    assert rv.parse_filter("fast")(frow("R2", **cheaper))
+
+
+def test_a_noted_row_is_neither_fast_nor_slow_unless_something_is_pending() -> None:
+    r = frow("R1", reviewer_note="looked at it")
+    assert not rv.parse_filter("fast")(r) and not rv.parse_filter("slow")(r)
+
+
+def test_an_unknown_metric_with_an_outcome_is_not_fast() -> None:
+    assert not rv.parse_filter("fast")(frow("R1", **{"assumption.metric": "no_such_metric", "outcome.reported_value": "7.0"}))
+
+
+def test_approved_and_rejected_rows_are_neither_fast_nor_slow() -> None:
+    for r in (frow("R1", approved="true"), frow("R2", approved="false", reviewer_note="wrong metric")):
+        assert not rv.parse_filter("fast")(r) and not rv.parse_filter("slow")(r)
+
+
+def test_a_rejected_row_with_a_pending_change_is_slow() -> None:
+    r = frow("R1", reviewer_note="earlier note", change_pending_review="true", aid_proposed_change='{"status": "met"}')
+    assert rv.parse_filter("slow")(r)
+
+
+def test_fast_and_slow_partition_the_unreviewed_rows(tmp_path) -> None:
+    rows = [frow("R1"), frow("R2", aid_verify="no"), frow("R3", approved="true"), frow("R4", conflict="true"), frow("R5")]
+    fast = [r["record_id"] for r in rows if rv.parse_filter("fast")(r)]
+    slow = [r["record_id"] for r in rows if rv.parse_filter("slow")(r)]
+    assert (fast, slow) == (["R1", "R5"], ["R2", "R4"])
+
+
+def test_bracket_targets_marks_only_the_target_numbers() -> None:
+    text = "Revenue is expected to be $5.0 billion to $6.0 billion, plus or minus 2%, up from 4.2."
+    assert rv.bracket_targets(text, "5.0", "6.0") == (
+        "Revenue is expected to be $[5.0] billion to $[6.0] billion, plus or minus 2%, up from 4.2.")
+
+
+def test_bracket_targets_matches_across_a_thousand_step_of_scale_and_commas() -> None:
+    assert rv.bracket_targets("between $5,000 million and $6,000 million", "5.0", "6.0") == "between $[5,000] million and $[6,000] million"
+
+
+def test_bracket_targets_with_no_target_leaves_the_text_alone() -> None:
+    assert rv.bracket_targets("about 5 percent", "", "") == "about 5 percent"
+
+
+def test_compact_render_is_header_lead_in_excerpt() -> None:
+    r = frow("R1", aid_lead_in="For the fourth quarter of fiscal 2026, we expect:", aid_proposed_status="unresolved")
+    out = rv.render_compact(r, 3, 9).split("\n")
+    assert out == [
+        "3/9  Example Corp | revenue | Q4 FY2026 | 5.0 to 6.0 USD billions | proposed: unresolved",
+        "lead-in: For the fourth quarter of fiscal 2026, we expect:",
+        "Revenue is expected to be $[5.0] billion to $[6.0] billion.",
+    ]
+
+
+def test_compact_render_omits_an_absent_lead_in_and_falls_back_to_ticker() -> None:
+    out = rv.render_compact(frow("R1", company=""), 1, 1).split("\n")
+    assert len(out) == 2 and out[0].startswith("1/1  EXMP | revenue")
+
+
+def test_fast_mode_shows_the_compact_form_with_the_key_prompt(tmp_path) -> None:
+    path = fseed(tmp_path, frow("R1"))
+    s = Script(keys=["s"])
+    rv.run(path, filters=["fast"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "$[5.0] billion" in s.out[0] and "EDGAR:" not in s.out[0] and s.out[1] == rv.PROMPT
+
+
+def test_fast_mode_y_approves_without_asking_for_a_note(tmp_path) -> None:
+    path = fseed(tmp_path, frow("R1"), frow("R2"))
+    s = Script(keys=["y", "y"])  # no lines queued: a note prompt would raise IndexError
+    rv.run(path, filters=["fast"], read_key=s.key, read_line=s.line, write=s.write)
+    assert [(r["approved"], r["reviewer_note"]) for r in read_csv(path)] == [("true", ""), ("true", "")]
+
+
+def test_fast_mode_n_still_asks_for_a_reason_and_e_still_edits(tmp_path) -> None:
+    path = fseed(tmp_path, frow("R1"))
+    s = Script(keys=["e", "n"], lines=["assumption.unit", "USD millions", "wrong unit"])
+    rv.run(path, filters=["fast"], read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = read_csv(path)[0]
+    assert (on_disk["approved"], on_disk["reviewer_note"], on_disk["assumption.unit"]) == ("false", "wrong unit", "USD millions")
+
+
+def test_fast_mode_only_visits_fast_rows(tmp_path) -> None:
+    path = fseed(tmp_path, frow("R1", aid_verify="no"), frow("R2"), frow("R3", approved="true"))
+    s = Script(keys=["y"])
+    rv.run(path, filters=["fast"], read_key=s.key, read_line=s.line, write=s.write)
+    assert [r["approved"] for r in read_csv(path)] == ["false", "true", "true"]
+
+
+def test_slow_mode_uses_the_full_view_and_still_requires_a_note(tmp_path) -> None:
+    path = fseed(tmp_path, frow("R1"), frow("R2", aid_verify="no"))
+    s = Script(keys=["y"], lines=["checked on EDGAR"])
+    rv.run(path, filters=["slow"], read_key=s.key, read_line=s.line, write=s.write)
+    assert "excerpt:" in s.out[0] and s.out[0].startswith("── 1/1 ──")
+    assert [(r["approved"], r["reviewer_note"]) for r in read_csv(path)] == [("false", ""), ("true", "checked on EDGAR")]
+
+
+def test_fast_mode_keeps_the_every_tenth_hand_verify_stop(tmp_path) -> None:
+    path = fseed(tmp_path, *[frow(f"R{n}") for n in range(10)])
+    s = Script(keys=["y"] * 10, lines=["y"])
+    rv.run(path, filters=["fast"], read_key=s.key, read_line=s.line, write=s.write)
+    rows = read_csv(path)
+    assert [r["hand_verified"] for r in rows] == ["false"] * 9 + ["true"]
+    assert any("SCOPE 4.3" in m for m in s.out)

@@ -25,6 +25,10 @@ sent again. An untouched row is not resent, whatever else in the file changed. E
 schema in this file (as happened between the first and second pass) changes the fingerprint of every
 request alike, so the whole file is re-sent once.
 
+Editing the prompt makes every archived answer stale, so the next plain run re-sends the whole file. `--rerun-plus-minus-no`
+sends only the rows whose verdict is "no" and whose excerpt has a plus or minus (plus or minus, +/-, or the sign), and leaves
+every other row exactly as it is, which is what to use after a prompt change that only concerns plus-or-minus readings.
+
 Once every row that was sent has an answer, the CSV is rewritten: every human edit, approved,
 hand_verified, reviewer_note, and any hand-corrected field, is carried over exactly as it was, and only
 aid_verify, aid_verify_reason and aid_verify_class change. The rows are then sorted so aid_verify "no"
@@ -40,6 +44,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import importlib
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -83,6 +88,7 @@ Context you are also given, which is not itself part of the claim to check
 
 Rules for reading the numbers
 - A point value P stated with "plus or minus X" (or "X%, plus or minus Y%" for a rate) means the correct range is [P-X, P+X]. If the numbers you are given are exactly that range, the excerpt supports them.
+- A dollar or per-share spread works the same way, in the unit the amount is printed in: "$1.52 billion plus or minus $50 million" is 1.47 to 1.57 billion, and "$1.74 plus or minus $0.08" is 1.66 to 1.82. Read a spread in millions against a centre in billions (or the reverse) in one unit before comparing, and when the excerpt prints several centres side by side (GAAP and non-GAAP columns, or two periods), take the one the claim's metric, basis and period name.
 - "$21B" and "$21.0B" are the same number: trailing zeros never change a figure. "Adjusted" and "non-GAAP" name the same accounting basis.
 - "A decline of 3 to 5 percent" and a range of -5% to -3% describe the same thing: a negative change of between 3 and 5 percent in magnitude. Do not fail a claim only because the excerpt spells the direction out in words ("decline", "down") while the claim gives it as a negative number, or the reverse.
 - When two values are given "respectively" (GAAP and non-GAAP, or two periods in a table), match the claim's metric and period to the one it names; do not fail it only because the OTHER value is also printed nearby.
@@ -94,7 +100,7 @@ Answer false if any of these is true:
 - the excerpt's figure and the claim's figure differ only in being positive versus negative: the sign is backwards;
 - the excerpt reports a past result rather than stating forward guidance, or has no number in it at all.
 
-Otherwise answer true. Give a one-line reason either way, quoting the part of the excerpt your answer turns on.
+Otherwise answer true. Your answer must follow your own reasoning: if working through the excerpt leads you to conclude that the range or number matches the claim, answer true. Never answer false with a reason that says the figures match. Give a one-line reason either way, quoting the part of the excerpt your answer turns on.
 
 When your answer is false, also classify why, as exactly one of: wrong_metric (a different metric than the one given), wrong_value (the number or range itself does not match), wrong_period (a different period, including a calendar date that does not map to the stated fiscal label), wrong_sign (right magnitude, backwards sign), not_guidance (a past result, or no number at all), other (any other reason). When your answer is true, return "other" for this field; it is not used.
 """
@@ -151,13 +157,24 @@ def build_prompt(row: dict[str, str], company: Company) -> str:
     return "\n".join(parts)
 
 
-def build_requests(targets: list[Company], review_dir: Path | None = None) -> tuple[list[llm.LlmRequest], dict[str, tuple[Company, str]]]:
-    """(requests, custom_id -> (company, record_id)), one request per verifiable row, in file order."""
+_PLUS_MINUS = re.compile(r"plus or minus|plus/minus|plus-or-minus|\u00b1|\+/-", re.IGNORECASE)
+
+
+def is_plus_minus_no(row: dict[str, str]) -> bool:
+    """A row whose current verdict is "no" and whose excerpt prints a plus or minus: the rows `--rerun-plus-minus-no`
+    sends again after the prompt learned to read dollar and per-share spreads."""
+    return row.get("aid_verify") == "no" and bool(_PLUS_MINUS.search(row.get("assumption.evidence.excerpt", "")))
+
+
+def build_requests(targets: list[Company], review_dir: Path | None = None, *, only_plus_minus_no: bool = False
+                   ) -> tuple[list[llm.LlmRequest], dict[str, tuple[Company, str]]]:
+    """(requests, custom_id -> (company, record_id)), one request per verifiable row, in file order. With
+    `only_plus_minus_no`, only the rows is_plus_minus_no picks."""
     requests: list[llm.LlmRequest] = []
     index: dict[str, tuple[Company, str]] = {}
     for company in targets:
         for row in load_rows(company, review_dir):
-            if not is_verifiable(row):
+            if not is_verifiable(row) or (only_plus_minus_no and not is_plus_minus_no(row)):
                 continue
             cid = custom_id(row)
             requests.append(llm.LlmRequest(cid, VERIFY_SYSTEM, build_prompt(row, company), MAX_TOKENS, VERIFY_SCHEMA))
@@ -243,13 +260,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER")
     parser.add_argument("--submit", action="store_true", help="really call the API and rewrite data/review/; without it this is a dry run")
+    parser.add_argument("--rerun-plus-minus-no", action="store_true",
+                        help="check only the rows whose current verdict is no and whose excerpt has a plus or minus; every other row is left as it is")
     parser.add_argument("--wait-minutes", type=float, default=60)
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
     cfg = llm.LlmConfig.from_config(config["llm"])
     targets = companies(config, args.company)
-    requests, index = build_requests(targets)
+    requests, index = build_requests(targets, only_plus_minus_no=args.rerun_plus_minus_no)
 
     archive, ledger = llm.RawArchive(STEP), llm.Ledger()
     have, todo = plan_requests(requests, archive.load(), cfg.model)

@@ -29,6 +29,15 @@ prints the EDGAR URL again, and asks whether to mark that row hand-verified on t
   change-pending only rows with `change_pending_review=true`: a re-derive changed an assumption field, a flag or
                  a sign on a row that was already touched, and the new values wait in `aid_proposed_change`
 
+  fast           only rows that are safe to go through quickly: unreviewed, `aid_capture_method=sentence`,
+                 `aid_verify=yes`, no `aid_flag_note`, not a conflict, not an empty block, no change or
+                 acknowledgement pending, a reviewer_note that is still empty, and a missed value (if any) that did
+                 not land on the worse side of its range. Shown in a compact form (`render_compact`), and `y`
+                 needs no note; `n` and `e` still do their usual thing
+  slow           the complement of `fast` among unreviewed rows: everything that needs a closer look. An unreviewed
+                 row is one not yet approved and not yet rejected (a rejection leaves a note), or one with a
+                 change or acknowledgement waiting
+
 Multiple specs combine with AND. Rows that do not match are never shown and never written to
 differently than they already were. When any filter is active, approving a row requires a non-empty
 reviewer_note: if `y` is pressed and the note is still empty, the tool prompts for one and saves it
@@ -70,6 +79,8 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Callable, TextIO
+
+from research_record import polarity, rubric
 
 RECORD_ID = "record_id"
 APPROVED = "approved"
@@ -260,10 +271,59 @@ def due_for_hand_verify(rows: list[dict[str, str]]) -> bool:
 AID_VERIFY_COLUMN = "aid_verify"
 
 
+def _float(text: str) -> float | None:
+    try:
+        return float(text.replace(",", "")) if text and text.strip() else None
+    except ValueError:
+        return None
+
+
+def row_direction(row: dict[str, str]) -> str | None:
+    """"better" / "worse" for a row's own numbers, computed as `rr stats` does; None when there is no outcome, the
+    value is inside the range, or the numbers or the metric's polarity are not readable."""
+    value = _float(row.get(OUTCOME_VALUE_COLUMN, ""))
+    if value is None:
+        return None
+    try:
+        return rubric.direction(_float(row.get("assumption.target_low", "")), _float(row.get("assumption.target_high", "")),
+                                value, polarity.higher_is_better(row.get("assumption.metric", "")))
+    except (KeyError, ValueError, TypeError):
+        return None
+
+
+def is_unreviewed(row: dict[str, str]) -> bool:
+    """Not approved, and not rejected (a rejection leaves a note) unless a change or acknowledgement is waiting."""
+    if row.get(APPROVED) == "true":
+        return False
+    return not row.get(REVIEWER_NOTE) or is_change_pending(row) or is_ack_pending(row)
+
+
+def is_fast(row: dict[str, str]) -> bool:
+    if not is_unreviewed(row) or row.get(REVIEWER_NOTE):
+        return False
+    if row.get(CHANGE_PENDING) == "true" or row.get(ACK_PENDING) == "true":
+        return False
+    if row.get("conflict") == "true" or row.get(EMPTY_BLOCK) == "true" or row.get("aid_flag_note"):
+        return False
+    if row.get("aid_capture_method") != "sentence" or row.get(AID_VERIFY_COLUMN) != "yes":
+        return False
+    if row.get(OUTCOME_VALUE_COLUMN) and polarity_unknown(row):
+        return False  # a miss we cannot place against its range may be a worse one
+    return row_direction(row) != "worse"
+
+
+def polarity_unknown(row: dict[str, str]) -> bool:
+    return row.get("assumption.metric", "") not in polarity.load()
+
+
 def parse_filter(spec: str) -> Callable[[dict[str, str]], bool]:
     """One `--filter` spec into a predicate over a row. Raises ValueError on an unrecognised spec."""
     if spec == "verify-no":
         return lambda row: row.get(AID_VERIFY_COLUMN) == "no"
+    if spec == "fast":
+        return is_fast
+    if spec == "slow":
+        return lambda row: is_unreviewed(row) and not is_fast(row)
     if spec == "no-note":
         return lambda row: not row.get(REVIEWER_NOTE)
     if spec == "ack-pending":
@@ -353,6 +413,39 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
     return "\n".join(lines)
 
 
+_SCALES = (1.0, 1e3, 1e6, 1e9, 1e-3, 1e-6, 1e-9)
+
+
+def bracket_targets(text: str, low: str, high: str) -> str:
+    """`text` with each number equal to the target low or high (in any thousand-step of scale, so "$5,000 million"
+    matches a target of 5.0 billion) wrapped in [brackets]; every other number is left alone."""
+    targets = [t for t in (_float(low), _float(high)) if t is not None]
+    if not text or not targets:
+        return text
+
+    def mark(m: re.Match) -> str:
+        n = _float(m.group().rstrip("%"))
+        if n is not None and any(abs(n * k - t) <= 1e-9 * max(1.0, abs(t)) for t in targets for k in _SCALES):
+            return f"[{m.group()}]"
+        return m.group()
+
+    return _NUMBER.sub(mark, text)
+
+
+def render_compact(row: dict[str, str], position: int, total: int) -> str:
+    """The fast-mode view: who, what, the target and the proposed status on one line; the lead-in if there is one;
+    the excerpt with the target numbers bracketed."""
+    lines = [
+        f"{position}/{total}  {row.get('company') or row.get('ticker', '')} | {row.get('assumption.metric', '')} | "
+        f"{row.get('assumption.target_period', '')} | {_range_text(row)} | proposed: {row.get('aid_proposed_status', '') or '(none)'}"
+    ]
+    if row.get("aid_lead_in"):
+        lines.append(f"lead-in: {_clip(row['aid_lead_in'], 200)}")
+    excerpt = bracket_targets(row.get(EXCERPT_COLUMN, ""), row.get("assumption.target_low", ""), row.get("assumption.target_high", ""))
+    lines.append(excerpt or "(no excerpt)")
+    return "\n".join(lines)
+
+
 def _clip(text: str, limit: int) -> str:
     text = " ".join(text.split())
     return text if len(text) <= limit else text[: limit - 1] + "…"
@@ -400,12 +493,13 @@ def run(
     read_key = read_key or default_read_key
     rf = ReviewFile.load(path)
     matches = combine_filters(filters) if filters else None
+    fast = "fast" in (filters or [])
     indices = [n for n, r in enumerate(rf.rows) if matches is None or matches(r)]
     pos = 0
     while pos < len(indices):
         idx = indices[pos]
         row = rf.rows[idx]
-        write(render_row(row, pos + 1, len(indices), wrap))
+        write(render_compact(row, pos + 1, len(indices)) if fast else render_row(row, pos + 1, len(indices), wrap))
         write(CHANGE_PROMPT if is_change_pending(row) else ACK_PROMPT if is_ack_pending(row) else PROMPT)
         key = read_key()
         if key in ("y", "n") and is_change_pending(row):
@@ -421,7 +515,9 @@ def run(
             if row.get(EMPTY_BLOCK) == "true":
                 write("empty block, use s")
                 continue
-            if row.get(SUGGESTED_NOTE) and not row.get(REVIEWER_NOTE):
+            if fast:
+                pass  # fast rows are the ones with nothing to say: approving needs no note
+            elif row.get(SUGGESTED_NOTE) and not row.get(REVIEWER_NOTE):
                 typed = read_line(f"Note [{row[SUGGESTED_NOTE]}]: ").strip()
                 row = edit_field(row, REVIEWER_NOTE, typed or row[SUGGESTED_NOTE])
             elif matches is not None and not row.get(REVIEWER_NOTE):

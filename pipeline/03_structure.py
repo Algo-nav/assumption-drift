@@ -544,6 +544,77 @@ def with_absolute_percent_spread(metric: str, item: dict[str, Any], kinds: dict[
     return item
 
 
+_PM_MARK = r"\s*[,;]?\s*(?:\u00b1|\+\s*/\s*-|plus or minus|plus/minus|plus-or-minus)\s*"
+_PM_CURRENCY_CENTRE = r"\$\s*(?P<c>\d[\d,]*(?:\.\d+)?)\s*(?P<cw>billion|million|thousand|B|M|K)?\b"
+_PM_PERCENT_UNIT = r"(?:%|percent\b|per\s*cent\b)"
+_PM_SPREAD_PERCENT = r"(?P<s>\d[\d,]*(?:\.\d+)?)\s*(?P<su>%|percentage\s+points?|percent\b|per\s*cent\b|basis\s+points?|bps\b)"
+_PRINTED_PLUS_MINUS = [
+    # "$1.52 billion, plus or minus $50 million" / "$0.42 \u00b1 $0.07"
+    ("currency", re.compile(_PM_CURRENCY_CENTRE + _PM_MARK + r"\$\s*(?P<s>\d[\d,]*(?:\.\d+)?)\s*(?P<sw>billion|million|thousand|B|M|K)?\b", re.IGNORECASE)),
+    # "$108.0 billion, plus or minus 2%": a relative spread on a dollar centre
+    ("currency_rel", re.compile(_PM_CURRENCY_CENTRE + _PM_MARK + _PM_SPREAD_PERCENT, re.IGNORECASE)),
+    # "41%, plus or minus 1%" / "62.3 percent \u00b1 50 basis points"
+    ("percent", re.compile(r"(?P<c>\d[\d,]*(?:\.\d+)?)\s*" + _PM_PERCENT_UNIT + _PM_MARK + _PM_SPREAD_PERCENT, re.IGNORECASE)),
+]
+
+
+def _stated_centre(item: dict[str, Any]) -> float | None:
+    low, high = item.get("value_low"), item.get("value_high")
+    if low is None or high is None:
+        return None
+    return (low + high) / 2
+
+
+def with_printed_plus_minus(metric: str, item: dict[str, Any], evidence: str, kinds: dict[str, str]) -> tuple[dict[str, Any], str | None]:
+    """A plus or minus the evidence prints in full (a centre and a spread, side by side) decides the range, by code,
+    whatever endpoints or spread the model returned: "$1.52 billion, plus or minus $50 million" is 1.47 to 1.57 in
+    USD billions, "41%, plus or minus 1%" is 40 to 42, "62.3%, plus or minus 50 bps" is 61.8 to 62.8. The model
+    sometimes returns the endpoints (so the numbers-in-evidence check finds 1.47 nowhere in the text) or a malformed
+    centre and spread; either is replaced. The item gets `_printed`, the centre and spread exactly as printed, and
+    check_numbers_in_evidence then validates those two figures against the text instead of the endpoints.
+
+    Bound to the item only when the printed centre is the figure the model was after (its centre, or the midpoint
+    of its range): an evidence line with two plus-or-minus statements, or one for another metric, is left alone.
+    A currency spread is absolute and worked out in the metric's own unit; a percent spread on a currency centre
+    is relative; on a percent metric a percent or percentage-point spread is absolute points and basis points are
+    a hundredth of one. Returns (item, note); note is None when nothing changed."""
+    kind = kinds.get(metric)
+    want = {"dollars": ("currency", "currency_rel"), "per share": ("currency", "currency_rel"), "percent": ("percent",)}.get(kind)
+    wanted = _stated_centre(item)
+    if want is None or wanted is None or not _PLUS_MINUS.search(evidence):
+        return item, None
+    base = _UNIT_BASE.get(item.get("unit", ""))
+    for label, pattern in _PRINTED_PLUS_MINUS:
+        if label not in want:
+            continue
+        for m in pattern.finditer(evidence):
+            centre_printed = float(m["c"].replace(",", ""))
+            centre_word = _AMOUNT_WORD.get((m.groupdict().get("cw") or "").lower(), 1.0)
+            if label == "percent":
+                centre, spread_kind = centre_printed, "absolute"
+            elif base is None:
+                continue
+            else:
+                centre, spread_kind = centre_printed * centre_word / base, "absolute"
+            if abs(centre - wanted) > 1e-6 * max(1.0, abs(wanted)):
+                continue
+            spread_printed = float(m["s"].replace(",", ""))
+            if label == "currency":
+                spread_word = _AMOUNT_WORD.get((m["sw"] or "").lower(), centre_word if m["sw"] is None and item.get("unit") != "USD per share" else 1.0)
+                spread = spread_printed * spread_word / base
+            elif label == "currency_rel":
+                spread, spread_kind = spread_printed, "percent"
+            else:
+                spread = spread_printed / 100 if m["su"].lower().startswith(("basis", "bps")) else spread_printed
+            new = {**item, "value_low": _round(centre), "value_high": _round(centre), "plus_minus": _round(spread),
+                   "plus_minus_kind": spread_kind, "_printed": (centre_printed, spread_printed)}
+            changed = any(new[k] != item.get(k) for k in ("value_low", "value_high", "plus_minus", "plus_minus_kind"))
+            note = (f"the range was worked out from the printed plus or minus ({m.group().strip()!r}), not taken from the model; the spread is {spread_kind}"
+                    if changed else None)
+            return new, note
+    return item, None
+
+
 def check_range_language(item: dict[str, Any], evidence: str) -> None:
     """A range must be in the words. Whatever the model was told, two separate figures ("$755 million" and
     "$915 million") never become 755 to 915, and a plus or minus needs plus or minus in the evidence."""
@@ -661,6 +732,11 @@ def check_numbers_in_evidence(item: dict[str, Any], evidence: str) -> None:
     evidence. The sign is not compared: "($0.03)" and "an expense of $10 million" are printed without one.
     An answer taken from the line before or after the evidence would have nothing in its excerpt to support it."""
     printed = numbers_in(evidence)
+    if item.get("_printed"):  # a plus or minus read from the text: the centre and the spread as printed are what has to be there
+        for value in item["_printed"]:
+            if round(abs(value), 6) not in printed:
+                raise ValueError(f"{value:g} (the printed centre or spread of a plus or minus) is not in the evidence text")
+        return
     for key in ("value_low", "value_high"):
         value = item[key]
         if value is not None and round(abs(value), 6) not in printed:
@@ -989,6 +1065,22 @@ def with_heading_basis(metric: str, candidate: dict[str, Any], evidence: str, me
     return metric
 
 
+def trim_to_figure_sentences(text: str, item: dict[str, Any]) -> str:
+    """`text` cut down to the sentence(s) that print the item's own figure, for a line that runs over the excerpt
+    limit: an outlook paragraph carries its revenue and its margin guidance together, and a company's boilerplate
+    ("outlook statements are based on current expectations") can sit in the same line. The span from the first
+    sentence with the figure to the last is kept if it fits; if not, only the first such sentence. Verbatim: the
+    result is a slice of `text`. Unchanged when no sentence prints the figure (the guard that follows rejects it)."""
+    figures = {round(abs(v), 6) for key in ("value_low", "value_high", "plus_minus") if isinstance(v := item.get(key), (int, float))}
+    if (centre := _stated_centre(item)) is not None:
+        figures.add(round(abs(centre), 6))  # the model may have returned the endpoints of a "$1.52 billion, plus or minus $50 million"
+    hits = [(start, end) for start, end in sentence_spans(text) if numbers_in(text[start:end]) & figures]
+    if not hits:
+        return text
+    span = text[hits[0][0] : hits[-1][1]]
+    return span if len(span) <= EXCERPT_LIMIT else text[hits[0][0] : hits[0][1]]
+
+
 def evidence_text(candidate: dict[str, Any], item: dict[str, Any]) -> str:
     """The verbatim text the item rests on: the sentence, or the lines of the section the model pointed at."""
     if not is_block(candidate):
@@ -1000,6 +1092,8 @@ def evidence_text(candidate: dict[str, Any], item: dict[str, Any]) -> str:
     text = "\n".join(lines[first - 1 : last])
     if len(text) > EXCERPT_LIMIT:
         text = lines[last - 1]  # the value line alone
+    if len(text) > EXCERPT_LIMIT:
+        text = trim_to_figure_sentences(text, item)
     if len(text) > EXCERPT_LIMIT:
         raise ValueError(f"the evidence is {len(text)} chars, over the {EXCERPT_LIMIT} char excerpt limit")
     return text
@@ -1203,7 +1297,9 @@ def derive_drafts(
                 if not from_columns:
                     metric = with_heading_basis(metric, cand, excerpt, metrics)
                 check_unit_kind(metric, item["unit"], kinds)
-                check_not_a_change(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
+                item, printed_note = with_printed_plus_minus(metric, item, excerpt, kinds)
+                if "_printed" not in item:  # "$1.52 billion, plus or minus $50 million" is a level whatever else the sentence says
+                    check_not_a_change(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
                 check_not_relative_to_prior_period(metric, (item.get("value_low"), item.get("value_high")), excerpt, kinds)
                 stated = with_one_sided_low(item, excerpt)
                 stated, spread_note = with_currency_spread_absolute(metric, stated, excerpt, kinds)
@@ -1212,7 +1308,7 @@ def derive_drafts(
                 low, high, parens_note = fix_parens_sign(
                     metric, low, high, excerpt, kinds, tax_rate_parens_negative=company.tax_rate_parens_negative)
                 low, high, expense_note = fix_expense_of_sign(metric, low, high, excerpt)
-                parens_note = "; ".join(n for n in (before_note, period_note, basis_note, spread_note, parens_note, expense_note) if n) or None
+                parens_note = "; ".join(n for n in (before_note, period_note, basis_note, printed_note, spread_note, parens_note, expense_note) if n) or None
                 check_range_language(stated, excerpt)
                 check_numbers_in_evidence(stated, excerpt)
                 check_not_past_tense(excerpt)
