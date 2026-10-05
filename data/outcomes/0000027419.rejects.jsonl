@@ -1,3 +1,5 @@
 {"draft_id": "01DJRQJ7008QB8AP3SKEVSFT9M", "output": {"index": 1, "value": 1.37, "unit": "USD per share"}, "reason": "the excerpt has forward-looking wording (expected, expects, guidance, outlook or anticipates) with no past-tense reporting verb, so it does not report a result"}
+{"draft_id": "01FX1CDM007FCRA8ER59QY0114", "output": {"index": 4, "value": 3.8, "unit": "USD billions"}, "reason": "cannot convert 'USD billions' to 'percent'"}
+{"draft_id": "01GAMHK300HZSHX7542M97T27R", "output": {"index": 4, "value": 3.8, "unit": "USD billions"}, "reason": "cannot convert 'USD billions' to 'percent'"}
 {"draft_id": "01HYESHZ00RB2SABANV5AM3TR4", "output": {"index": 3, "value": 0.1, "unit": "percent"}, "reason": "reported 0.1 is 0.1x the guidance 1: likely a unit or row mix-up"}
 {"draft_id": "01J5S3QC00KTMFWY56F53V585W", "output": {"index": 3, "value": 0.1, "unit": "percent"}, "reason": "reported 0.1 is 0.1x the guidance 1: likely a unit or row mix-up"}

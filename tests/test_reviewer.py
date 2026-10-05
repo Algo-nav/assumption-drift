@@ -660,7 +660,7 @@ def test_an_unreadable_proposal_applies_nothing_but_still_clears(tmp_path) -> No
 
 # --- fast / slow ------------------------------------------------------------------
 
-FAST_COLUMNS = COLUMNS + ["company", "aid_capture_method", "aid_lead_in"]
+FAST_COLUMNS = COLUMNS + ["company", "aid_capture_method", "aid_lead_in", "aid_context"]
 
 
 def frow(record_id, **overrides) -> dict[str, str]:
@@ -757,6 +757,12 @@ def test_compact_render_is_header_lead_in_excerpt() -> None:
         "lead-in: For the fourth quarter of fiscal 2026, we expect:",
         "Revenue is expected to be $[5.0] billion to $[6.0] billion.",
     ]
+
+
+def test_compact_render_shows_the_context_sentences_when_the_excerpt_names_no_period() -> None:
+    out = rv.render_compact(frow("R1", aid_context="Q4 FY2026 outlook. We expect:"), 1, 1).split("\n")
+    assert out[-1] == "names no period; sent to the model before it: Q4 FY2026 outlook. We expect:"
+    assert len(rv.render_compact(frow("R1"), 1, 1).split("\n")) == 2
 
 
 def test_compact_render_omits_an_absent_lead_in_and_falls_back_to_ticker() -> None:

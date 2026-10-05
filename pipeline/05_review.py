@@ -22,6 +22,8 @@ an unapproved row is never published.
                  filing's source and the start of the block, and `aid_flag_note` says why it is empty.
                  It is not a record: its metric, unit and range are blank, so it cannot be published
                  whatever is put in `approved`. If the block does hold guidance, add the rows by hand.
+  aid_context    on a row whose excerpt names no period, the two sentences before it that 03_structure sent the
+                 model, which is where the model took the period from. `rr review --filter fast` shows it.
   aid_*          context to help the reviewer. Not schema fields, and ignored downstream:
                  what the rubric would call the row, how the line was captured, the heading,
                  lead-in and table header row the period was inferred from, and why an
@@ -67,6 +69,10 @@ verdict with an empty one. This is for the case where 03_structure or 04_outcome
 for a draft that is already queued: the normal run above only appends what is new, it never revisits a row
 once it is in the file.
 
+The refresh also drops an outlook-block flag row (`empty_block`) once a draft exists for the same block, since
+the flag only said that the block produced none. A flag with a reviewer note, approval or hand-verification
+mark on it is kept.
+
 A row with a human edit is not rewritten, but an acknowledgement 04 finds for it is not dropped either: it
 goes into `aid_ack_proposed_at`, `aid_ack_proposed_excerpt`, `aid_ack_proposed_url` (and
 `aid_ack_proposed_evidence`, the whole evidence block as JSON, so accepting it can fill every real column) with
@@ -95,6 +101,7 @@ import hashlib
 import json
 import os
 import sys
+import importlib
 import typing
 from collections import Counter
 from datetime import date
@@ -103,7 +110,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, RAW_DIR, REVIEW_DIR, Company, companies, load_config
+from pipeline.common import CANDIDATES_DIR, CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, RAW_DIR, REVIEW_DIR, Company, companies, load_config, stable_ulid
 from research_record import rubric
 from research_record.schema import ResearchRecord
 from research_record.text import html_to_text
@@ -114,7 +121,7 @@ FLAG_COLUMNS = ["conflict", "empty_block", "ack_pending_review", "change_pending
 AID_COLUMNS = ["aid_proposed_status", "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_value_column",
                "aid_outcome_note", "aid_flag_note", "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note",
                "aid_ack_proposed_at", "aid_ack_proposed_excerpt", "aid_ack_proposed_url", "aid_ack_proposed_evidence",
-               "aid_proposed_change", "aid_derived_snapshot"]
+               "aid_proposed_change", "aid_derived_snapshot", "aid_context"]
 
 
 # --- columns ---------------------------------------------------------------
@@ -242,6 +249,10 @@ def withdrawal_of(outcome_row: dict[str, Any] | None) -> dict[str, Any] | None:
 PROPOSABLE = ([c for c in COLUMNS if c.startswith("assumption.") and not c.startswith("assumption.evidence.")]
               + ["claim", "invalidation_condition", "aid_flag_note", "conflict"])
 _NUMBER_COLUMNS = ("assumption.target_low", "assumption.target_high")
+#: What an outcome 04 finds for a row that has none is proposed as: every outcome column, the days to it, and the note
+#: that said why there was none (cleared on accept). `aid_proposed_status` is recomputed when it is accepted, from the
+#: row's own targets, which a person may have edited.
+OUTCOME_PROPOSAL_COLUMNS = ([c for c in COLUMNS if c.startswith("outcome.")] + ["days_to_falsifiable", "aid_outcome_note"])
 
 
 def derived_snapshot(row: dict[str, str]) -> str:
@@ -250,7 +261,28 @@ def derived_snapshot(row: dict[str, str]) -> str:
     return json.dumps({c: row.get(c, "") for c in PROPOSABLE}, sort_keys=True)
 
 
-def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: date) -> dict[str, str]:
+def load_candidates(cik: str) -> dict[tuple[str, int], dict[str, Any]]:
+    """A cik's sentence candidates by (accession, char_start): a draft's custom_id is `c-{cik}-{accession}-{char_start}`."""
+    return {(c["accession"].replace("-", ""), int(c["char_start"])): c for c in _read_jsonl(CANDIDATES_DIR / f"{cik}.jsonl")}
+
+
+def period_context(draft: dict[str, Any], excerpt: str, candidates: dict[tuple[str, int], dict[str, Any]] | None) -> str:
+    """The two sentences 03_structure sent the model as "Lines before" the line, when the excerpt itself names no period.
+    The model then took the period from them, and the reviewer needs to see where it came from. Blank when the excerpt
+    names a period, when the draft is not a sentence capture, or when its candidate cannot be found."""
+    parse_periods = importlib.import_module("pipeline.02_candidates").parse_periods
+    if not candidates or draft.get("capture_method") != "sentence" or parse_periods(excerpt):
+        return ""
+    try:
+        _, _, accession, char_start = draft["custom_id"].rsplit("-", 3)
+        candidate = candidates[(accession, int(char_start))]
+    except (KeyError, ValueError):
+        return ""
+    return " ".join(" ".join(candidate.get("context_before") or []).split())
+
+
+def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: date,
+              candidates: dict[tuple[str, int], dict[str, Any]] | None = None) -> dict[str, str]:
     record = build_record(draft, outcome_row, today)
     withdrawal = withdrawal_of(outcome_row)
     row = {c: "" for c in COLUMNS}
@@ -273,6 +305,7 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
         aid_value_column=draft.get("value_column") or "",
         aid_outcome_note="" if record.outcome else (outcome_row or {}).get("outcome_reason") or "outcome search not run",
         aid_flag_note=draft.get("parens_note") or "",
+        aid_context=period_context(draft, record.assumption.evidence.excerpt, candidates),
         aid_withdrawal_note=(f"filed {withdrawal['withdrawn_at']}, before the period closed on {withdrawal['period_close']} "
                              f"({withdrawal['evidence']['source_url']}): {withdrawal['evidence']['excerpt']}") if withdrawal else "",
     )
@@ -333,6 +366,7 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
     drafts = _read_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl")
     blocks = _read_jsonl(DRAFTS_DIR / f"{company.cik}.empty_blocks.jsonl")
     outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
+    candidates = load_candidates(company.cik)
     path = REVIEW_DIR / f"{company.cik}.csv"
     existing = read_csv(path) if path.exists() else []
     known = {r["record_id"] for r in existing}
@@ -342,7 +376,7 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
         if d["draft_id"] in known:
             continue
         try:
-            new_rows.append(build_row(d, outcomes.get(d["draft_id"]), today))
+            new_rows.append(build_row(d, outcomes.get(d["draft_id"]), today, candidates))
         except (ValidationError, KeyError, ValueError) as exc:
             stats["invalid"] += 1
             print(f"  {d['draft_id']}: not a valid record, left out of the queue: {str(exc)[:160]}", file=sys.stderr)
@@ -370,7 +404,7 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
 PIPELINE_OWNED_PREFIXES = ("assumption.", "claim", "invalidation_condition", "outcome.", "acknowledgement_evidence.",
                             "acknowledged_at", "days_to_", "aid_proposed_status", "aid_capture_method", "aid_heading",
                             "aid_lead_in", "aid_table_header", "aid_value_column", "aid_outcome_note", "aid_flag_note",
-                            "aid_withdrawal_note", "aid_derived_snapshot")
+                            "aid_withdrawal_note", "aid_derived_snapshot", "aid_context")
 
 
 def is_pipeline_owned(column: str) -> bool:
@@ -471,7 +505,10 @@ def propose_change(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]
     produced is proposed: a flag note, the conflict flag, and a sign flipped on the target numbers (with the claim and
     invalidation condition written from them). Nothing is proposed again once a reviewer has rejected that very change
     (the note carries `[hash]`), and a pending one the pipeline no longer stands behind, or the row now already has,
-    is cleared. The snapshot is brought up to date either way."""
+    is cleared. The snapshot is brought up to date either way.
+
+    An outcome is proposed in the same way, but only for a row that has none (a row's outcome is never overwritten):
+    when 04 found one, all its columns go into the proposal, and accepting it recomputes the row's proposed status."""
     snapshot_text = row.get("aid_derived_snapshot") or ""
     pending = row.get("change_pending_review") == "true"
     try:
@@ -486,6 +523,8 @@ def propose_change(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]
         flipped = any(_signs_flipped(row.get(c, ""), fresh.get(c, "")) for c in _NUMBER_COLUMNS)
         changed = [c for c in differing if c in ("aid_flag_note", "conflict")
                    or (flipped and c in (*_NUMBER_COLUMNS, "claim", "invalidation_condition"))]
+    if not row.get("outcome.reported_value") and fresh.get("outcome.reported_value"):
+        changed += [c for c in OUTCOME_PROPOSAL_COLUMNS if fresh.get(c, "") != row.get(c, "") and c not in changed]
     if any(c in changed for c in _NUMBER_COLUMNS) and fresh.get("aid_proposed_status", "") != row.get("aid_proposed_status", ""):
         changed.append("aid_proposed_status")
     base = {**row, "aid_derived_snapshot": derived_snapshot(fresh)}
@@ -496,6 +535,18 @@ def propose_change(row: dict[str, str], fresh: dict[str, str]) -> dict[str, str]
     if f"[{change_hash(changes)}]" in row.get("reviewer_note", ""):
         return cleared if pending else base
     return {**base, "change_pending_review": "true", "aid_proposed_change": json.dumps(changes, sort_keys=True)}
+
+
+def block_ids_with_a_draft(drafts: dict[str, dict[str, Any]]) -> set[str]:
+    """The record_id an empty-block flag would have for every draft's outlook block (03_structure derives it from the
+    block's custom_id and filing date), so a flag can be matched to a draft that has since been made from its block."""
+    ids: set[str] = set()
+    for d in drafts.values():
+        try:
+            ids.add(stable_ulid(f"{d['custom_id']}|empty_block", date.fromisoformat(d["assumption"]["stated_at"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return ids
 
 
 def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None = None) -> tuple[list[dict[str, str]], Counter]:
@@ -512,10 +563,19 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
         return rows, Counter()
     drafts = {d["draft_id"]: d for d in _read_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl")}
     outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
+    candidates = load_candidates(company.cik)
     stats: Counter = Counter()
     refreshed: list[dict[str, str]] = []
+    drafted_blocks = block_ids_with_a_draft(drafts)
     for row in rows:
         draft = drafts.get(row["record_id"])
+        if row.get("empty_block") == "true" and row["record_id"] in drafted_blocks:
+            # The flag said "this block produced no draft"; one does now, so the flag is stale. A flag a person has
+            # written on is kept: dropping it would lose their note.
+            if untouched_by_a_human(row):
+                stats["flags_dropped"] += 1
+                continue
+            stats["flags_stale_kept"] += 1
         if row.get("empty_block") == "true" or draft is None:
             refreshed.append(row)
             stats["kept"] += 1
@@ -523,7 +583,7 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
         if not untouched_by_a_human(row):
             # Never rewrite a human-touched row, but never drop what 04 found for it either: park it.
             try:
-                fresh = build_row(draft, outcomes.get(row["record_id"]), today)
+                fresh = build_row(draft, outcomes.get(row["record_id"]), today, candidates)
                 with_ack = propose_acknowledgement(row, fresh)
                 proposed = propose_change(with_ack, fresh)
                 stats["ack_proposed"] += with_ack != row
@@ -536,7 +596,7 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
             stats["kept"] += 1
             continue
         try:
-            fresh = build_row(draft, outcomes.get(row["record_id"]), today)
+            fresh = build_row(draft, outcomes.get(row["record_id"]), today, candidates)
         except (ValidationError, KeyError, ValueError) as exc:
             refreshed.append(row)
             stats["invalid"] += 1
@@ -574,6 +634,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {company.ticker}: {len(rows):,} rows ({stats['changed']} changed, {stats['unchanged']} unchanged, "
                   f"{stats['kept']} kept as-is (human-touched, an empty-block flag, or no longer drafted), {stats['invalid']} could not rebuild, "
                   f"{stats['content_sha256_recomputed']} content_sha256 recomputed); "
+                  f"{stats['flags_dropped']} outlook-block flag(s) dropped (a draft exists now), "
+                  f"{stats['flags_stale_kept']} kept with a reviewer note; "
                   f"{stats['ack_proposed']} newly proposed acknowledgement(s), "
                   f"{sum(r.get('ack_pending_review') == 'true' for r in rows)} ack-pending in all; "
                   f"{stats['change_proposed']} newly proposed change(s), "

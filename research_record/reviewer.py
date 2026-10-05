@@ -48,6 +48,10 @@ the keys mean something narrower: `y` copies the proposal into the real acknowle
 the flag (approval is left as it is), `n` clears the proposal and records the reason in `reviewer_note`
 with the proposal's date and URL, so a later refresh does not propose the same one again.
 
+On a row with `change_pending_review=true` whose proposal carries an outcome (04 found one for a row that had none), a
+"PROPOSED OUTCOME (not yet reviewed)" block shows the value, date, excerpt and EDGAR link; `y` writes it into the real
+columns and recomputes `aid_proposed_status` from the row's own targets and the new outcome.
+
 On a row with `change_pending_review=true` a "PROPOSED CHANGE (not yet reviewed)" block shows each proposed
 column with its current value and its proposed value side by side; the real columns are untouched until you
 decide. `y` writes the proposed values into the real columns, clears the proposal and adds "proposed change
@@ -102,6 +106,10 @@ PROPOSED_AT, PROPOSED_EXCERPT, PROPOSED_URL, PROPOSED_EVIDENCE = (
 ACK_EVIDENCE_PREFIX = "acknowledgement_evidence."
 CHANGE_PENDING = "change_pending_review"
 PROPOSED_CHANGE = "aid_proposed_change"
+#: The columns an outcome proposal carries (see pipeline/05_review.py); shown as a PROPOSED OUTCOME block, not as table rows.
+OUTCOME_PROPOSAL_COLUMNS = frozenset({"days_to_falsifiable", "aid_outcome_note"} | {f"outcome.{k}" for k in
+    ("reported_value", "reported_at", "evidence.source_url", "evidence.accession_number", "evidence.filing_type",
+     "evidence.filed_at", "evidence.fetched_at", "evidence.content_sha256", "evidence.excerpt")})
 
 HAND_VERIFY_EVERY = 10  # SCOPE 4.3: at least 10% of approved rows per company
 
@@ -227,12 +235,32 @@ def _add_note(row: dict[str, str], note: str) -> str:
     return f"{existing}; {note}" if existing else note
 
 
+def _recomputed_status(row: dict[str, str]) -> str | None:
+    """What the rubric says of this row's own numbers and outcome, as `aid_proposed_status` does; None when the row
+    does not load as a record. A withdrawal found by 04 is carried in `aid_withdrawal_note`."""
+    from research_record.schema import ResearchRecord
+    from research_record.validate import unflatten_csv_row
+    try:
+        return rubric.resolve_record(ResearchRecord.model_validate(unflatten_csv_row(row)), reviewed=True,
+                                     withdrawn=bool(row.get("aid_withdrawal_note")))
+    except Exception:  # a row a person has edited into something that is not a valid record
+        return None
+
+
 def accept_change(row: dict[str, str]) -> dict[str, str]:
     """The proposed values copied into the real columns (only columns this file has), the proposal and the flag
-    cleared, "proposed change applied" added to the note. Approval is not touched."""
+    cleared, "proposed change applied" added to the note. Approval is not touched. When the proposal carries an
+    outcome, `aid_proposed_status` is recomputed from the row's own targets and the new outcome."""
     changes = proposed_changes(row)
     updated = {**row, **{c: v for c, v in changes.items() if c in row}}
-    updated[REVIEWER_NOTE] = _add_note(row, f"proposed change applied [{change_hash(changes)}]: {', '.join(sorted(changes))}")
+    note = f"proposed change applied [{change_hash(changes)}]: {', '.join(sorted(changes))}"
+    if OUTCOME_VALUE_COLUMN in changes:
+        status = _recomputed_status(updated)
+        if status is None:
+            note += " (proposed status not recomputed: the row does not load as a record)"
+        else:
+            updated["aid_proposed_status"] = status
+    updated[REVIEWER_NOTE] = _add_note(row, note)
     return _clear_change(updated)
 
 
@@ -392,6 +420,13 @@ def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[s
                   f"  EDGAR: {row.get(PROPOSED_URL, '') or '(none)'}"]
     if is_change_pending(row):
         changes = proposed_changes(row)
+        if changes.get(OUTCOME_VALUE_COLUMN):
+            lines += ["", "PROPOSED OUTCOME (not yet reviewed)",
+                      f"  reported {changes[OUTCOME_VALUE_COLUMN]} on {changes.get(OUTCOME_DATE_COLUMN, '') or '(no date)'}",
+                      f"  {highlight_numbers(changes.get(OUTCOME_EXCERPT_COLUMN, ''), wrap) or '(none)'}",
+                      f"  EDGAR: {changes.get('outcome.evidence.source_url', '') or '(none)'}"]
+            changes = {c: v for c, v in changes.items() if c not in OUTCOME_PROPOSAL_COLUMNS}
+    if is_change_pending(row) and changes:
         width = max([len("field")] + [len(c) for c in changes])
         now_width = min(40, max([len("now")] + [len(row.get(c, "")) for c in changes]))
         lines += ["", "PROPOSED CHANGE (not yet reviewed)",
@@ -443,6 +478,8 @@ def render_compact(row: dict[str, str], position: int, total: int) -> str:
         lines.append(f"lead-in: {_clip(row['aid_lead_in'], 200)}")
     excerpt = bracket_targets(row.get(EXCERPT_COLUMN, ""), row.get("assumption.target_low", ""), row.get("assumption.target_high", ""))
     lines.append(excerpt or "(no excerpt)")
+    if row.get("aid_context"):  # the excerpt names no period: these are the sentences the model took it from
+        lines.append(f"names no period; sent to the model before it: {row['aid_context']}")
     return "\n".join(lines)
 
 

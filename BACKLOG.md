@@ -68,3 +68,29 @@ line with the table's column header (`Three Months Ended | Fiscal Year Ended`, f
 `04_outcomes.find_result_header` already finds one) so it can pick the fiscal-year column. Fixtures are the ten
 rows of the diagnostic (five Lowe's, five Home Depot) and the Home Depot FY2022 and FY2025 and Lowe's FY2022
 releases above. Expect it to change the 04 requests for every company, so it costs a re-run of 04.
+
+## 7. A later filing that restates a metric and period at a different number, or prints the earlier guidance beside preliminary results, acknowledges the earlier row
+
+A later filing can name the same metric and the same period as an earlier guidance row and give a different
+number, or print the earlier guidance next to preliminary results. Either way the company is saying the
+earlier figure no longer stands, and that is an acknowledgement of the earlier row. Today neither shape
+reaches the acknowledgement stage: `04_outcomes` looks for a direction word near the metric, and a restated
+number or a side-by-side table has none.
+Fix: in the candidate filter, treat a later filing's line as an acknowledgement candidate when it holds the
+row's metric and period (matched the way the outcome matcher matches them) and either (a) states a different
+number than the row's range, or (b) prints the row's own guidance range next to preliminary results for that
+period. The earliest such filing wins, as it does now. Fixture: AMD `0000002488-22-000163` (cached under
+`data/raw/0000002488/`).
+
+## 8. A row stated after its period closed but before the results filing is a preliminary estimate: flag it, keep it, count it nowhere
+
+A guidance row whose `stated_at` is after the day its period closed and before the filing that reports the
+results is not guidance for a future period: the company is estimating a result it has not yet reported
+(AMD's preannouncement releases are the shape). It is a real statement and worth keeping, but it is not a
+forecast that a later result can meet or miss.
+Fix: flag such a row `preliminary=true` (the period's close comes from the company's fiscal calendar in
+`config.yaml`, the way `04_outcomes` dates a withdrawal, and the results filing is the outcome's own
+evidence filing). Keep it in the data, exclude it from the met, missed and worse counts on the card and on
+the Space, and show it as preliminary wherever its row is listed. This is different from
+`PERIOD_BEFORE_STATED` in `03_structure`, which catches a period the model mislabelled; here the period is
+right and the statement is late.

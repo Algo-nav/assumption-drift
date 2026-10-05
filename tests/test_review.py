@@ -41,15 +41,15 @@ def parts(record_data):
 
 def test_the_columns_follow_the_schema_and_then_the_reviewers() -> None:
     cols = review.COLUMNS
-    assert len(cols) == len(set(cols)) == 68
+    assert len(cols) == len(set(cols)) == 69
     for needed in ["record_id", "claim", "assumption.metric", "assumption.evidence.content_sha256", "outcome.reported_value",
                    "outcome.evidence.excerpt", "acknowledged_at", "acknowledgement_evidence.source_url", "reviewer"]:
         assert needed in cols
-    assert cols[-26:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "change_pending_review", "aid_proposed_status",
+    assert cols[-27:] == ["approved", "hand_verified", "reviewer_note", "conflict", "empty_block", "ack_pending_review", "change_pending_review", "aid_proposed_status",
                           "aid_capture_method", "aid_heading", "aid_lead_in", "aid_table_header", "aid_value_column", "aid_outcome_note", "aid_flag_note",
                           "aid_withdrawal_note", "aid_verify", "aid_verify_reason", "aid_verify_class", "aid_suggested_note", "aid_ack_proposed_at", "aid_ack_proposed_excerpt",
-                          "aid_ack_proposed_url", "aid_ack_proposed_evidence", "aid_proposed_change", "aid_derived_snapshot"]
-    assert set(review.schema_columns()) == set(cols[:-26])
+                          "aid_ack_proposed_url", "aid_ack_proposed_evidence", "aid_proposed_change", "aid_derived_snapshot", "aid_context"]
+    assert set(review.schema_columns()) == set(cols[:-27])
 
 
 # --- the words code writes -------------------------------------------------
@@ -157,11 +157,12 @@ def test_every_row_loads_back_as_a_valid_research_record(parts) -> None:
 
 @pytest.fixture
 def dirs(tmp_path, monkeypatch):
-    for name in ("DRAFTS_DIR", "OUTCOMES_DIR", "REVIEW_DIR", "RAW_DIR"):
+    for name in ("DRAFTS_DIR", "OUTCOMES_DIR", "REVIEW_DIR", "RAW_DIR", "CANDIDATES_DIR"):
         monkeypatch.setattr(review, name, tmp_path / name.split("_")[0].lower())
     (tmp_path / "drafts").mkdir()
     (tmp_path / "outcomes").mkdir()
     (tmp_path / "raw").mkdir()
+    (tmp_path / "candidates").mkdir()
     return tmp_path
 
 
@@ -875,3 +876,82 @@ def test_an_untouched_row_is_refreshed_directly_with_no_proposal(dirs, parts) ->
     seed(dirs, [revised], [outcome_row])
     rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
     assert stats["changed"] == 1 and rows[0]["change_pending_review"] == "false" and rows[0]["assumption.target_low"] == "-6000.0"
+
+
+def test_refresh_drops_an_outlook_block_flag_once_a_draft_exists_for_the_block(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    block = empty_block()
+    flag_id = common.stable_ulid("b-1|empty_block", date.fromisoformat(block["filed_at"]))
+    seed(dirs, [draft], [outcome_row])
+    seed_blocks(dirs, [{**empty_block(block_id=flag_id)}])
+    review.review_company(COMPANY, TODAY)
+    assert sum(r["empty_block"] == "true" for r in review.read_csv(dirs / "review" / f"{COMPANY.cik}.csv")) == 1
+    seed(dirs, [{**draft, "custom_id": "b-1"}], [outcome_row])  # 03_structure now makes a draft from that block
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert [r["empty_block"] for r in rows] == ["false"] and stats["flags_dropped"] == 1
+
+
+def test_refresh_keeps_a_stale_flag_that_a_person_wrote_on(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    flag_id = common.stable_ulid("b-1|empty_block", date(2024, 2, 1))
+    seed(dirs, [draft], [outcome_row])
+    seed_blocks(dirs, [empty_block(block_id=flag_id)])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    rows = [{**r, "reviewer_note": "checked by hand"} if r["empty_block"] == "true" else r for r in review.read_csv(path)]
+    review.write_csv(path, rows)
+    seed(dirs, [{**draft, "custom_id": "b-1"}], [outcome_row])
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert sum(r["empty_block"] == "true" for r in rows) == 1 and stats["flags_stale_kept"] == 1
+
+
+def _sentence_candidate(excerpt: str) -> tuple[dict, dict]:
+    candidate = {"accession": "0000000123-24-000001", "char_start": 55, "context_before": ["Q4 FY2026 outlook.", "We expect:"], "context_after": ["x"]}
+    return candidate, {(candidate["accession"].replace("-", ""), 55): candidate}
+
+
+def test_context_sentences_are_kept_when_the_excerpt_names_no_period(parts) -> None:
+    draft, _, _ = parts
+    _, candidates = _sentence_candidate("")
+    draft = {**draft, "capture_method": "sentence", "custom_id": "c-0000000123-000000012324000001-55"}
+    assert review.period_context(draft, "Revenue is expected to be $5 billion.", candidates) == "Q4 FY2026 outlook. We expect:"
+    assert review.period_context(draft, "Revenue for Q4 FY2026 is expected to be $5 billion.", candidates) == ""
+    assert review.period_context({**draft, "capture_method": "section"}, "Revenue is $5 billion.", candidates) == ""
+    assert review.period_context(draft, "Revenue is $5 billion.", {}) == ""
+
+
+def test_an_outcome_04_finds_for_a_touched_row_that_has_none_is_proposed_and_accepting_it_recomputes_the_status(dirs, parts) -> None:
+    from research_record import reviewer
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [{**outcome_row, "outcome": None, "outcome_reason": None}])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true", reviewer_note="checked")
+    review.write_csv(path, edited)
+    assert review.read_csv(path)[0]["outcome.reported_value"] == ""
+    seed(dirs, [draft], [outcome_row])  # 04 now finds the outcome
+    rows, stats = review.refresh_pipeline_fields(COMPANY, TODAY)
+    row = rows[0]
+    changes = json.loads(row["aid_proposed_change"])
+    assert row["change_pending_review"] == "true" and stats["change_proposed"] == 1
+    assert row["outcome.reported_value"] == "" and changes["outcome.reported_value"] and changes["outcome.evidence.excerpt"]
+    assert "PROPOSED OUTCOME (not yet reviewed)" in reviewer.render_row(row, 1, 1)
+    again, stats2 = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert stats2["change_proposed"] == 0 and again[0]["aid_proposed_change"] == row["aid_proposed_change"]
+    accepted = reviewer.accept_change(row)
+    assert accepted["outcome.reported_value"] == changes["outcome.reported_value"] and accepted["aid_outcome_note"] == ""
+    fresh = review.build_row(draft, outcome_row, TODAY)
+    assert accepted["aid_proposed_status"] == fresh["aid_proposed_status"] != "" and accepted["change_pending_review"] == "false"
+
+
+def test_a_row_that_already_has_an_outcome_never_gets_one_proposed(dirs, parts) -> None:
+    draft, outcome_row, _ = parts
+    seed(dirs, [draft], [outcome_row])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    edited = review.read_csv(path)
+    edited[0].update(approved="true", reviewer_note="checked")
+    review.write_csv(path, edited)
+    rows, _ = review.refresh_pipeline_fields(COMPANY, TODAY)
+    assert rows[0]["change_pending_review"] == "false"
