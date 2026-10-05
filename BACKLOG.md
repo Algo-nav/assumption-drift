@@ -130,3 +130,48 @@ Also under this item, the same symptom in bulk: about 25 recovered AMD rows and 
 outcome. Work out whether they share the Q4 / full-year layout cause or have separate ones before fixing.
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
+
+Also under this item: in two-figure headline sentences ("GAAP EPS: $2.46, Non-GAAP EPS: $2.75", "GAAP EPS:
+$2.83, Record Non-GAAP EPS: $3.41") the GAAP row resolves and the non-GAAP row does not, inconsistently. QCOM
+rows: Q3 FY2021, Q1 FY2024, Q1 FY2025 non-GAAP.
+
+## 11. Outcome matcher accepted a forward-looking range as a reported value
+
+A reported value is a single number. Any candidate that prints a range, or sits in an outlook or guidance
+table, must be rejected as an outcome. Fixtures: QCOM Q4 FY2025 EPS GAAP and EPS non-GAAP rows (guidance
+accession `0000804328-25-000044`), whose outcomes were taken from the Q1 FY2026 guidance lines in the
+2025-11-05 release ("GAAP diluted EPS $2.55 - $2.75", "Non-GAAP diluted EPS $3.30 - $3.50").
+
+Fix: not yet investigated. No pipeline code changed; this entry is the record.
+
+## 12. Qualcomm outlook tables, 2019 to mid-2020: evidence taken from the prior-year results column
+
+Qualcomm's outlook tables from 2019 to mid-2020 have a prior-year results column beside the estimates column.
+The structurer attached the results cell as evidence, so the range guard rejected the real estimate. Evidence
+must come from the estimates cell. Fixtures:
+
+- `0001728949-19-000011` (Q2 FY19): "Revenues $5.2B / $4.4B - $5.2B"
+- `0001728949-19-000034` (Q3 FY19): "$5.6B / $9.2B - $10.2B"
+- `0001728949-19-000053` (Q4 FY19): "$5.8B / $4.3B - $5.1B"
+- `0001728949-19-000071` (Q1 FY20): "$4.8B / $4.4B - $5.2B"
+- the Q2, Q3 and Q4 FY20 releases, same layout.
+
+Roughly seven quarters of revenue and EPS guidance are missing for QCOM because of this.
+
+Fix: not yet investigated. No pipeline code changed; this entry is the record.
+
+## 13. Component figures are being structured as the metric
+
+When the clause containing the number carries "impact", "reduction", "headwind", "attributable to other
+items", "reduce our", or names a segment or program, the number is a component of the metric, not the metric,
+and must be rejected. Fixtures:
+
+- META "reduce our overall operating profit in 2021 by approximately $10 billion" (`0001326801-21-000062`)
+- QCOM "approximate $0.20 reduction to EPS" (`0001728949-22-000039`)
+- QCOM "estimated impact of greater than ($0.30) to EPS" (Q3 FY2020 release)
+- QCOM "EPS attributable to other items ... $3.10 to $3.20" (`0001728949-19-000034`)
+- QCOM "revenues attributable to other items ... approximately $1.8 billion" (Q4 FY2020 release)
+
+Also reject a "fixed estimated Non-GAAP tax rate": it is an accounting convention, not a forecast.
+
+Fix: not yet investigated. No pipeline code changed; this entry is the record.
