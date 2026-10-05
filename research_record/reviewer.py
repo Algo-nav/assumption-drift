@@ -11,6 +11,10 @@ below that, and the EDGAR URL the evidence came from. Keys:
   v  mark hand-verified       hand_verified -> true; stays on the row
   q  quit                     stop here; everything already written is already on disk
 
+A row whose reviewer_note starts with "not guidance", "duplicate", "conflict loser" or "wrong period" is a
+rejected row: `y` on it asks "Approve anyway? [y/N]" and leaves it rejected unless the answer is y, so going back
+over a file cannot approve a rejection by accident.
+
 A row with `empty_block=true` is not a draft record, so `y` on one refuses: it prints "empty block,
 use s" and leaves the row untouched. Use `s` to move past it.
 
@@ -162,6 +166,15 @@ class ReviewFile:
 
 
 # --- what each key does, pure -------------------------------------------------
+
+
+#: A note that starts with one of these is the reason a row was rejected (`n`, or typed by hand into the note).
+REJECTION_PREFIXES = ("not guidance", "duplicate", "conflict loser", "wrong period")
+
+
+def is_rejected(row: dict[str, str]) -> bool:
+    """The row's note says it was rejected. `y` on such a row would approve it with the rejection reason still on it."""
+    return row.get(REVIEWER_NOTE, "").strip().lower().startswith(REJECTION_PREFIXES)
 
 
 def approve(row: dict[str, str]) -> dict[str, str]:
@@ -552,6 +565,8 @@ def run(
             if row.get(EMPTY_BLOCK) == "true":
                 write("empty block, use s")
                 continue
+            if is_rejected(row) and not read_line(f"Rejected: {row[REVIEWER_NOTE]!r}. Approve anyway? [y/N] ").strip().lower().startswith("y"):
+                continue  # stays on the row, still rejected
             if fast:
                 pass  # fast rows are the ones with nothing to say: approving needs no note
             elif row.get(SUGGESTED_NOTE) and not row.get(REVIEWER_NOTE):

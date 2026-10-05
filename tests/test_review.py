@@ -955,3 +955,53 @@ def test_a_row_that_already_has_an_outcome_never_gets_one_proposed(dirs, parts) 
     review.write_csv(path, edited)
     rows, _ = review.refresh_pipeline_fields(COMPANY, TODAY)
     assert rows[0]["change_pending_review"] == "false"
+
+
+# --- a rejected row stays approved=false through every refresh and proposal path --------------------------
+
+
+REJECTED_NOTE = "duplicate: restates the Aug guide from a comparison table; Oct 6 filing's own number is the preliminary 5.6"
+
+
+def _rejected_queue(dirs, parts):
+    draft, outcome_row, ack = parts
+    seed(dirs, [draft])
+    review.review_company(COMPANY, TODAY)
+    path = dirs / "review" / f"{COMPANY.cik}.csv"
+    rows = review.read_csv(path)
+    rows[0].update(approved="false", reviewer_note=REJECTED_NOTE)
+    review.write_csv(path, rows)
+    return draft, outcome_row, ack, path
+
+
+def test_a_rejected_row_stays_approved_false_through_a_plain_append_a_refresh_and_every_proposal(dirs, parts) -> None:
+    draft, outcome_row, ack, path = _rejected_queue(dirs, parts)
+
+    def assert_rejected():
+        row = review.read_csv(path)[0]
+        assert row["approved"] == "false" and row["reviewer_note"].startswith(REJECTED_NOTE)
+
+    # 05 plain append, with one new draft and nothing new
+    seed(dirs, [draft, another(draft, "Z")])
+    review.review_company(COMPANY, TODAY)
+    review.review_company(COMPANY, TODAY)
+    assert_rejected()
+
+    # --refresh-pipeline-fields, with 04 now finding an outcome and an acknowledgement for it (outcome and ack proposals),
+    # and with the draft's derived fields changed (change proposal)
+    changed = copy.deepcopy(draft)
+    changed["assumption"]["target_low"], changed["assumption"]["target_high"] = -changed["assumption"]["target_low"], -changed["assumption"]["target_high"]
+    for drafts, outcomes in (([draft], [{**outcome_row, "acknowledgement": ack}]), ([changed], [outcome_row])):
+        seed(dirs, drafts, outcomes)
+        rows, _ = review.refresh_pipeline_fields(COMPANY, TODAY)
+        review.write_csv(path, rows)
+        assert_rejected()
+
+
+def test_proposal_functions_never_set_approved_on_a_rejected_row() -> None:
+    row = cols(approved="false", reviewer_note=REJECTED_NOTE, **{"assumption.target_period": "Q2 FY2020", "assumption.target_low": "146.0"})
+    fresh = cols(aid_flag_note=FLAG, conflict="true", approved="true", **{"outcome.reported_value": "5.6", "assumption.target_period": "Q2 FY2020",
+                 "assumption.target_low": "-146.0"})
+    for out in (review.propose_change(row, fresh), review.propose_acknowledgement(row, {**fresh, "acknowledged_at": "2026-10-06"}),
+                review.refresh_row(row, fresh)):
+        assert out["approved"] == "false" and out["reviewer_note"].startswith(REJECTED_NOTE)

@@ -814,3 +814,34 @@ def test_fast_mode_keeps_the_every_tenth_hand_verify_stop(tmp_path) -> None:
     rows = read_csv(path)
     assert [r["hand_verified"] for r in rows] == ["false"] * 9 + ["true"]
     assert any("SCOPE 4.3" in m for m in s.out)
+
+
+# --- a rejected row stays rejected ----------------------------------------------
+
+
+REJECTED = "duplicate: restates the Aug guide from a comparison table"
+
+
+def test_y_on_a_rejected_row_asks_first_and_leaves_it_rejected_unless_confirmed(tmp_path) -> None:
+    path = seed(tmp_path, row("R1", reviewer_note=REJECTED), row("R2", reviewer_note="wrong period: Q4"))
+    s = Script(keys=["y", "s", "y"], lines=["", "y"])  # R1: declined, then skipped; R2: confirmed
+    rv.run(path, read_key=s.key, read_line=s.line, write=s.write)
+    on_disk = {r["record_id"]: r for r in read_csv(path)}
+    assert on_disk["R1"]["approved"] == "false" and on_disk["R1"]["reviewer_note"] == REJECTED
+    assert on_disk["R2"]["approved"] == "true"
+
+
+@pytest.mark.parametrize("prefix", ["not guidance", "Duplicate", "conflict loser", "wrong period"])
+def test_every_rejection_prefix_is_recognised(prefix) -> None:
+    assert rv.is_rejected(row("R1", reviewer_note=f"{prefix}: because")) and not rv.is_rejected(row("R1", reviewer_note="checked"))
+
+
+@pytest.mark.parametrize("filters", [None, ["fast"], ["slow"], ["no-note"], ["verify-no"], ["change-pending"], ["ack-pending"]])
+def test_no_filter_or_key_path_approves_a_rejection_the_reviewer_did_not_confirm(tmp_path, filters) -> None:
+    pending = row("R2", reviewer_note=REJECTED, change_pending_review="true",
+                  aid_proposed_change=json.dumps({"aid_flag_note": "x"}), ack_pending_review="true")
+    path = seed(tmp_path, row("R1"), pending)
+    # R1 is rejected with `n`; whatever the filter shows of R2, n/s/v/e never approve it.
+    s = Script(keys=["n", "n", "n", "s", "v", "q"], lines=[REJECTED, "no", "no"])
+    rv.run(path, filters=filters, read_key=s.key, read_line=s.line, write=s.write)
+    assert all(r["approved"] == "false" for r in read_csv(path))
