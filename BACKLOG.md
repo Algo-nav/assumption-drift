@@ -94,3 +94,39 @@ evidence filing). Keep it in the data, exclude it from the met, missed and worse
 the Space, and show it as preliminary wherever its row is listed. This is different from
 `PERIOD_BEFORE_STATED` in `03_structure`, which catches a period the model mislabelled; here the period is
 right and the statement is late.
+
+## 9. A sentence printing a dollar range and a growth range is guidance, and a range can have a negative low end
+
+Two range-parsing defects, both seen in Amazon's guidance sentences. Fixtures: AMZN accession
+`0001018724-22-000011`; META accessions `0001628280-25-036719` and `0001628280-25-047114`.
+
+- A sentence that prints both a dollar range and a growth range ("between $116.0 billion and $121.0 billion,
+  or to grow between 3% and 7%") is guidance. The change-word guard (the one that treats "grow", "increase"
+  and the like as marking a change rather than a level) must not fire when a dollar range is printed in the
+  same sentence: the dollar range is the guided value and the growth range is its restatement.
+  META shows the same guard failing without a growth range printed beside the dollar range: "full year 2025
+  total expenses to be in the range of $114-118 billion" (`0001628280-25-036719`) and the narrowed "$116-118
+  billion" (`0001628280-25-047114`) were rejected because a later clause of the sentence mentions growth. The
+  guard should look only at the clause that carries the dollar range, not the whole sentence.
+- "$(1.0) billion and $3.0 billion" is a range with a negative low end (-1.0 to 3.0), not an endpoint-only
+  value. The parenthesised figure is a negative number, so the range parser must read it as the low end
+  rather than dropping it and keeping only the 3.0.
+
+Fix: both in the range parser and guard. No pipeline code changed yet; this entry is the record.
+
+## 10. Outcomes missing where the filing is cached and the figure is in it
+
+Rows that should have an outcome and have none, although the results filing is in the cache and prints the
+figure. Known rows:
+
+- META revenue Q4 FY2021: reported in `0001326801-22-000008`, $33.67B.
+- META revenue Q4 FY2025: reported 2026-01-28, $59.89B.
+
+The other FY2025 META quarters resolved, so the suspect is the Q4 release layout: a full-year column printed
+next to the quarter column, so the extractor either takes the wrong column or finds two candidates and gives
+up. Check the Q4 table handling first.
+
+Also under this item, the same symptom in bulk: about 25 recovered AMD rows and about 159 MU rows have no
+outcome. Work out whether they share the Q4 / full-year layout cause or have separate ones before fixing.
+
+Fix: not yet investigated. No pipeline code changed; this entry is the record.
