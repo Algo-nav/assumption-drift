@@ -1,6 +1,7 @@
 """The `rr` command line.
 
     rr review <csv> [--filter verify-no] [--filter no-note] [--filter fast|slow] [--filter ack-pending] [--filter change-pending] [--filter ids=<comma-separated record_ids>]
+                      [--dump PATH | --apply PATH]
     rr validate <path>       path is a release .jsonl, or a review-queue .csv (approved rows only)
     rr stats <jsonl> [--json]
 
@@ -28,6 +29,10 @@ def main(argv: list[str] | None = None) -> int:
         help="only rows matching SPEC: verify-no | no-note | fast | slow | ack-pending | change-pending | ids=<comma-separated record_ids>; "
              "repeat to combine with AND",
     )
+    review_parser.add_argument("--dump", type=Path, metavar="PATH",
+                               help="with --filter: write the matching rows as plain-text cards to PATH instead of prompting")
+    review_parser.add_argument("--apply", type=Path, metavar="PATH",
+                               help="apply a CSV of record_id,decision,note (decision y|n|s|v) instead of prompting")
 
     validate_parser = sub.add_parser("validate", help="validate a release .jsonl or an approved review-queue .csv")
     validate_parser.add_argument("path", type=Path)
@@ -40,7 +45,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "review":
         try:
-            reviewer.run(args.csv, filters=args.filter or None)
+            if args.dump and args.apply:
+                raise ValueError("--dump and --apply cannot be combined")
+            if args.dump:
+                print(f"wrote {reviewer.dump(args.csv, args.dump, args.filter)} card(s) to {args.dump}")
+            elif args.apply:
+                result = reviewer.apply_decisions(args.csv, args.apply)
+                print("applied: " + ", ".join(f"{d}={n}" for d, n in result.counts.items()))
+                print(f"skipped (s): {', '.join(result.skipped) or 'none'}")
+                for rid, why in result.warned:
+                    print(f"warning: {rid}: {why}")
+                print(f"warned: {', '.join(r for r, _ in result.warned) or 'none'}")
+            else:
+                reviewer.run(args.csv, filters=args.filter or None)
         except (FileNotFoundError, ValueError) as exc:
             print(f"rr review: {exc}", file=sys.stderr)
             return 1

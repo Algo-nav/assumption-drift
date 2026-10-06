@@ -399,9 +399,10 @@ def _range_text(row: dict[str, str]) -> str:
     return f"{body} {unit}".strip()
 
 
-def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[str], str] | None = None) -> str:
+def render_row(row: dict[str, str], position: int, total: int, wrap: Callable[[str], str] | None = None,
+               show_id: bool = False) -> str:
     lines = [
-        f"── {position}/{total} ── {row.get('ticker', '')}  {row.get('assumption.metric', '')}  "
+        f"── {position}/{total} ── " + (f"{row.get(RECORD_ID, '')} ── " if show_id else "") + f"{row.get('ticker', '')}{row.get('assumption.metric', '')}  "
         f"{row.get('assumption.target_period', '')}  (stated {row.get('assumption.stated_at', '')})"
     ]
     if row.get(EMPTY_BLOCK) == "true":
@@ -526,6 +527,92 @@ def default_read_key(stream: TextIO = sys.stdin) -> str:
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
     return ch.lower()
+
+
+# --- --dump and --apply ----------------------------------------------------------
+
+
+def dump(path: Path, out: Path, filters: list[str]) -> int:
+    """Every row the filters would show, as the interactive cards (plain text, record_id after the index), to `out`.
+    Writes nothing to the review CSV. Returns the number of cards."""
+    if not filters:
+        raise ValueError("--dump needs at least one --filter")
+    rf = ReviewFile.load(path)
+    matches = combine_filters(filters)
+    rows = [r for r in rf.rows if matches(r)]
+    cards = [render_row(r, n, len(rows), wrap=lambda t: t, show_id=True) for n, r in enumerate(rows, 1)]
+    out.write_text("\n\n".join(cards) + ("\n" if cards else ""), encoding="utf-8")
+    return len(cards)
+
+
+DECISIONS = ("y", "n", "s", "v")
+
+
+@dataclass
+class ApplySummary:
+    counts: dict[str, int]
+    skipped: list[str]
+    warned: list[tuple[str, str]]
+
+
+def _apply_one(row: dict[str, str], decision: str, note: str) -> tuple[dict[str, str] | None, str]:
+    """The row after `decision`, or (None, why) when the decision is refused. Uses the same row functions as the keys."""
+    if decision == "s":
+        return row, ""
+    if is_change_pending(row) or is_ack_pending(row):
+        return None, "a proposal is pending: settle it interactively"
+    if decision == "n":  # allowed on an empty block too: the interactive `n` just writes the rejection note
+        if not note.strip().lower().startswith(REJECTION_PREFIXES):
+            return None, f"note must start with one of {', '.join(REJECTION_PREFIXES)}"
+        return reject(row, note), ""
+    if row.get(EMPTY_BLOCK) == "true":
+        return None, "empty block"
+    if is_rejected(row) and (not note.strip() or note.strip().lower().startswith(REJECTION_PREFIXES) or note == row.get(REVIEWER_NOTE)):
+        return None, f"row is rejected ({row[REVIEWER_NOTE]!r}) and the note does not replace it"
+    final = note if note.strip() else row.get(REVIEWER_NOTE, "")
+    if not final.strip():
+        return None, "approving needs a note"
+    row = approve(edit_field(row, REVIEWER_NOTE, final))
+    return (hand_verify(row) if decision == "v" else row), ""
+
+
+def apply_decisions(path: Path, decisions: Path) -> ApplySummary:
+    """Apply a record_id,decision,note CSV to the review CSV; rows not named are untouched. Saves once, only if something changed."""
+    rf = ReviewFile.load(path)
+    with decisions.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if not {RECORD_ID, "decision", "note"} <= set(reader.fieldnames or []):
+            raise ValueError(f"{decisions}: needs columns record_id, decision, note")
+        entries = list(reader)
+    by_id = {r[RECORD_ID]: n for n, r in enumerate(rf.rows)}
+    summary = ApplySummary({d: 0 for d in DECISIONS}, [], [])
+    seen: set[str] = set()
+    changed = False
+    for e in entries:
+        rid, decision, note = (e[RECORD_ID] or "").strip(), (e["decision"] or "").strip().lower(), e["note"] or ""
+        if rid in seen:
+            summary.warned.append((rid, "duplicate record_id in decision file"))
+            continue
+        seen.add(rid)
+        if rid not in by_id:
+            summary.warned.append((rid, "no such record_id in the review file"))
+            continue
+        if decision not in DECISIONS:
+            summary.warned.append((rid, f"unknown decision {decision!r}"))
+            continue
+        updated, why = _apply_one(rf.rows[by_id[rid]], decision, note)
+        if updated is None:
+            summary.warned.append((rid, why))
+            continue
+        if decision == "s":
+            summary.skipped.append(rid)
+        elif updated != rf.rows[by_id[rid]]:
+            rf.rows[by_id[rid]] = updated
+            changed = True
+        summary.counts[decision] += 1
+    if changed:
+        rf.save()
+    return summary
 
 
 # --- the loop --------------------------------------------------------------
