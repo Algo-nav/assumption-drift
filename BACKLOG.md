@@ -4,6 +4,25 @@ Extractor fixes found while reviewing the three-company pilot, needed before the
 Not implemented here: each one needs a real example from a fourth company to write a test against
 first, and none of the three pilot companies' data is wrong badly enough to hold up Phase 3 for it.
 
+## Rejection notes in use
+
+Keep the wording of review rejection notes consistent. The forms in use:
+
+- `not guidance: <reason>`
+- `duplicate: <where the figure lives>`
+- `conflict loser`
+- `wrong period`
+
+Standing reasons for `not guidance: <reason>`, new this week:
+
+- component figure (impact, reduction, headwind, attributable to other items, segment)
+- qualitative outlook with no number
+- boilerplate preamble or disclaimer
+- FASB guidance
+- fixed non-GAAP tax rate as accounting convention
+- adjusted EBITDA not a canonical metric
+- number with no target period
+
 ## 1. Salesforce "N/A | value" table rows: assign the value to column 2, not column 1
 
 Salesforce's guidance tables sometimes print a quarter column and a full-year column side by side,
@@ -135,12 +154,40 @@ Also under this item: in two-figure headline sentences ("GAAP EPS: $2.46, Non-GA
 $2.83, Record Non-GAAP EPS: $3.41") the GAAP row resolves and the non-GAAP row does not, inconsistently. QCOM
 rows: Q3 FY2021, Q1 FY2024, Q1 FY2025 non-GAAP.
 
-## 11. Outcome matcher accepted a forward-looking range as a reported value
+Third cause, derived metrics: Home Depot's releases do not print the effective tax rate, operating margin or
+gross margin as a reported line. They are in the 10-K and derivable from two stated lines (provision over
+pre-tax earnings; operating income over net sales; gross profit over net sales). Rows affected: every HD tax
+rate, operating margin and gross margin row with "outcome: none". Lowe's will have the same.
+
+## 11. Outcome matcher accepted a forward-looking range as a reported value (top priority, fix before publish)
 
 A reported value is a single number. Any candidate that prints a range, or sits in an outlook or guidance
 table, must be rejected as an outcome. Fixtures: QCOM Q4 FY2025 EPS GAAP and EPS non-GAAP rows (guidance
 accession `0000804328-25-000044`), whose outcomes were taken from the Q1 FY2026 guidance lines in the
 2025-11-05 release ("GAAP diluted EPS $2.55 - $2.75", "Non-GAAP diluted EPS $3.30 - $3.50").
+
+Second rule: a forward-looking candidate must be rejected as an outcome. Any outcome candidate containing
+"expect", "forecast", "guidance" or "outlook" is forward-looking. Fixture: AVGO Q3 FY2026 operating margin
+non-GAAP took its outcome from the CFO quote in the 2026-09-02 release ("we expect to maintain our non-GAAP
+operating margin at 66%"), which is Q4 outlook, not the Q3 result.
+
+Third rule, Home Depot: nearly every HD row whose period's Q4 release also carries the next year's guide took
+its outcome from that guide. Rule: a candidate sentence of the form "<metric> of approximately <number>"
+inside a Business Outlook or Guidance section is a guide, not a result, and must be rejected. Fixtures, all
+CIK 0000354950:
+
+- FY2022 tax rate row (stated 2022-11-15): outcome "Tax rate of approximately 24.5 percent", from the
+  2023-02-21 release.
+- FY2023 operating margin rows: outcome "Operating margin of approximately 14.1%", from the 2024-02-20
+  release.
+- FY2024 gross margin and operating margin rows: outcomes "Gross margin of approximately 33.4%" and
+  "Operating margin of approximately 13.0%", from the 2025-02-25 release.
+- FY2025 rows: outcomes "Gross margin of approximately 33.1%", "Adjusted operating margin of approximately
+  12.8% to 13.0%" and "Effective tax rate of approximately 24.3%", from the 2026-02-24 release.
+
+Separate defect: one of these was proposed "met" with 24.5 against a 24.6 point target. Something is applying
+a tolerance to point targets, and none should exist. A point target is met only on an exact match at the
+printed precision. Find where the tolerance comes from.
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
 
@@ -173,5 +220,43 @@ and must be rejected. Fixtures:
 - QCOM "revenues attributable to other items ... approximately $1.8 billion" (Q4 FY2020 release)
 
 Also reject a "fixed estimated Non-GAAP tax rate": it is an accounting convention, not a forecast.
+
+Fix: not yet investigated. No pipeline code changed; this entry is the record.
+
+Also under this item: a segment figure structured as total revenue. Fixture: AVGO `0001730168-24-000095`,
+"revenue from AI to be $12 billion" (AI is a segment of revenue, not total revenue).
+
+Also under this item, Home Depot fixtures:
+
+- "Interest expense of approximately $1.8 billion" and "Net interest expense of approximately $2.2 billion"
+  structured as other income and expense (`0000354950-23-000110`, `0000354950-25-000030`).
+- "approximately 40 basis point impact from acquired intangible asset amortization" structured as operating
+  margin non-GAAP (`0000354950-25-000030`, `0000354950-25-000238`).
+
+Also under this item: the word "guidance" in the accounting sense ("FASB guidance", "accounting guidance",
+"guidance issued") must not open an outlook block. Fixture: AVGO `0001730168-20-000126`.
+
+## 14. Printed plus-or-minus repair fails when the sentence ends "; and" or "; or" (low priority)
+
+The printed plus-or-minus repair does not fire when the sentence ends with "; and" or "; or". Fixtures: AVGO
+`0001730168-20-000099` and `0001730168-20-000154`. The table row for the same figure was captured, so the
+loss is a duplicate, not a missing record.
+
+Fix: strip the trailing "; and" or "; or" before the repair. No pipeline code changed; this entry is the record.
+
+## 15. Item returned with line_first 0 and line_last 0 is rejected by the section-line guard (low priority)
+
+When the model omits line numbers, the item comes back with `line_first` 0 and `line_last` 0 and the
+section-line guard rejects it. Fixture: AVGO `0001730168-26-000051`. The table row carried the figure, so
+again the loss is a duplicate, not a missing record.
+
+Fix: fall back to text match when the model omits line numbers. No pipeline code changed; this entry is the record.
+
+## 16. Block finder flags results paragraphs as outlook blocks with no items (low priority)
+
+Home Depot 2019 to 2021 releases put guidance in prose ("The Company expects its fiscal 2019 sales to grow by
+approximately 3.3 percent and comp sales ... up approximately 5.0 percent") after a results paragraph. The
+results paragraph was flagged as an outlook block with no items, while the prose guidance was captured
+separately. Harmless, but the flagged empty blocks are noise in review.
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
