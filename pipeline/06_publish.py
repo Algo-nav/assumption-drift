@@ -407,7 +407,7 @@ def main(argv: list[str] | None = None) -> int:
 
     index_path = space.write_space(
         records, result, figures.acknowledgement_summary(records),
-        strip_plot=FIGURES_DIR / figures.FIGURE_FILES[0], card_text=card_text, hf_user=hf_user,
+        card_text=card_text, hf_user=hf_user,
         generated_at=generated_at, space_dir=SPACE_DIR,
         filings_from=date.fromisoformat(config["edgar"]["date_from"]), filings_to=date.fromisoformat(config["edgar"]["date_to"]),
     )

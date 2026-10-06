@@ -16,7 +16,6 @@ space = importlib.import_module("pipeline.space")
 
 REPO = Path(__file__).resolve().parent.parent
 ALLOWED = ("sec.gov", "huggingface.co", "github.com")
-PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 32
 
 
 def make(record_data, record_id, *, company="Example Corporation", reported=4_800.0, ack=False, stated=date(2024, 2, 1)):
@@ -32,7 +31,7 @@ def make(record_data, record_id, *, company="Example Corporation", reported=4_80
 def page(records):
     return space.render_page(
         records, stats.compute(records), figures.acknowledgement_summary(records),
-        strip_plot_png=PNG, limitations=["First limit.", "Second limit."], hf_user="Nav772", generated_at=date(2026, 9, 29),
+        limitations=["First limit.", "Second limit."], hf_user="Nav772", generated_at=date(2026, 9, 29),
     )
 
 
@@ -80,7 +79,7 @@ def test_only_allowed_hosts(record_data) -> None:
     for url in urls:
         host = urlparse(url).hostname or ""
         assert any(host == a or host.endswith("." + a) for a in ALLOWED), url
-    assert "data:image/png;base64," in html
+    assert "data:image" not in html
 
 
 def test_no_forms_no_external_assets(record_data) -> None:
@@ -110,10 +109,9 @@ def test_limitations_from_card_joins_wrapped_bullets() -> None:
 def test_release_page_has_one_card_per_worse_row(tmp_path) -> None:
     records, _ = stats.load_records(REPO / "data" / "release" / "assumption_drift.jsonl")
     card = (REPO / "card" / "README.md").read_text(encoding="utf-8")
-    plot = REPO / "card" / "figures" / figures.FIGURE_FILES[0]
     index = space.write_space(
         records, stats.compute(records), figures.acknowledgement_summary(records),
-        strip_plot=plot, card_text=card, hf_user="Nav772", generated_at=date(2026, 9, 29), space_dir=tmp_path,
+        card_text=card, hf_user="Nav772", generated_at=date(2026, 9, 29), space_dir=tmp_path,
     )
     html = index.read_text(encoding="utf-8")
     assert html.count('class="card worse"') == figures.acknowledgement_summary(records)["worse"]
@@ -197,3 +195,17 @@ def test_summary_table_has_six_columns_on_desktop_and_a_phone_rule(record_data) 
     assert ".col-resolved{display:none}" in mobile
     assert "table-layout:fixed" in mobile and "width:100%" in mobile and "font-size:15px" in mobile
     assert "overflow-x:auto" in mobile
+
+
+def test_strip_plot_is_inline_svg_with_one_linked_circle_per_missed_row(record_data) -> None:
+    records = sample(record_data)
+    html = page(records)
+    svg = html[html.index('<svg id="strip"') : html.index("</svg>")]
+    circles = re.findall(r"<circle [^>]*>", svg)
+    assert len(circles) == sum(1 for r in records if r.status == "missed") == 4
+    for circle in circles:
+        card = re.search(r'data-card="([^"]+)"', circle).group(1)
+        assert f'id="{card}"' in html
+    assert 'data-guided="$5,000 million to $6,000 million"' in svg and 'data-ack="2025-03-01"' in svg
+    assert 'id="tip" hidden' in html and "<img" not in html
+    assert page(records) == html  # jitter is seeded from record_id: stable between builds

@@ -2,12 +2,13 @@
 
 Called from pipeline/06_publish.py, never run on its own. Reads nothing but the records and figure it is
 handed. The page takes no input beyond a company selector, calls no model, has no form, and makes no
-request to any host: the strip plot is embedded as base64 and every other URL is a plain link.
+request to any host: the strip plot is drawn inline as SVG from the rows and every other URL is a plain link.
 """
 
 from __future__ import annotations
 
-import base64
+import math
+import random
 import re
 from datetime import date
 from html import escape
@@ -109,7 +110,7 @@ def _card(record: ResearchRecord, kind: str) -> str:
     else:
         outcome = f"<blockquote>{escape(o.evidence.excerpt)}</blockquote>"
     return f"""\
-<article class="card {kind}">
+<article class="card {kind}" id="row-{escape(record.record_id, quote=True)}">
 <div class="top">
 <h4>{escape(a.metric)}, {escape(a.target_period)}</h4>
 <p class="gap">guided {escape(guided)}, reported <span class="rep">{escape(reported)}</span></p>
@@ -132,6 +133,68 @@ def _kind(record: ResearchRecord) -> str | None:
 def short_name(company: str) -> str:
     """"NVIDIA Corporation" -> "NVIDIA", "Salesforce, Inc." -> "Salesforce"."""
     return re.sub(r"[,.]?\s+(?:Corporation|Corp\.?|Incorporated|Inc\.?|Company|Co\.?)$", "", company).strip() or company
+
+
+# --- the strip plot, drawn from the release rows -------------------------------------------------
+
+_W, _H = 720, 420
+_LEFT, _RIGHT, _TOP, _BOTTOM = 150, 24, 44, 64
+_ROW_LABELS = {
+    "acknowledged in the same filing": ("acknowledged in", "the same filing"),
+    "acknowledged later": ("acknowledged", "later"),
+    "never acknowledged": ("never", "acknowledged"),
+}
+
+
+def _ticks(top: int) -> list[int]:
+    """Round x ticks from 0 to just past `top`, about five of them."""
+    raw = max(top, 1) / 5
+    mag = 10 ** math.floor(math.log10(raw))
+    step = next(m * mag for m in (1, 2, 5, 10) if m * mag >= raw)
+    return [int(i * step) for i in range(int(math.ceil(max(top, 1) / step)) + 1)]
+
+
+def strip_plot_svg(records: list[ResearchRecord], generated_at: date) -> str:
+    """The "when the gap was acknowledged" figure as inline SVG: one circle per missed row that has a
+    card, days to falsifiable on x, the three acknowledgement buckets on y. Jitter is seeded from the
+    record_id, so the picture does not move between builds. Each circle carries what the tooltip shows
+    and the id of its row card."""
+    missed = [r for r in records if r.status == "missed"]
+    rows = [r for r in missed if _kind(r) is not None and r.days_to_falsifiable is not None]
+    ticks = _ticks(max((r.days_to_falsifiable for r in rows), default=0))
+    pw, ph = _W - _LEFT - _RIGHT, _H - _TOP - _BOTTOM
+    x = lambda d: _LEFT + pw * d / ticks[-1] if ticks[-1] else _LEFT
+    y = lambda i: _TOP + ph * (i + 0.5) / len(figures.ACK_CATEGORIES)
+    out = [f'<svg id="strip" viewBox="0 0 {_W} {_H}" width="100%" role="img" '
+           'aria-label="Missed rows: days from guidance to a checkable outcome, by when the gap was acknowledged">',
+           f'<text class="t" x="{_LEFT}" y="22" font-size="16" font-weight="700">Missed rows: when the gap was acknowledged</text>']
+    for t in ticks:
+        out.append(f'<line x1="{x(t):.1f}" x2="{x(t):.1f}" y1="{_TOP}" y2="{_TOP + ph}" stroke="{figures.GREY_LIGHT}" stroke-width="0.5"/>')
+        out.append(f'<text class="a" x="{x(t):.1f}" y="{_TOP + ph + 18}" text-anchor="middle" font-size="12">{t:,}</text>')
+    for i, cat in enumerate(figures.ACK_CATEGORIES):
+        for k, line in enumerate(_ROW_LABELS[cat]):
+            out.append(f'<text class="a" x="{_LEFT - 10}" y="{y(i) + (k - 0.5) * 15 + 4:.1f}" text-anchor="end" font-size="13">{line}</text>')
+    out.append(f'<text class="a" x="{_LEFT + pw / 2:.1f}" y="{_TOP + ph + 40}" text-anchor="middle" font-size="13">'
+               'days to falsifiable (guidance to the filing that reported it)</text>')
+    for r in sorted(rows, key=lambda r: r.record_id):
+        bucket = figures.acknowledgement_bucket(r)
+        i = figures.ACK_CATEGORIES.index(bucket)
+        cy = y(i) + random.Random(r.record_id).uniform(-0.15, 0.15) * ph / len(figures.ACK_CATEGORIES)
+        never = bucket == "never acknowledged"
+        guided, reported = guided_parts(r)
+        ack = r.acknowledged_at.isoformat() if r.acknowledged_at else ""
+        out.append(
+            f'<circle class="dot" cx="{x(r.days_to_falsifiable):.1f}" cy="{cy:.1f}" r="4" '
+            f'fill="{figures.ACCENT_MISSED if never else figures.GREY_DARK}" fill-opacity="0.7" '
+            f'data-ticker="{escape(r.ticker, quote=True)}" data-metric="{escape(r.assumption.metric, quote=True)}" '
+            f'data-period="{escape(r.assumption.target_period, quote=True)}" data-guided="{escape(guided, quote=True)}" '
+            f'data-reported="{escape(reported, quote=True)}" data-days="{r.days_to_falsifiable}" '
+            f'data-ack="{ack}" data-card="row-{escape(r.record_id, quote=True)}"/>')
+    unit = "row" if len(missed) == 1 else "rows"
+    out.append(f'<text class="s" x="{_LEFT - 140}" y="{_H - 8}" font-size="10" fill="{figures.GREY_MID}">'
+               f'Assumption Drift · {len(missed):,} missed {unit} · generated {generated_at.isoformat()} · Source: SEC EDGAR</text>')
+    out.append("</svg>")
+    return "\n".join(out)
 
 
 def _company_section(name: str, records: list[ResearchRecord], index: int) -> str:
@@ -210,7 +273,16 @@ table.summary tr.total th,table.summary tr.total td{font-weight:700;border-botto
 .short{display:none}
 .note{color:var(--mute);font-size:13px;margin:4px 0 0}
 figure{margin:40px 0 0}
-img.plot{display:block;width:100%;height:auto}
+figure{position:relative}
+svg#strip{display:block;width:100%;height:auto;font-family:var(--sans);overflow:visible}
+svg#strip text{fill:var(--ink)}
+svg#strip text.s{fill:var(--mute)}
+svg#strip .dot{cursor:pointer}
+svg#strip .dot.hot{stroke:var(--ink);stroke-width:1}
+#tip{position:absolute;z-index:2;max-width:320px;box-sizing:border-box;padding:6px 8px;border:1px solid var(--ink);background:var(--paper);
+color:var(--ink);font:14px/1.4 var(--sans);pointer-events:none}
+#tip[hidden]{display:none}
+#tip div+div{margin-top:2px}
 figcaption{color:var(--mute);font-size:14px;margin-top:8px}
 .picker{display:none;align-items:baseline;gap:12px;margin:48px 0 0}
 html.js .picker{display:flex}
@@ -291,6 +363,43 @@ sel.addEventListener('change',function(){show(sel.selectedIndex);
 history.replaceState(null,'','#'+secs[sel.selectedIndex].id);});
 window.addEventListener('hashchange',function(){show(fromHash());});
 show(fromHash());
+var svg=document.getElementById('strip'),tip=document.getElementById('tip');
+if(svg&&tip){
+var dots=svg.querySelectorAll('circle.dot'),cur=null,touch=false;
+function near(e){
+var b=svg.getBoundingClientRect(),k=b.width/svg.viewBox.baseVal.width,best=null,bd=12;
+for(var i=0;i<dots.length;i++){
+var dx=b.left+dots[i].getAttribute('cx')*k-e.clientX,dy=b.top+dots[i].getAttribute('cy')*k-e.clientY,d=Math.sqrt(dx*dx+dy*dy);
+if(d<=bd){bd=d;best=dots[i];}}
+return best;}
+function hide(){if(cur)cur.classList.remove('hot');cur=null;tip.hidden=true;}
+function show1(c,e){
+if(cur&&cur!==c)cur.classList.remove('hot');
+cur=c;c.classList.add('hot');
+var d=c.dataset,l=[d.ticker+' '+d.metric+', '+d.period,'guided '+d.guided+', reported '+d.reported,
+d.days+' days to outcome; '+(d.ack?'acknowledged '+d.ack:'no later filing acknowledged the gap')];
+tip.textContent='';
+for(var i=0;i<3;i++){var n=document.createElement('div');n.textContent=l[i];tip.appendChild(n);}
+tip.hidden=false;
+var f=svg.parentNode.getBoundingClientRect(),w=tip.offsetWidth,x=e.clientX-f.left+12;
+if(x+w>f.width)x=Math.max(0,e.clientX-f.left-12-w);
+tip.style.left=x+'px';tip.style.top=(e.clientY-f.top+14)+'px';}
+function go(c){
+var card=document.getElementById(c.dataset.card);if(!card)return;
+var s=card.closest('section.company');
+for(var k=0;k<secs.length;k++){if(secs[k]===s){show(k);history.replaceState(null,'','#'+s.id);}}
+var dt=card.closest('details');if(dt)dt.open=true;
+hide();card.scrollIntoView({behavior:'smooth',block:'start'});}
+svg.addEventListener('pointerdown',function(e){touch=e.pointerType==='touch';});
+svg.addEventListener('mousemove',function(e){var c=near(e);if(c)show1(c,e);else hide();});
+svg.addEventListener('mouseleave',hide);
+svg.addEventListener('click',function(e){
+var c=near(e);if(!c){hide();return;}
+if(touch&&cur!==c){show1(c,e);return;}
+go(c);});
+document.addEventListener('click',function(e){if(!svg.contains(e.target))hide();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')hide();});
+}
 })();
 """
 
@@ -301,7 +410,7 @@ def _month(d: date) -> str:
 
 def render_page(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
-    strip_plot_png: bytes, limitations: list[str], hf_user: str, generated_at: date,
+    limitations: list[str], hf_user: str, generated_at: date,
     filings_from: date | None = None, filings_to: date | None = None, coverage_notes: list[str] | None = None,
 ) -> str:
     """The whole page as one string. `result` is `stats.compute()`, `summary` is
@@ -318,7 +427,6 @@ def render_page(
         for i, n in enumerate(names)
     )
     sections = "\n".join(_company_section(n, [r for r in records if r.company == n], i) for i, n in enumerate(names))
-    encoded = base64.b64encode(strip_plot_png).decode("ascii")
     limit_html = "\n".join(f"<li>{escape(item)}</li>" for item in limitations)
     coverage_html = ""
     if coverage_notes:
@@ -349,7 +457,8 @@ def render_page(
 <hr>
 {_summary_table(records, names)}
 <figure>
-<img class="plot" alt="Missed rows: days from guidance to a checkable outcome, against days to acknowledgement" src="data:image/png;base64,{encoded}">
+{strip_plot_svg(records, generated_at)}
+<div id="tip" hidden></div>
 <figcaption>Each mark is a missed row: days from guidance to a checkable outcome, against days to acknowledgement.</figcaption>
 </figure>
 <div class="picker"><label for="company-select">Company</label>
@@ -374,14 +483,14 @@ def render_page(
 
 def write_space(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
-    strip_plot: Path, card_text: str, hf_user: str, generated_at: date, space_dir: Path,
+    card_text: str, hf_user: str, generated_at: date, space_dir: Path,
     filings_from: date | None = None, filings_to: date | None = None,
 ) -> Path:
     """Write space/index.html and the Space's README.md (the YAML block Hugging Face reads to know the
     Space is static). Returns the index path."""
     space_dir.mkdir(parents=True, exist_ok=True)
     page = render_page(
-        records, result, summary, strip_plot_png=strip_plot.read_bytes(),
+        records, result, summary,
         limitations=limitations_from_card(card_text), hf_user=hf_user, generated_at=generated_at,
         filings_from=filings_from, filings_to=filings_to,
         coverage_notes=limitations_from_card(card_text, "Coverage notes"),
@@ -398,5 +507,5 @@ _URL = re.compile(r"""(?:https?:)?//[^\s"'<>)]+""")
 
 
 def external_urls(page: str) -> set[str]:
-    """Every absolute or protocol-relative URL in `page`, the embedded base64 image aside."""
-    return set(_URL.findall(re.sub(r"data:image/png;base64,[A-Za-z0-9+/=]+", "", page)))
+    """Every absolute or protocol-relative URL in `page`, the inline SVG aside."""
+    return set(_URL.findall(page))
