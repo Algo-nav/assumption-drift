@@ -377,7 +377,7 @@ def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
     with pytest.raises(ValueError, match="publish"):
         common._company({**base, "publish": "no"})
     listed = {c.ticker: c.publish for c in common.companies(common.load_config())}
-    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM"]
+    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM", "MU"]
 
 
 def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table(world, config_path, record_data, monkeypatch) -> None:

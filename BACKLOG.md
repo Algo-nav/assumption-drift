@@ -12,6 +12,7 @@ Keep the wording of review rejection notes consistent. The forms in use:
 - `duplicate: <where the figure lives>`
 - `conflict loser`
 - `wrong period`
+- `change in basis points, no level printed` (margin guidance given as an increase or decrease in basis points)
 
 Standing reasons for `not guidance: <reason>`, new this week:
 
@@ -189,6 +190,14 @@ Separate defect: one of these was proposed "met" with 24.5 against a 24.6 point 
 a tolerance to point targets, and none should exist. A point target is met only on an exact match at the
 printed precision. Find where the tolerance comes from.
 
+Fourth rule, Lowe's fixtures (CIK 0000060667), two shapes:
+
+- Twelve tax rate rows matched the next fiscal year's "Effective income tax rate of approximately X%", the
+  same forward-looking guide shape as the Home Depot rule above.
+- Outcomes whose value is not in the matched sentence at all: 12.15 from a net earnings paragraph; 11.73,
+  11.93 and 11.8 from a quarterly "Adjusted diluted earnings per share $1.93" line; 12.4 and 170 from a CEO
+  quote. The value-in-evidence guard that exists for guidance must also run on outcomes.
+
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
 
 ## 12. Qualcomm outlook tables, 2019 to mid-2020: evidence taken from the prior-year results column
@@ -204,6 +213,10 @@ must come from the estimates cell. Fixtures:
 - the Q2, Q3 and Q4 FY20 releases, same layout.
 
 Roughly seven quarters of revenue and EPS guidance are missing for QCOM because of this.
+
+Also under this item, Lowe's: the December 2020 investor update (`0000060667-20-000177`) prints forecasted
+FY EPS in a two-column low-end and high-end table ("Forecasted diluted earnings per share $ 7.53 $ 7.63").
+The range guard rejected it for lacking a dash. The guard must accept a low-end and high-end column pair.
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
 
@@ -236,6 +249,14 @@ Also under this item, Home Depot fixtures:
 Also under this item: the word "guidance" in the accounting sense ("FASB guidance", "accounting guidance",
 "guidance issued") must not open an outlook block. Fixture: AVGO `0001730168-20-000126`.
 
+Also under this item, Lowe's fixtures:
+
+- "53rd week expected to increase total sales by approximately $1.0 billion to $1.5 billion" structured as
+  revenue (five rows, 2021-12-15 to 2022-11-16). The 53rd week is a component of sales.
+- "approximately 60 basis points of dilution on the consolidated full year 2022 operating margin outlook"
+  structured as operating margin (`0000060667-22-000162`, `0000060667-22-000166`). A dilution amount is not
+  the margin level; reject as "change in basis points, no level printed".
+
 ## 14. Printed plus-or-minus repair fails when the sentence ends "; and" or "; or" (low priority)
 
 The printed plus-or-minus repair does not fire when the sentence ends with "; and" or "; or". Fixtures: AVGO
@@ -260,3 +281,19 @@ results paragraph was flagged as an outlook block with no items, while the prose
 separately. Harmless, but the flagged empty blocks are noise in review.
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
+
+## 17. Period derivation from "fiscal year ending <date>" ignores fiscal_year_named_for (high priority, fix before publish)
+
+Period derivation from "fiscal year ending <date>" uses the calendar year of the end date and ignores
+`fiscal_year_named_for`. For a fiscal year ending in January or early February, that names the wrong year.
+Fixtures, CIK 0000060667 (Lowe's):
+
+- Fiscal 2019 ("fiscal year ending Jan. 31, 2020") was written FY2020. Finding no FY2020 release in range, it
+  was proposed withdrawn. 11 rows in `0000060667.csv` from the 2019 releases.
+- Fiscal 2020 ("fiscal year ending Jan 29, 2021", `0000060667-20-000177`) was written FY2021 and matched
+  fiscal 2021 outcomes (EPS $12.04 against a $7.53 to 7.63 guide).
+- The genuinely withdrawn fiscal 2020 guidance (February 2020, withdrawn May 2020) is absent.
+
+Fix: derive the period using `fiscal_year_named_for`, not the calendar year of the end date. Then refresh
+untouched LOW rows with `05_review --refresh-pipeline-fields` and re-run outcomes for them. Skipped rows carry
+the note "period mislabelled". No pipeline code changed; this entry is the record.

@@ -15,11 +15,11 @@ pretty_name: assumption-drift
 
 ## What this is
 
-NVIDIA Corporation, Salesforce, Inc. and Target Corporation made numeric forward guidance statements in their own SEC filings, filed between
+Adobe Inc., Advanced Micro Devices, Inc., Amazon.com, Inc., Broadcom Inc., Lowe's Companies, Inc., Meta Platforms, Inc., Microsoft Corporation, NVIDIA Corporation, QUALCOMM Incorporated, Salesforce, Inc., Target Corporation and The Home Depot, Inc. made numeric forward guidance statements in their own SEC filings, filed between
 January 2019 and September 2026. This dataset pairs each one with what the company later reported for that same metric
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
 It is a problem statement in data form, not a model and not a demonstration of one.
-Apple Inc., Alphabet Inc., Costco Wholesale Corporation and JPMorgan Chase & Co. were in the company list but issued no numeric guidance the metric list covers, so they have no rows here.
+Apple Inc., Alphabet Inc., Costco Wholesale Corporation, JPMorgan Chase & Co. and Micron Technology, Inc. were in the company list but issued no numeric guidance the metric list covers, so they have no rows here.
 
 ## How a row is built
 
@@ -44,18 +44,27 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-02, the release holds **611 rows**: 103 met, 285 missed, 221 unresolved, 2 withdrawn.
-Of the misses, 221 were better than guided and 64 worse than guided; median days from the guidance to the
-filing that made it checkable was 92.0, and
-97% of misses were never acknowledged in a later filing.
+As of 2026-10-06, the release holds **1,046 rows**: 213 met, 406 missed, 424 unresolved, 3 withdrawn.
+Of the misses, 314 were better than guided and 92 worse than guided; median days from the guidance to the
+filing that made it checkable was 92, and
+98% of misses were never acknowledged in a later filing.
 
 By company:
 
 | company | rows | met | missed | withdrawn | unresolved | never-acknowledged share |
 | --- | --- | --- | --- | --- | --- | --- |
+| Adobe Inc. | 8 | 0 | 0 | 0 | 8 | n/a |
+| Advanced Micro Devices, Inc. | 95 | 36 | 19 | 0 | 40 | 100% |
+| Amazon.com, Inc. | 30 | 10 | 18 | 0 | 2 | 100% |
+| Broadcom Inc. | 37 | 10 | 16 | 1 | 10 | 100% |
+| Lowe's Companies, Inc. | 75 | 0 | 3 | 0 | 72 | 100% |
+| Meta Platforms, Inc. | 80 | 37 | 27 | 0 | 16 | 100% |
+| Microsoft Corporation | 5 | 0 | 0 | 0 | 5 | n/a |
 | NVIDIA Corporation | 212 | 58 | 79 | 0 | 75 | 100% |
+| QUALCOMM Incorporated | 52 | 13 | 23 | 0 | 16 | 100% |
 | Salesforce, Inc. | 317 | 18 | 168 | 0 | 131 | 99% |
 | Target Corporation | 82 | 27 | 38 | 2 | 15 | 79% |
+| The Home Depot, Inc. | 53 | 4 | 15 | 0 | 34 | 100% |
 
 ![Missed rows: when the gap was acknowledged](figures/falsifiable_vs_acknowledged.png)
 ![Worse and better than guided, acknowledged or not](figures/acknowledgement_by_company.png)
@@ -90,12 +99,32 @@ one the pipeline used.
   not in EDGAR.
 - An outcome that would come from a multi-column table whose header could not be confidently matched
   to a period is held back as unresolved rather than guessed at.
+- An acknowledgement is a sentence written after the outcome was reported that refers back to the
+  guided figure. A revision made while the period was still open, such as 'increased from our prior
+  outlook of $60-65 billion', is a new guidance row, not an acknowledgement. A later release will
+  record these revisions separately; when it does, the acknowledged counts will change.
+
+## Coverage notes
+
+- Lowe's and Home Depot: most margin and tax rate rows are unresolved because those companies do not
+  print the reported figure as a line in the release; it must be derived from two reported lines.
+  These will resolve in a later release.
+- Qualcomm: guidance from early 2019 to late 2020 is not yet included because of a two-column table
+  layout the parser does not read. Coverage starts at Q1 FY2021.
+- Adobe: the revenue and EPS targets table is not yet parsed; Adobe rows are non-GAAP operating margin
+  only.
+- Microsoft: guidance appeared in filing text only from August 2024; earlier guidance was given on
+  earnings calls, which are not in EDGAR.
+- Broadcom: adjusted EBITDA guidance is not a tracked metric; rows are revenue and, from 2026,
+  non-GAAP operating margin.
+- Micron is reviewed separately and not in this release.
+- Apple, Alphabet, Costco and JPMorgan issue no numeric guidance in filing text.
 
 ## How to cite
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-02.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-06.
 
 ## Licence
 

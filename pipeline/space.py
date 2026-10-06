@@ -25,10 +25,10 @@ REPO_URL = "https://github.com/Algo-nav/assumption-drift"
 _BILLION_MILLION = {"USD billions": ("$", " billion"), "USD millions": ("$", " million")}
 
 
-def limitations_from_card(card_text: str) -> list[str]:
-    """The bullets under "## Known limitations" of the rendered dataset card, each joined onto one line.
+def limitations_from_card(card_text: str, heading: str = "Known limitations") -> list[str]:
+    """The bullets under a "## <heading>" section of the rendered dataset card, each joined onto one line.
     Taken from the card's own text, so the page repeats the card word for word."""
-    start = card_text.index("## Known limitations") + len("## Known limitations")
+    start = card_text.index(f"## {heading}") + len(f"## {heading}")
     end = card_text.index("\n## ", start)
     bullets: list[str] = []
     for line in card_text[start:end].splitlines():
@@ -100,7 +100,7 @@ def _card(record: ResearchRecord, kind: str) -> str:
             f'&ldquo;{escape(record.acknowledgement_evidence.excerpt)}&rdquo;</p>'
         )
     else:
-        ack = '<p class="ack">Never referred to again.</p>'
+        ack = '<p class="ack">No later filing acknowledged the gap.</p>'
     if is_table_line(o.evidence.excerpt):
         outcome = (
             '<div class="raw"><span class="rawlabel">table line as filed</span>'
@@ -294,7 +294,7 @@ def _month(d: date) -> str:
 def render_page(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
     strip_plot_png: bytes, limitations: list[str], hf_user: str, generated_at: date,
-    filings_from: date | None = None, filings_to: date | None = None,
+    filings_from: date | None = None, filings_to: date | None = None, coverage_notes: list[str] | None = None,
 ) -> str:
     """The whole page as one string. `result` is `stats.compute()`, `summary` is
     `figures.acknowledgement_summary()`, both already computed from `records`. The filing range in the
@@ -311,6 +311,10 @@ def render_page(
     sections = "\n".join(_company_section(n, [r for r in records if r.company == n], i) for i, n in enumerate(names))
     encoded = base64.b64encode(strip_plot_png).decode("ascii")
     limit_html = "\n".join(f"<li>{escape(item)}</li>" for item in limitations)
+    coverage_html = ""
+    if coverage_notes:
+        items = "\n".join(f"<li>{escape(item)}</li>" for item in coverage_notes)
+        coverage_html = f'<h2 class="limits-head smallcaps">Coverage notes</h2>\n<ol class="limits">\n{items}\n</ol>\n'
     dataset_url = DATASET_URL.format(hf_user=hf_user)
     dateline = (
         f"{len(records):,} guidance statements, {len(names)} companies, filings "
@@ -347,7 +351,7 @@ def render_page(
 <ol class="limits">
 {limit_html}
 </ol>
-<footer>
+{coverage_html}<footer>
 <a href="{escape(dataset_url, quote=True)}">Dataset</a> / <a href="{REPO_URL}">Repository</a> / Source: SEC EDGAR / Data CC-BY-4.0, code MIT
 </footer>
 </main>
@@ -370,6 +374,7 @@ def write_space(
         records, result, summary, strip_plot_png=strip_plot.read_bytes(),
         limitations=limitations_from_card(card_text), hf_user=hf_user, generated_at=generated_at,
         filings_from=filings_from, filings_to=filings_to,
+        coverage_notes=limitations_from_card(card_text, "Coverage notes"),
     )
     (space_dir / "README.md").write_text(
         f"---\ntitle: {SPACE_TITLE}\nsdk: static\npinned: false\nlicense: cc-by-4.0\n---\n", encoding="utf-8"

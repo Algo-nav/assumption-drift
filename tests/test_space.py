@@ -69,7 +69,7 @@ def test_card_content(record_data) -> None:
     assert "guided $5,000 million to $6,000 million, reported $4,800 million" in re.sub(r"<[^>]+>", "", html)
     assert '<span class="rep">$4,800 million</span>' in html
     assert "Acknowledged 2025-03-01" in html and "We came in below our range." in html
-    assert "Never referred to again." in html
+    assert "No later filing acknowledged the gap." in html
     assert html.count("Guidance filing on EDGAR") == 4 and html.count("Outcome filing on EDGAR") == 4
 
 

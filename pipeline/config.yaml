@@ -20,21 +20,21 @@ companies:
   # (Sunday closest to October 31, so month 10), Costco Aug 31 2025 (Sunday nearest the end of August), Home Depot
   # Feb 1 2026 (Sunday nearest January 31) and that year is called "fiscal 2025", so named for the year it starts.
   - {name: "Apple Inc.", ticker: "AAPL", cik: "0000320193", fiscal_year_end_month: 9, publish: false}
-  - {name: "Microsoft Corporation", ticker: "MSFT", cik: "0000789019", fiscal_year_end_month: 6}
-  - {name: "Amazon.com, Inc.", ticker: "AMZN", cik: "0001018724", fiscal_year_end_month: 12}
-  - {name: "Meta Platforms, Inc.", ticker: "META", cik: "0001326801", fiscal_year_end_month: 12}
+  - {name: "Microsoft Corporation", ticker: "MSFT", cik: "0000789019", fiscal_year_end_month: 6, publish: true}
+  - {name: "Amazon.com, Inc.", ticker: "AMZN", cik: "0001018724", fiscal_year_end_month: 12, publish: true}
+  - {name: "Meta Platforms, Inc.", ticker: "META", cik: "0001326801", fiscal_year_end_month: 12, publish: true}
   - {name: "Alphabet Inc.", ticker: "GOOGL", cik: "0001652044", fiscal_year_end_month: 12, publish: false}
-  - {name: "Advanced Micro Devices, Inc.", ticker: "AMD", cik: "0000002488", fiscal_year_end_month: 12}
-  - {name: "Broadcom Inc.", ticker: "AVGO", cik: "0001730168", fiscal_year_end_month: 10}
+  - {name: "Advanced Micro Devices, Inc.", ticker: "AMD", cik: "0000002488", fiscal_year_end_month: 12, publish: true}
+  - {name: "Broadcom Inc.", ticker: "AVGO", cik: "0001730168", fiscal_year_end_month: 10, publish: true}
   - {name: "Costco Wholesale Corporation", ticker: "COST", cik: "0000909832", fiscal_year_end_month: 8, publish: false}
-  - {name: "The Home Depot, Inc.", ticker: "HD", cik: "0000354950", fiscal_year_end_month: 1, fiscal_year_named_for: start}
+  - {name: "The Home Depot, Inc.", ticker: "HD", cik: "0000354950", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true}
   - {name: "JPMorgan Chase & Co.", ticker: "JPM", cik: "0000019617", fiscal_year_end_month: 12, publish: false}
   # The next four, same rule: Qualcomm Sep 28 2025 (last Sunday of September), Adobe Nov 28 2025 ("fiscal 2025"), Micron
   # Aug 28 2025 (Thursday closest to August 31), Lowe's Jan 30 2026 (called "2025", so named for the year it starts).
-  - {name: "QUALCOMM Incorporated", ticker: "QCOM", cik: "0000804328", fiscal_year_end_month: 9}
-  - {name: "Adobe Inc.", ticker: "ADBE", cik: "0000796343", fiscal_year_end_month: 11}
-  - {name: "Micron Technology, Inc.", ticker: "MU", cik: "0000723125", fiscal_year_end_month: 8}
-  - {name: "Lowe's Companies, Inc.", ticker: "LOW", cik: "0000060667", fiscal_year_end_month: 1, fiscal_year_named_for: start}
+  - {name: "QUALCOMM Incorporated", ticker: "QCOM", cik: "0000804328", fiscal_year_end_month: 9, publish: true}
+  - {name: "Adobe Inc.", ticker: "ADBE", cik: "0000796343", fiscal_year_end_month: 11, publish: true}
+  - {name: "Micron Technology, Inc.", ticker: "MU", cik: "0000723125", fiscal_year_end_month: 8, publish: false}
+  - {name: "Lowe's Companies, Inc.", ticker: "LOW", cik: "0000060667", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true}
 # The only metrics a draft may be about. Haiku must pick from this list or return nothing, so a
 # figure for anything else (gross profit, growth rates, segment revenue) never becomes a row.
 # Capital return, buybacks and dividends are deliberately not here.
