@@ -84,7 +84,7 @@ one the pipeline used.
 
 ## Known limitations
 
-- This covers three companies. It is a pilot, not a survey of the market.
+- This covers twelve companies. It is a pilot, not a survey of the market.
 - The pipeline does not claim to capture every guidance statement a company ever made; it captures
   the ones its patterns and its model caught.
 - A row reported better than guided is recorded as missed, the same as one reported worse, because the

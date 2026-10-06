@@ -181,6 +181,17 @@ def _join_names(names: list[str]) -> str:
     return ", ".join(names[:-1]) + f" and {names[-1]}"
 
 
+_NUMBER_WORDS = (
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen "
+    "eighteen nineteen twenty"
+).split()
+
+
+def _count_words(n: int) -> str:
+    """Spelled out up to twenty ("twelve"), digits above."""
+    return _NUMBER_WORDS[n] if 0 <= n < len(_NUMBER_WORDS) else str(n)
+
+
 def _frontmatter(dataset: str) -> str:
     return f"""\
 ---
@@ -215,6 +226,8 @@ def render_card(
     higher = _join_names_plain(_families(m for m, up in table.items() if up))
     lower = _join_names_plain(_families(m for m, up in table.items() if not up))
     companies_named = _join_names([row["company"] for row in result["company_table"]])
+    n_companies = len(result["company_table"])
+    company_count = f"{_count_words(n_companies)} {'company' if n_companies == 1 else 'companies'}"
     filing_range = f"{filing_date_from:%B %Y} and {filing_date_to:%B %Y}"
     one = len(unpublished) == 1
     left_out = (f"\n{_join_names(list(unpublished))} {'was' if one else 'were'} in the company list but issued no numeric "
@@ -280,7 +293,7 @@ one the pipeline used.
 
 ## Known limitations
 
-- This covers three companies. It is a pilot, not a survey of the market.
+- This covers {company_count}. It is a pilot, not a survey of the market.
 - The pipeline does not claim to capture every guidance statement a company ever made; it captures
   the ones its patterns and its model caught.
 - A row reported better than guided is recorded as missed, the same as one reported worse, because the

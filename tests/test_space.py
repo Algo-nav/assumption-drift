@@ -175,8 +175,8 @@ def test_table_line_is_shown_as_evidence(record_data) -> None:
 
 def test_report_structure(record_data) -> None:
     html = page(sample(record_data))
-    assert html.index("<h1>") < html.index('<table class="summary">') < html.index("<figure>") < html.index('<nav class="tabs"')
-    assert "<select" not in html and '<ol class="limits">' in html
+    assert html.index("<h1>") < html.index('<table class="summary">') < html.index("<figure>") < html.index('<select id="company-select"')
+    assert html.count("<select") == 1 and " worse)</option>" in html and '<ol class="limits">' in html
     assert "4 guidance statements, 2 companies, filings Feb 2024 to Feb 2025, generated 2026-09-29" in html
     assert html.count('class="total"') == 1 and "@media print" in html and "max-width:600px" in html
     assert html.count("<section class=\"company\"") == 2

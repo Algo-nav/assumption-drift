@@ -226,7 +226,7 @@ def test_render_card_states_every_limitation_plainly(sample_result) -> None:
     text = render(sample_result)
     limitations = " ".join(text[text.index("## Known limitations") : text.index("## How to cite")].split())
     for phrase in [
-        "three companies", "pilot",
+        f"{publish._count_words(len(sample_result['company_table']))} compan", "pilot",
         "does not claim to capture every guidance statement",
         "recorded as missed", "once per metric",
         "one-sided floor", "not measured",
@@ -395,3 +395,7 @@ def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table
     # --company cannot bring it back
     assert publish.main(["--config", str(config_path), "--company", "OTHR"]) == 0
     assert "Other Corp" not in (world / "release" / "assumption_drift.jsonl").read_text()
+
+
+def test_company_count_is_spelled_out_to_twenty_then_digits() -> None:
+    assert [publish._count_words(n) for n in (1, 3, 12, 20, 21)] == ["one", "three", "twelve", "twenty", "21"]

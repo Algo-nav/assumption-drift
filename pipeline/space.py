@@ -212,11 +212,13 @@ table.summary tr.total th,table.summary tr.total td{font-weight:700;border-botto
 figure{margin:40px 0 0}
 img.plot{display:block;width:100%;height:auto}
 figcaption{color:var(--mute);font-size:14px;margin-top:8px}
-nav.tabs{display:none;gap:24px;margin:48px 0 0;border-bottom:1px solid var(--rule)}
-html.js nav.tabs{display:flex}
-nav.tabs button{font:inherit;font-family:var(--serif);font-size:18px;background:none;border:0;border-bottom:1px solid transparent;
-margin-bottom:-1px;padding:0 0 8px;color:var(--mute);cursor:pointer}
-nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+.picker{display:none;align-items:baseline;gap:12px;margin:48px 0 0}
+html.js .picker{display:flex}
+.picker label{font-family:var(--serif);font-size:18px}
+.picker select{font:inherit;font-family:var(--serif);font-size:18px;color:inherit;background:none;border:0;border-bottom:1px solid var(--ink);
+-webkit-appearance:none;appearance:none;padding:0 20px 4px 0;cursor:pointer;
+background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+background-position:calc(100% - 8px) 55%,calc(100% - 3px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 html.js section.company{display:none}
 html.js section.company.active{display:block}
 section.company{margin-top:32px}
@@ -261,11 +263,13 @@ table.summary th:first-child{width:27%}
 .col-resolved{display:none}
 .full{display:none}
 .short{display:inline}
-nav.tabs{gap:16px}
+.picker{display:none}
+html.js .picker{display:block}
+.picker select{width:100%;margin-top:4px}
 }
 @media print{
 body{background:#fff}
-nav.tabs{display:none!important}
+html.js .picker{display:none!important}
 html.js section.company{display:block}
 .card{break-inside:avoid}
 }
@@ -274,15 +278,19 @@ html.js section.company{display:block}
 SCRIPT = """\
 (function(){
 document.documentElement.className+=' js';
-var tabs=document.querySelectorAll('nav.tabs button');
+var sel=document.getElementById('company-select');
 var secs=document.querySelectorAll('section.company');
 function show(i){
-for(var k=0;k<secs.length;k++){
-secs[k].className='company'+(k===i?' active':'');
-tabs[k].setAttribute('aria-selected',k===i?'true':'false');}
-}
-for(var j=0;j<tabs.length;j++){(function(n){tabs[n].addEventListener('click',function(){show(n);});})(j);}
-show(0);
+for(var k=0;k<secs.length;k++){secs[k].className='company'+(k===i?' active':'');}
+sel.selectedIndex=i;}
+function fromHash(){
+var h=location.hash.replace('#','');
+for(var k=0;k<secs.length;k++){if(secs[k].id===h)return k;}
+return 0;}
+sel.addEventListener('change',function(){show(sel.selectedIndex);
+history.replaceState(null,'','#'+secs[sel.selectedIndex].id);});
+window.addEventListener('hashchange',function(){show(fromHash());});
+show(fromHash());
 })();
 """
 
@@ -304,8 +312,9 @@ def render_page(
         filed = [e.filed_at for r in records for e in (r.assumption.evidence, r.outcome.evidence if r.outcome else None) if e]
         filings_from = filings_from or min(filed, default=generated_at)
         filings_to = filings_to or max(filed, default=generated_at)
-    tabs = "\n".join(
-        f'<button type="button" role="tab" aria-selected="{"true" if i == 0 else "false"}">{escape(short_name(n))}</button>'
+    options = "\n".join(
+        f'<option value="company-{i}"{" selected" if i == 0 else ""}>'
+        f'{escape(short_name(n))} ({sum(1 for r in records if r.company == n and _kind(r) == "worse"):,} worse)</option>'
         for i, n in enumerate(names)
     )
     sections = "\n".join(_company_section(n, [r for r in records if r.company == n], i) for i, n in enumerate(names))
@@ -343,9 +352,10 @@ def render_page(
 <img class="plot" alt="Missed rows: days from guidance to a checkable outcome, against days to acknowledgement" src="data:image/png;base64,{encoded}">
 <figcaption>Each mark is a missed row: days from guidance to a checkable outcome, against days to acknowledgement.</figcaption>
 </figure>
-<nav class="tabs" role="tablist" aria-label="Company">
-{tabs}
-</nav>
+<div class="picker"><label for="company-select">Company</label>
+<select id="company-select">
+{options}
+</select></div>
 {sections}
 <h2 class="limits-head smallcaps">Known limitations</h2>
 <ol class="limits">
