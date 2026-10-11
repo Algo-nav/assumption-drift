@@ -1,5 +1,7 @@
 # assumption-drift
 
+Write-up: how it was built and what it found, in [WRITEUP.md](WRITEUP.md).
+
 Two things in one repo.
 
 **`assumption-drift`** is a dataset. Each row is a numeric forward guidance
