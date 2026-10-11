@@ -236,6 +236,8 @@ def render_card(
     return _frontmatter(dataset) + f"""\
 # {dataset}
 
+Write-up: how it was built and what it found: https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md
+
 ## What this is
 
 {companies_named} made numeric forward guidance statements in their own SEC filings, filed between

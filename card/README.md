@@ -13,6 +13,8 @@ pretty_name: assumption-drift
 ---
 # assumption-drift
 
+Write-up: how it was built and what it found: https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md
+
 ## What this is
 
 Adobe Inc., Advanced Micro Devices, Inc., Amazon.com, Inc., Broadcom Inc., Lowe's Companies, Inc., Meta Platforms, Inc., Microsoft Corporation, NVIDIA Corporation, QUALCOMM Incorporated, Salesforce, Inc., Target Corporation and The Home Depot, Inc. made numeric forward guidance statements in their own SEC filings, filed between
@@ -44,7 +46,7 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-06, the release holds **1,046 rows**: 213 met, 406 missed, 424 unresolved, 3 withdrawn.
+As of 2026-10-11, the release holds **1,046 rows**: 213 met, 406 missed, 424 unresolved, 3 withdrawn.
 Of the misses, 314 were better than guided and 92 worse than guided; median days from the guidance to the
 filing that made it checkable was 92, and
 98% of misses were never acknowledged in a later filing.
@@ -124,7 +126,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-06.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-11.
 
 ## Licence
 
