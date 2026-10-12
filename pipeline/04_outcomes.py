@@ -42,13 +42,16 @@ from __future__ import annotations
 import argparse
 import bisect
 import importlib
+import dataclasses
+import functools
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from pydantic import ValidationError
 
@@ -56,7 +59,7 @@ from pipeline import common, llm
 from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config
 from research_record import polarity, rubric
 from research_record.schema import Evidence, Outcome
-from research_record.text import html_to_text, sentence_spans
+from research_record.text import html_to_text_and_gaps, sentence_spans
 
 candidates_step = importlib.import_module("pipeline.02_candidates")
 structure_step = importlib.import_module("pipeline.03_structure")
@@ -249,9 +252,16 @@ class DocText:
     lines: list[str]
     line_starts: list[int]
     spans: list[tuple[int, int]]
+    outlook_lines: frozenset[int] = frozenset()  # lines inside a block under an Outlook, Guidance or Targets heading
 
     def line_of(self, char_start: int) -> int:
         return bisect.bisect_right(self.line_starts, char_start) - 1
+
+
+@functools.lru_cache(maxsize=1)
+def _outlook_settings() -> Any:
+    settings = candidates_step.Settings.from_config(load_config()["candidates"])
+    return dataclasses.replace(settings, heading=_OUTLOOK_HEADING)
 
 
 class DocStore:
@@ -275,13 +285,16 @@ class DocStore:
     def get(self, meta: dict[str, Any]) -> DocText:
         acc = meta["accession"]
         if acc not in self._docs:
-            text = html_to_text((self.folder / f"{acc}.html").read_bytes())
+            text, gaps = html_to_text_and_gaps((self.folder / f"{acc}.html").read_bytes())
             lines = text.split("\n")
             starts, offset = [], 0
             for line in lines:
                 starts.append(offset)
                 offset += len(line) + 1
-            self._docs[acc] = DocText(meta, text, lines, starts, sentence_spans(text))
+            # The same section capture 02_candidates uses, with the heading widened to the words an outcome must avoid.
+            blocks = candidates_step.find_blocks(lines, gaps, _outlook_settings())
+            outlook = frozenset(i for b in blocks for i in range(b.start, b.end))
+            self._docs[acc] = DocText(meta, text, lines, starts, sentence_spans(text), outlook)
         return self._docs[acc]
 
 
@@ -329,6 +342,7 @@ def select_lines(
     require_number: bool = True,
     reference: re.Pattern[str] | None = None,
     require_period: bool = False,
+    reject: Callable[[DocText, int, str], bool] | None = None,
 ) -> list[Line]:
     """Lines in these releases that name the metric next to a number (and `extra`, if given). Best first, then in
     order. An outcome line must state a value, so `require_number` defaults on; an acknowledgement line often
@@ -336,7 +350,7 @@ def select_lines(
     acknowledgement search turns it off. The acknowledgement search also asks, of the sentence that holds the
     direction word, that it hold a `reference` to what was guided and (`require_period`) that it name this
     row's period: without the first it describes results and does not admit a gap, and without the second it
-    is about some other quarter or year."""
+    is about some other quarter or year. `reject(doc, char_start, sentence)` drops a sentence before it is scored."""
     lowered = metric.lower()  # canonical names are mixed case: "gross margin non-GAAP"
     wants_non_gaap = "non-gaap" in lowered
     wants_gaap = "gaap" in lowered and not wants_non_gaap
@@ -348,6 +362,8 @@ def select_lines(
             sentence = doc.text[start:end]
             li = doc.line_of(start)
             if len(sentence) > EXCERPT_LIMIT or (require_number and not number.search(sentence)):
+                continue
+            if reject is not None and reject(doc, start, sentence):
                 continue
             if not matcher.search(sentence):
                 # A full-year row also takes a line that states the year and a number when the line above it is what
@@ -410,6 +426,118 @@ def _evidence(meta: dict[str, Any], excerpt: str) -> Evidence:
     )
 
 
+# --- guards on an outcome line ----------------------------------------------
+#
+# A reported value is a single number, stated in a results release for a period that has closed. A line that prints
+# a range, reads as a forecast, sits under an outlook heading, is on the wrong basis or names a later period is not one.
+
+_OUTLOOK_HEADING = re.compile(r"\b(?:Outlook|Guidance|Targets?)\b", re.IGNORECASE)
+_FORWARD_WORDS = re.compile(
+    r"\b(?:expects?|expected|anticipates?|forecast|forecasted|guidance|outlook|targets?|projected|projections?|will be|to be in the range)\b", re.IGNORECASE)
+_AMOUNT = r"\$?\s?\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b|(?:million|billion|thousand)\b|[BMK]\b)?"
+_RANGE = re.compile(rf"(?<![\d.,])(?<!\d-)({_AMOUNT})\s*(?:to|through|-|\u2013|\u2014)\s*({_AMOUNT})(?![\d]|-\d)", re.IGNORECASE)
+_BETWEEN = re.compile(rf"\bbetween\s+{_AMOUNT}\s+and\s+{_AMOUNT}", re.IGNORECASE)
+_PLUS_MINUS = re.compile(r"plus or minus|\u00b1", re.IGNORECASE)
+_FROM_BEFORE = re.compile(r"\bfrom\s+(?:about\s+|approximately\s+)?$", re.IGNORECASE)
+_YEAR_ONLY = re.compile(r"(?:19|20)\d\d")
+_BASIS_MARK = re.compile(r"non[- ]?gaap|adjusted", re.IGNORECASE)
+_GAAP_MARK = re.compile(r"(?<!non)(?<!non-)(?<!non )\bgaap\b", re.IGNORECASE)
+_FISCAL_YEAR_NAMED = re.compile(r"\b(?:fiscal(?: year)? ?|FY ?)(20\d\d|\d\d)\b", re.IGNORECASE)
+_QUARTER_YEAR_NAMED = re.compile(
+    r"\b(?:(?:first|second|third|fourth|1st|2nd|3rd|4th)[- ]quarter(?: of)?(?: fiscal)? ?|Q[1-4] ?(?:fiscal |FY ?)?)(20\d\d)\b", re.IGNORECASE)
+_NUMBER_TOKEN = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+
+def has_range(sentence: str) -> bool:
+    """A range around a number: "$2.55 - $2.75", "3.1% to 3.4%", "11-12", "between 5 and 6", "plus or minus". "from $1.2 billion to
+    $1.4 billion" is a change that ended on one number, and two years or a date's parts are not an amount."""
+    if _BETWEEN.search(sentence) or _PLUS_MINUS.search(sentence):
+        return True
+    for m in _RANGE.finditer(sentence):
+        if _FROM_BEFORE.search(sentence[: m.start()]):
+            continue
+        if all(_YEAR_ONLY.fullmatch(g.strip()) for g in m.groups()):
+            continue
+        return True
+    return False
+
+
+def forward_looking(sentence: str, company: Company) -> bool:
+    """A forecast word, whole and in any case. A company named for one of them (Target) is not forecasting by naming itself."""
+    for word in re.findall(r"[A-Za-z]+", company.name):
+        if _FORWARD_WORDS.fullmatch(word):
+            sentence = re.sub(rf"\b{word}\b", " ", sentence)
+    return bool(_FORWARD_WORDS.search(sentence))
+
+
+def value_in_evidence(value: float, sentence: str) -> bool:
+    """The reported value is printed in the sentence, at up to 2 decimals and with or without thousands separators, as is or
+    in the unit next to it (billions printed as millions or thousands, or the other way round). One footnote digit stuck to
+    the end of a 3-decimal figure ("$1.331" for 1.33) is dropped. Signs are the sentence's own business."""
+    base = abs(value)
+    wanted = [base, base * 1e3, base * 1e6, base / 1e3, base / 1e6]
+    for m in _NUMBER_TOKEN.finditer(sentence):
+        token = m.group().replace(",", "")
+        decimals = len(token.split(".")[1]) if "." in token else 0
+        forms = [token] if decimals <= 2 else [token[:-1]] if decimals == 3 else []
+        if any(math.isclose(float(f), w, rel_tol=1e-9, abs_tol=1e-9) for f in forms for w in wanted):
+            return True
+    return False
+
+
+def names_later_period(sentence: str, period: tuple[int | None, int]) -> bool:
+    """Does the sentence name a fiscal year after the row's, or (for a quarter row, with no earlier year named) a later quarter?"""
+    quarter, year = period
+    years = {int(y) if len(y) == 4 else 2000 + int(y) for y in _FISCAL_YEAR_NAMED.findall(sentence)}
+    years |= {int(y) for y in _QUARTER_YEAR_NAMED.findall(sentence)}
+    if any(y > year for y in years):
+        return True
+    if quarter is None or any(y < year for y in years):
+        return False
+    return any(_quarter_regex(q).search(sentence) for q in range(quarter + 1, 5))
+
+
+def outcome_line_rejection(
+    store: "DocStore", doc: DocText, char_start: int, sentence: str, a: dict[str, Any], matcher: re.Pattern[str] | None
+) -> str | None:
+    """Why this sentence cannot be an outcome for the draft, or None. Everything here is the line's own: the value
+    check, which needs the model's answer, is `value_in_evidence`."""
+    period = parse_period(a["target_period"])
+    li = doc.line_of(char_start)
+    if has_range(sentence):
+        return "the sentence prints a range, and a reported value is a single number"
+    if forward_looking(sentence, store.company):
+        return "the sentence is forward-looking"
+    if li in doc.outlook_lines:
+        return "the sentence sits in an outlook, guidance or targets section"
+    if period is not None:
+        close = store.company.period_end(period[1], period[0])
+        if close is not None and date.fromisoformat(doc.meta["filed_at"]) <= close:
+            return "the filing is dated on or before the end of the period"
+        if names_later_period(sentence, period):
+            return "the sentence names a later period than the row's"
+    lowered = a["metric"].lower()
+    if "gaap" in lowered or "adjusted" in lowered:
+        if _BASIS_MARK.search(sentence) and _GAAP_MARK.search(sentence):
+            return None  # "GAAP and Adjusted EPS were ...": the sentence names both bases, so it serves a row of either
+        marked = bool(_BASIS_MARK.search(sentence) or _BASIS_MARK.search(_section_label(doc, li, 25) or ""))
+        if "non-gaap" in lowered or "adjusted" in lowered:
+            if not marked and matcher is not None and _prints_both_bases(doc, matcher):
+                return "a non-GAAP row matched a sentence with no non-GAAP or adjusted label, and the release prints both"
+        elif _BASIS_MARK.search(sentence):
+            return "a GAAP row matched a sentence labelled adjusted or non-GAAP"
+    return None
+
+
+def _prints_both_bases(doc: DocText, matcher: re.Pattern[str]) -> bool:
+    cache = doc.__dict__.setdefault("_both", {})
+    key = matcher.pattern
+    if key not in cache:
+        hits = [doc.text[a:b] for a, b in doc.spans if matcher.search(doc.text[a:b])]
+        cache[key] = any(_BASIS_MARK.search(h) for h in hits) and any(not _BASIS_MARK.search(h) for h in hits)
+    return cache[key]
+
+
 # --- stage 1: outcomes -----------------------------------------------------
 
 
@@ -456,7 +584,10 @@ def build_outcome_requests(
                 reasons[d["draft_id"]] = ("period not closed" if close is not None and close > (as_of or today)
                                           else "no later 8-K release for that period found")
                 continue
-            lines = select_lines(store, named[: int(cfg["max_docs"])], matcher, None, a["metric"], period, cfg, number)
+            def reject(doc: DocText, start: int, sentence: str, a=a, matcher=matcher, store=store) -> bool:
+                return outcome_line_rejection(store, doc, start, sentence, a, matcher) is not None
+
+            lines = select_lines(store, named[: int(cfg["max_docs"])], matcher, None, a["metric"], period, cfg, number, reject=reject)
             if not lines:
                 reasons[d["draft_id"]] = "the matching release has no line naming the metric with a number"
                 continue
@@ -583,13 +714,19 @@ def derive_outcomes(
                 raise ValueError("the excerpt has forward-looking wording (expected, expects, guidance, outlook "
                                   "or anticipates) with no past-tense reporting verb, so it does not report a result")
             a = d["assumption"]
+            store = stores[d["cik"]]
+            meta = next(m for m in store.metas if m["accession"] == line.accession)
+            why = outcome_line_rejection(store, store.get(meta), line.char_start, line.sentence, a, metric_pattern(a["metric"], cfg["metric_terms"]))
+            if why:
+                raise ValueError(why)
             value = convert(float(payload["value"]), payload["unit"], a["unit"])
             value = comparable_sales_sign(a["metric"], value, line.sentence)
+            if not value_in_evidence(value, line.sentence):
+                raise ValueError(f"the value {value:g} is not printed in the sentence")
             mid = [x for x in (a["target_low"], a["target_high"]) if x is not None]
             centre = sum(mid) / len(mid)
             if centre > 0 and value > 0 and not (1 / ratio <= value / centre <= ratio):
                 raise ValueError(f"reported {value:g} is {value / centre:.1f}x the guidance {centre:g}: likely a unit or row mix-up")
-            meta = next(m for m in stores[d["cik"]].metas if m["accession"] == line.accession)
         except (ValueError, TypeError, StopIteration, ValidationError) as exc:
             rejects.append({"draft_id": d["draft_id"], "output": payload, "reason": str(exc)[:300]})
             reasons[d["draft_id"]] = "model output rejected"

@@ -116,7 +116,7 @@ Not in the schema, do not add: cross-record links, contradiction fields, confide
 
 Resolution is mechanical. No judgment calls.
 
-- **met**: `target_low <= reported_value <= target_high` (point guidance: low == high, tolerance 0.5% of value)
+- **met**: `target_low <= reported_value <= target_high` (point guidance: low == high, met only by an exact match at the printed precision; no tolerance)
 - **missed**: reported_value outside the range
 - **withdrawn**: company explicitly withdrew or suspended guidance in a later filing before the period closed
 - **unresolved**: period has not closed, or no later filing reports the metric

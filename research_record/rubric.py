@@ -25,7 +25,6 @@ from typing import Literal
 from research_record.schema import ResearchRecord, Status
 
 __all__ = [
-    "POINT_TOLERANCE",
     "is_point_guidance",
     "in_range",
     "side",
@@ -40,10 +39,7 @@ __all__ = [
 Side = Literal["above", "below"]
 Direction = Literal["better", "worse"]
 
-#: Point guidance (low == high) is met within 0.5 percent of the stated value.
-POINT_TOLERANCE = 0.005
-
-#: Guards float representation at the endpoints of a range. Not a tolerance:
+#: Guards float representation at the endpoints of a range or a point. Not a tolerance:
 #: a range is inclusive, and this only keeps 3.3 from landing outside [1.1, 3.3].
 _REL_EPS = 1e-9
 
@@ -77,8 +73,7 @@ def in_range(
 
     if is_point_guidance(target_low, target_high):
         target = float(target_low)  # type: ignore[arg-type]
-        tolerance = POINT_TOLERANCE * abs(target)
-        return abs(reported_value - target) <= tolerance
+        return abs(reported_value - target) <= _slack(target)  # exact: a point has no tolerance
 
     if target_low is not None and reported_value < target_low - _slack(target_low):
         return False

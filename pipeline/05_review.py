@@ -190,7 +190,7 @@ def invalidation(a: dict[str, Any]) -> str:
     low, high = a["target_low"], a["target_high"]
     if low is not None and high is not None:
         if low == high:
-            return f"reported value differs from {low:g} by more than {rubric.POINT_TOLERANCE * 100:g}%"
+            return f"reported value differs from {low:g}"
         return f"reported value falls outside [{low:g}, {high:g}]"
     return f"reported value is below {low:g}" if low is not None else f"reported value is above {high:g}"
 

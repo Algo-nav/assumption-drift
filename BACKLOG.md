@@ -160,6 +160,10 @@ gross margin as a reported line. They are in the 10-K and derivable from two sta
 pre-tax earnings; operating income over net sales; gross profit over net sales). Rows affected: every HD tax
 rate, operating margin and gross margin row with "outcome: none". Lowe's will have the same.
 
+Also under this item: sentences of the form "X and Y, respectively" list the current and prior period in order.
+The matcher took the second figure for CRM FY2022 tax rate ("GAAP tax rate of 22.0% and 21.5%, respectively").
+The matcher should take the figure whose position matches the row's period in the sentence's period list.
+
 ## 11. Outcome matcher accepted a forward-looking range as a reported value (top priority, fix before publish)
 
 A reported value is a single number. Any candidate that prints a range, or sits in an outlook or guidance

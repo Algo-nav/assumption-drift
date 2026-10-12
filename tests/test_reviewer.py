@@ -845,3 +845,18 @@ def test_no_filter_or_key_path_approves_a_rejection_the_reviewer_did_not_confirm
     s = Script(keys=["n", "n", "n", "s", "v", "q"], lines=[REJECTED, "no", "no"])
     rv.run(path, filters=filters, read_key=s.key, read_line=s.line, write=s.write)
     assert all(r["approved"] == "false" for r in read_csv(path))
+
+
+def test_apply_y_and_n_on_a_pending_change_do_what_the_interactive_keys_do() -> None:
+    row_ = changed(reviewer_note="checked")
+    accepted, why = rv._apply_one(row_, "y", "")
+    assert why == "" and accepted == rv.accept_change(row_)
+    rejected, why = rv._apply_one(row_, "n", "provision is in parentheses")  # no rejection prefix needed for a proposal
+    assert why == "" and rejected == rv.reject_change(row_, "provision is in parentheses")
+    assert rv._apply_one(row_, "s", "") == (row_, "")
+
+
+def test_apply_still_refuses_y_and_n_on_a_pending_acknowledgement() -> None:
+    for decision in ("y", "n"):
+        updated, why = rv._apply_one(pending(), decision, "rejected: no")
+        assert updated is None and "acknowledgement is pending" in why

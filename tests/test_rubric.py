@@ -49,24 +49,20 @@ def test_point_guidance_is_detected() -> None:
     assert rubric.is_point_guidance(None, None) is False
 
 
-@pytest.mark.parametrize(
-    "reported, expected",
-    [
-        (100.0, "met"),     # exact
-        (100.5, "met"),     # exactly 0.5 percent above
-        (99.5, "met"),      # exactly 0.5 percent below
-        (100.51, "missed"),
-        (99.49, "missed"),
-    ],
-)
-def test_point_guidance_tolerance_is_half_a_percent(reported: float, expected: str) -> None:
+@pytest.mark.parametrize("reported, expected", [(100.0, "met"), (100.5, "missed"), (99.5, "missed"), (100.01, "missed")])
+def test_point_guidance_has_no_tolerance(reported: float, expected: str) -> None:
     assert rubric.resolve(100.0, 100.0, reported) == expected
 
 
-def test_point_tolerance_scales_with_the_value() -> None:
-    # 0.5 percent of 2.50 is 0.0125.
-    assert rubric.resolve(2.50, 2.50, 2.5124) == "met"
-    assert rubric.resolve(2.50, 2.50, 2.52) == "missed"
+def test_a_point_target_of_24_6_is_not_met_by_24_5() -> None:
+    # A row was proposed "met" with 24.5 against a 24.6 point target, inside the old half percent.
+    assert rubric.resolve(24.6, 24.6, 24.5) == "missed"
+    assert rubric.resolve(24.6, 24.6, 24.6) == "met"
+    assert rubric.side(24.6, 24.6, 24.5) == "below" and rubric.side(24.6, 24.6, 24.7) == "above"
+
+
+def test_point_guidance_matches_at_float_precision() -> None:
+    assert rubric.resolve(2.5, 2.5, 0.1 + 2.4) == "met"
 
 
 def test_point_guidance_of_zero_requires_an_exact_match() -> None:
@@ -74,10 +70,9 @@ def test_point_guidance_of_zero_requires_an_exact_match() -> None:
     assert rubric.resolve(0.0, 0.0, 0.01) == "missed"
 
 
-def test_negative_point_guidance_uses_the_absolute_value_for_tolerance() -> None:
-    # 0.5 percent of -2.00 is 0.01 either side.
-    assert rubric.resolve(-2.00, -2.00, -2.01) == "met"
-    assert rubric.resolve(-2.00, -2.00, -2.02) == "missed"
+def test_negative_point_guidance_is_exact_too() -> None:
+    assert rubric.resolve(-2.00, -2.00, -2.00) == "met"
+    assert rubric.resolve(-2.00, -2.00, -2.01) == "missed"
 
 
 def test_a_range_gets_no_tolerance() -> None:

@@ -75,7 +75,7 @@ def test_the_claim_and_the_invalidation_condition_are_restatements_not_judgments
     a = {"metric": "revenue", "target_low": 5.0, "target_high": 6.0, "unit": "USD billions", "target_period": "Q4 FY2026"}
     assert review.restate("NVIDIA Corporation", a) == "NVIDIA Corporation expects revenue of $5 billion to $6 billion for Q4 FY2026."
     assert review.invalidation(a) == "reported value falls outside [5, 6]"
-    assert review.invalidation({**a, "target_low": 5.0, "target_high": 5.0}) == "reported value differs from 5 by more than 0.5%"
+    assert review.invalidation({**a, "target_low": 5.0, "target_high": 5.0}) == "reported value differs from 5"
     assert review.invalidation({**a, "target_high": None}) == "reported value is below 5"
     assert review.invalidation({**a, "target_low": None}) == "reported value is above 6"
 

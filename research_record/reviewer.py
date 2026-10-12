@@ -559,8 +559,14 @@ def _apply_one(row: dict[str, str], decision: str, note: str) -> tuple[dict[str,
     """The row after `decision`, or (None, why) when the decision is refused. Uses the same row functions as the keys."""
     if decision == "s":
         return row, ""
-    if is_change_pending(row) or is_ack_pending(row):
-        return None, "a proposal is pending: settle it interactively"
+    if is_change_pending(row):  # a proposal, not a row: y and n do exactly what the interactive keys do
+        if decision == "y":
+            return accept_change(row), ""
+        if decision == "n":
+            return reject_change(row, note.strip()), ""
+        return None, "a change is pending: only y, n or s"
+    if is_ack_pending(row):
+        return None, "an acknowledgement is pending: settle it interactively"
     if decision == "n":  # allowed on an empty block too: the interactive `n` just writes the rejection note
         if not note.strip().lower().startswith(REJECTION_PREFIXES):
             return None, f"note must start with one of {', '.join(REJECTION_PREFIXES)}"

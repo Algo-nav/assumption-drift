@@ -193,8 +193,7 @@ def test_lines_are_ranked_actuals_first_and_guidance_last(world) -> None:
     (_, lines), = index.values()
     by_score = sorted(lines, key=lambda l: -l.score)
     assert by_score[0].sentence.startswith("Fourth quarter revenue of $4.8 billion")
-    guidance = next(l for l in lines if l.sentence.startswith("Initiates first quarter"))
-    assert all(guidance.score < l.score for l in lines if l is not guidance)  # strictly below every other line
+    assert not any(l.sentence.startswith("Initiates first quarter") for l in lines)  # guidance is no longer a candidate at all
 
 
 def test_the_request_shows_the_guidance_and_numbered_lines(world) -> None:
@@ -308,8 +307,12 @@ def test_an_outcome_line_that_is_still_forward_looking_is_rejected(world) -> Non
                ["Fourth quarter revenue is expected to be $4.8 billion."],
                title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
     reqs, index, _ = requests_for(draft())
-    n = line_no(index[reqs[0].custom_id][1], "Fourth quarter revenue is expected")
-    (outs, rejects, reasons), _ = outcome_for(world, {"index": n, "value": 4.8, "unit": "USD billions"})
+    lines = index[reqs[0].custom_id][1]
+    assert not any("is expected" in l.sentence for l in lines)  # never offered to the model
+    # and if an answer to an older prompt points at it anyway, the guard in derive_outcomes still refuses it
+    forward = outcomes.Line("0000000123-24-000021", "2024-05-02", "Fourth quarter revenue is expected to be $4.8 billion.", 0, [], None, None, 0)
+    res = {reqs[0].custom_id: llm.Result(reqs[0].custom_id, "succeeded", json.dumps({"index": 1, "value": 4.8, "unit": "USD billions"}), 1, 1, None, "b")}
+    outs, rejects, reasons = outcomes.derive_outcomes({reqs[0].custom_id: (draft(), [forward])}, res, {COMPANY.cik: store()}, OCFG)
     assert outs == {} and "forward-looking" in rejects[0]["reason"] and reasons["D1"] == "model output rejected"
 
 
@@ -529,7 +532,7 @@ def test_an_acknowledgement_line_no_longer_needs_a_number_of_its_own(world) -> N
 def config_path(world):
     cfg = common.load_config()
     cfg["llm"]["sync_below"] = 0  # these tests are about the batch path; the synchronous rule has its own tests in test_llm.py
-    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik, "fiscal_year_end_month": 6}]
+    cfg["companies"] = [{"name": COMPANY.name, "ticker": COMPANY.ticker, "cik": COMPANY.cik, "fiscal_year_end_month": 4}]
     path = world / "config.yaml"
     path.write_text(yaml.safe_dump(cfg))
     return path
@@ -873,7 +876,7 @@ def test_submit_runs_the_withdrawal_stage_and_puts_the_withdrawal_on_the_row(wor
     monkeypatch.setattr(llm, "make_client", lambda: client)
     assert outcomes.main(["--config", str(config_path), "--submit"]) == 0
     rows = {r["draft_id"]: r for r in read_outcomes(world)}
-    assert rows["D1"]["withdrawal"]["withdrawn_at"] == "2024-04-20" and rows["D3"]["withdrawal"]["period_close"] == "2024-06-30"
+    assert rows["D1"]["withdrawal"]["withdrawn_at"] == "2024-04-20" and rows["D3"]["withdrawal"]["period_close"] == "2024-04-30"  # April year end
     assert rows["D4"]["withdrawal"] is None
     assert set(llm.RawArchive("04_withdrawals").load()) == {"w-D1", "w-D3"}  # D4 was never sent
     out = capsys.readouterr().out
@@ -1139,3 +1142,211 @@ def test_comparable_sales_take_their_sign_from_the_verb(value, sentence, expecte
 
 def test_the_sign_rule_is_for_comparable_sales_only() -> None:
     assert outcomes.comparable_sales_sign("revenue", 5.0, "revenue decreased") == 5.0
+
+
+# --- BACKLOG item 11: an outcome is one number, reported, for a closed period -------------------------------------
+
+
+def rejection(world, sentence, d=None, *, filed="2025-08-20", heading=None, extra=(), company=DATED):
+    """Why `outcome_line_rejection` refuses this sentence for this draft in a release filed `filed`, or None."""
+    d = d or draft(metric="EPS GAAP", unit="USD per share", period="Q4 FY2025", stated="2025-01-15", low=2.0, high=2.2)
+    acc = add_filing(world, "0090", filed, "8-K", ([heading] if heading else []) + [sentence] + list(extra))
+    st = outcomes.DocStore(company)
+    doc = st.get(next(m for m in st.metas if m["accession"] == acc))
+    matcher = outcomes.metric_pattern(d["assumption"]["metric"], OCFG["metric_terms"])
+    return outcomes.outcome_line_rejection(st, doc, doc.text.index(sentence), sentence, d["assumption"], matcher)
+
+
+def row(metric, period="Q4 FY2025", unit="percent", low=60.0, high=70.0):
+    return draft(metric=metric, unit=unit, period=period, stated="2025-01-15", low=low, high=high)
+
+
+@pytest.mark.parametrize("metric, sentence", [
+    ("EPS GAAP", "GAAP diluted EPS $2.55 - $2.75"),  # QCOM Q4 FY2025, 0000804328-25-000044: the Q1 FY2026 guidance line
+    ("EPS non-GAAP", "Non-GAAP diluted EPS $3.30 - $3.50"),
+])
+def test_qcom_q4_fy2025_eps_rows_do_not_take_a_guidance_range_as_the_result(world, metric, sentence) -> None:
+    d = row(metric, unit="USD per share", low=2.0, high=2.2)
+    assert "range" in rejection(world, sentence, d)
+
+
+def test_avgo_q3_fy2026_operating_margin_does_not_take_the_ceos_expectation_as_the_result(world) -> None:
+    d = row("operating margin non-GAAP", period="Q3 FY2026", low=65.0, high=67.0)
+    sentence = "In Q4, we expect to maintain our non-GAAP operating margin at 66%."
+    assert rejection(world, sentence, d, filed="2026-09-02", company=DATED.__class__(COMPANY.name, "AVGO", COMPANY.cik, 10)) == "the sentence is forward-looking"
+
+
+@pytest.mark.parametrize("metric, sentence, heading", [
+    ("tax rate", "Tax rate of approximately 24.5 percent", "Fiscal 2023 Business Outlook"),  # HD FY2022, 2023-02-21 release
+    ("operating margin", "Operating margin of approximately 14.1%", "Fiscal 2024 Business Outlook"),  # HD FY2023
+    ("gross margin", "Gross margin of approximately 33.4%", "Fiscal 2025 Guidance"),  # HD FY2024
+    ("operating margin", "Operating margin of approximately 13.0%", "Fiscal 2025 Targets"),
+    ("gross margin", "Gross margin of approximately 33.1%", "Business Outlook"),  # HD FY2025
+    ("tax rate", "Effective tax rate of approximately 24.3%", "Financial Targets"),
+    ("tax rate", "Effective income tax rate of approximately 24.3%", "Outlook"),  # LOW, the next year's guide
+])
+def test_hd_and_low_guides_of_the_form_metric_of_approximately_x_in_an_outlook_section_are_rejected(world, metric, sentence, heading) -> None:
+    d = row(metric, period="FY2022", low=24.0, high=25.0)
+    assert "outlook, guidance or targets section" in rejection(world, sentence, d, filed="2023-02-21", heading=heading)
+    # the same words in the results part of a release are the metric's own result
+    assert rejection(world, sentence, d, filed="2023-02-21") is None
+
+
+def test_hd_fy2025_adjusted_operating_margin_range_is_rejected(world) -> None:
+    d = row("operating margin non-GAAP", period="FY2025", low=12.5, high=13.5)
+    assert "range" in rejection(world, "Adjusted operating margin of approximately 12.8% to 13.0%", d, filed="2026-02-24")
+
+
+def test_low_tax_rate_row_does_not_take_the_next_fiscal_years_guide(world) -> None:
+    d = row("tax rate", period="FY2023", low=24.0, high=25.0)
+    sentence = "Effective income tax rate of approximately 24.3% for fiscal 2024"
+    assert "later period" in rejection(world, sentence, d, filed="2024-02-21")
+
+
+def test_low_net_earnings_paragraph_and_the_1_93_line_do_not_state_the_value_the_row_was_given() -> None:
+    paragraph = "Net earnings for the quarter were $1.4 billion, compared to $1.5 billion for the same quarter last year."
+    assert not outcomes.value_in_evidence(12.15, paragraph)
+    assert not outcomes.value_in_evidence(11.73, "Adjusted diluted earnings per share $1.93")
+    assert not outcomes.value_in_evidence(11.93, "Adjusted diluted earnings per share $1.93")
+    assert not outcomes.value_in_evidence(12.4, "Our CEO said: \"we delivered a strong quarter.\"")
+    assert not outcomes.value_in_evidence(170, "Comparable sales were 1.7%")
+
+
+@pytest.mark.parametrize("value, sentence", [
+    (4.8, "Fourth quarter revenue of $4.8 billion"),
+    (4800, "Fourth quarter revenue of $4.8 billion"),  # a row in millions, printed in billions
+    (4.8, "Fourth quarter revenue of $4,800 million"),  # a row in billions, printed in millions
+    (4.8, "Revenue of $4,800,000 thousand"),
+    (1.33, "Diluted earnings per share $1.331"),  # one trailing footnote digit
+    (12.0, "Operating margin 12 %"),
+    (-1.8, "Comparable sales for fiscal 2024 decreased 1.8%"),
+    (1234.5, "Revenue $ 1,234.50"),
+])
+def test_a_value_printed_in_the_sentence_is_found_at_up_to_two_decimals(value, sentence) -> None:
+    assert outcomes.value_in_evidence(value, sentence)
+
+
+def test_a_value_is_not_found_in_a_longer_or_different_number() -> None:
+    assert not outcomes.value_in_evidence(1.3, "Diluted earnings per share $1.33")
+    assert not outcomes.value_in_evidence(1.33, "Diluted earnings per share $1.3312")
+
+
+def test_an_outcome_whose_value_is_not_in_its_sentence_is_rejected(world) -> None:
+    add_filing(world, "0022", "2024-05-02", "8-K", ["Fourth quarter revenue was strong at $4.9 billion."],
+               title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
+    reqs, index, _ = requests_for(draft())
+    n = line_no(index[reqs[0].custom_id][1], "Fourth quarter revenue was strong")
+    (outs, rejects, reasons), _ = outcome_for(world, {"index": n, "value": 4.8, "unit": "USD billions"})
+    assert outs == {} and "not printed in the sentence" in rejects[0]["reason"] and reasons["D1"] == "model output rejected"
+
+
+def test_the_24_5_against_24_6_point_target_is_missed_with_a_direction() -> None:
+    # The old half percent made 24.5 "met" against a 24.6 point.
+    assert rubric.resolve(24.6, 24.6, 24.5) == "missed"
+    assert rubric.direction(24.6, 24.6, 24.5, higher_is_better=True) == "worse"
+    assert rubric.direction(24.6, 24.6, 24.7, higher_is_better=True) == "better"
+
+
+@pytest.mark.parametrize("sentence, ranged", [
+    ("GAAP diluted EPS $2.55 - $2.75", True), ("Revenue of $5.0 billion to $6.0 billion", True), ("Margin of 12.8% to 13.0%", True),
+    ("Margin of 12.8%-13.0%", True), ("Revenue of 11-12 billion", True), ("Revenue between $5 billion and $6 billion", True),
+    ("Margin of 33% plus or minus 1 point", True), ("Margin of 33% \u00b1 1 point", True),
+    ("Revenue grew from $1.2 billion to $1.4 billion", False),  # a change that ended on one number
+    ("Revenue was $4.8 billion in fiscal 2023-2024", False), ("Revenue was $4.8 billion on 2024-09-02", False),
+    ("Fourth quarter revenue of $4.8 billion, up 10% from a year ago.", False),
+])
+def test_a_range_around_a_number_is_found(sentence, ranged) -> None:
+    assert outcomes.has_range(sentence) is ranged
+
+
+@pytest.mark.parametrize("sentence", [
+    "We expect revenue of $5 billion", "Management expects $5 billion", "Revenue is expected to be $5 billion", "We anticipate $5 billion",
+    "Anticipates $5 billion", "Forecast revenue $5 billion", "Forecasted revenue $5 billion", "Guidance of $5 billion", "The Outlook is $5 billion",
+    "Our target is $5 billion", "Targets of $5 billion", "Revenue will be $5 billion", "Revenue to be in the range of $5 billion", "EXPECTED REVENUE $5 billion",
+])
+def test_forward_looking_words_are_found_whole_and_in_any_case(sentence) -> None:
+    assert outcomes.forward_looking(sentence, COMPANY)
+
+
+def test_forward_words_inside_other_words_are_not_forward_looking() -> None:
+    assert not outcomes.forward_looking("Revenue was $5 billion, unexpectedly high, at the targeted retailer", COMPANY)
+
+
+def test_a_company_named_target_is_not_forecasting_by_saying_its_name() -> None:
+    target = common.Company("Target Corporation", "TGT", "0000027419")
+    assert not outcomes.forward_looking("Target's comparable sales decreased 1.8%", target)
+    assert outcomes.forward_looking("Target expects comparable sales of 1.8%", target)
+    assert outcomes.forward_looking("Our target is comparable sales of 1.8%", target)
+
+
+def test_a_gaap_row_refuses_a_sentence_labelled_adjusted_or_non_gaap(world) -> None:
+    d = row("EPS GAAP", unit="USD per share", low=2.0, high=2.2)
+    assert "GAAP row" in rejection(world, "Non-GAAP diluted EPS $2.10", d)
+    assert "GAAP row" in rejection(world, "Adjusted diluted earnings per share $2.10", d)
+    assert rejection(world, "GAAP diluted EPS $2.10", d) is None
+
+
+@pytest.mark.parametrize("metric", ["EPS GAAP", "EPS non-GAAP"])
+def test_a_sentence_naming_both_bases_is_valid_for_a_row_of_either(world, metric) -> None:
+    d = row(metric, period="FY2024", unit="USD per share", low=8.5, high=9.0)
+    sentence = "GAAP and Adjusted EPS were $8.86 for full-year 2024, compared with $8.94 in the prior year."
+    assert rejection(world, sentence, d, extra=["Non-GAAP diluted EPS $3.10"]) is None
+
+
+def test_a_non_gaap_row_refuses_an_unlabelled_sentence_when_the_release_prints_both(world) -> None:
+    d = row("EPS non-GAAP", unit="USD per share", low=3.0, high=3.2)
+    both = ["Non-GAAP diluted EPS $3.10"]
+    assert "non-GAAP row" in rejection(world, "GAAP diluted EPS $2.10", d, extra=both)
+    assert rejection(world, "Non-GAAP diluted EPS $3.10", d, extra=["GAAP diluted EPS $2.10"]) is None
+    assert rejection(world, "Diluted EPS $3.10", d) is None  # a release with only one basis printed: nothing to tell apart
+
+
+def test_a_non_gaap_row_takes_its_basis_from_the_section_label(world) -> None:
+    d = row("EPS non-GAAP", unit="USD per share", low=3.0, high=3.2)
+    assert rejection(world, "Diluted EPS $3.10", d, heading="Non-GAAP Results", extra=["GAAP diluted EPS $2.10"]) is None
+
+
+def test_an_outcome_filing_must_be_dated_after_the_period_ends(world) -> None:
+    d = row("EPS GAAP", period="Q4 FY2025", unit="USD per share", low=2.0, high=2.2)  # June year end: closes 2025-06-30
+    assert "on or before the end of the period" in rejection(world, "GAAP diluted EPS $2.10", d, filed="2025-06-30")
+    assert rejection(world, "GAAP diluted EPS $2.10", d, filed="2025-07-01") is None
+
+
+@pytest.mark.parametrize("sentence, period, later", [
+    ("Fiscal 2026 diluted EPS $2.10", "Q4 FY2025", True),
+    ("First quarter fiscal 2026 diluted EPS $2.10", "Q4 FY2025", True),
+    ("Fourth quarter diluted EPS $2.10", "Q3 FY2025", True),
+    ("Fourth quarter fiscal 2025 diluted EPS $2.10", "Q3 FY2025", True),
+    ("Fourth quarter of fiscal 2024 diluted EPS $2.10", "Q3 FY2025", False),  # an earlier year's fourth quarter
+    ("Third quarter fiscal 2025 diluted EPS $2.10", "Q3 FY2025", False),
+    ("Fiscal 2025 diluted EPS $2.10", "FY2025", False),
+    ("Fourth quarter diluted EPS $2.10", "FY2025", False),
+    ("Diluted EPS $2.10 in FY26", "FY2025", True),
+])
+def test_a_sentence_naming_a_later_period_than_the_rows_is_found(sentence, period, later) -> None:
+    quarter, year = outcomes.parse_period(period)
+    assert outcomes.names_later_period(sentence, (quarter, year)) is later
+
+
+def test_a_correct_candidate_still_matches_end_to_end(world) -> None:
+    """"Comparable sales for fiscal 2024 decreased 1.8%" for a -1.8 row survives every guard and becomes the outcome."""
+    add_filing(world, "0023", "2024-05-02", "8-K", ["Comparable sales for fiscal 2024 decreased 1.8%"],
+               title="Example Corp Announces Financial Results for Fourth Quarter and Fiscal 2024")
+    d = draft(metric="comparable sales", unit="percent", period="FY2024", low=-2.5, high=-1.5)
+    reqs, index, reasons = requests_for(d)
+    assert reasons == {}
+    n = line_no(index[reqs[0].custom_id][1], "Comparable sales for fiscal 2024 decreased 1.8%")
+    (outs, rejects, _), _ = outcome_for(world, {"index": n, "value": 1.8, "unit": "percent"}, d)
+    assert rejects == [] and outs["D1"]["reported_value"] == -1.8
+    assert outs["D1"]["evidence"]["excerpt"] == "Comparable sales for fiscal 2024 decreased 1.8%"
+    assert rubric.resolve(-2.5, -1.5, outs["D1"]["reported_value"]) == "met"
+
+
+def test_a_projected_figure_is_forward_looking() -> None:
+    assert outcomes.forward_looking("the Company used a projected non-GAAP tax rate of 23.5%", COMPANY)
+    assert outcomes.forward_looking("Projections put the tax rate at 23.5%", COMPANY)
+
+
+def test_a_sentence_with_a_projected_rate_is_rejected_as_an_outcome(world) -> None:
+    d = row("tax rate non-GAAP", low=22.0, high=24.0)
+    assert rejection(world, "the Company used a projected non-GAAP tax rate of 23.5%", d) == "the sentence is forward-looking"
