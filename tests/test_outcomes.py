@@ -1350,3 +1350,19 @@ def test_a_projected_figure_is_forward_looking() -> None:
 def test_a_sentence_with_a_projected_rate_is_rejected_as_an_outcome(world) -> None:
     d = row("tax rate non-GAAP", low=22.0, high=24.0)
     assert rejection(world, "the Company used a projected non-GAAP tax rate of 23.5%", d) == "the sentence is forward-looking"
+
+
+def test_a_draft_whose_own_end_date_puts_it_in_another_period_is_not_searched_for_a_withdrawal(world) -> None:
+    """Lowe's fiscal 2019 EPS ("fiscal year ending Jan. 31, 2020"), mislabelled FY2020: the May 2020 withdrawal of fiscal 2020
+    guidance is not a withdrawal of it, and a correctly labelled FY2019 row closed before that release."""
+    lowes = common.Company("Lowe's", "LOW", COMPANY.cik, 1, "start")
+    add_filing(world, "0019", "2020-05-20", "8-K", ["The Company is withdrawing its financial guidance for fiscal year 2020."], title="Example Corp Update")
+    text = "Diluted earnings per share of $6.00 to $6.10 are expected for the fiscal year ending Jan. 31, 2020."
+
+    def eps(period):
+        d = draft("L1", metric="EPS GAAP", unit="USD per share", period=period, stated="2019-02-27", low=6.0, high=6.1)
+        d["assumption"]["text"] = text
+        return d
+
+    assert withdrawal_requests(eps("FY2020"), company=lowes)[1] == {}  # mislabelled: caught by the end date
+    assert withdrawal_requests(eps("FY2019"), company=lowes)[1] == {}  # right label: closed 2020-01-31, before the release

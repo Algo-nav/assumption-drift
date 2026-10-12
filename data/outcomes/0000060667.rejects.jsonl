@@ -1,3 +1,7 @@
+{"draft_id": "01D4P40E000AGCNG0D0T3H6G9A", "output": {"index": 3, "value": null, "unit": "none"}, "reason": "index 3 or value None is not usable"}
+{"draft_id": "01DBEDCT005FA933KZJ9DCZJJ9", "output": {"index": 1, "value": 0.66, "unit": "USD per share"}, "reason": "reported 0.66 is 0.1x the guidance 5.64: likely a unit or row mix-up"}
+{"draft_id": "01DJRQJ7007RX23JD04D5KJ359", "output": {"index": 1, "value": 0.66, "unit": "USD per share"}, "reason": "reported 0.66 is 0.1x the guidance 5.64: likely a unit or row mix-up"}
+{"draft_id": "01DT31QM00BWH0T3FB9G2MHRXX", "output": {"index": 1, "value": 0.66, "unit": "USD per share"}, "reason": "reported 0.66 is 0.1x the guidance 5.41: likely a unit or row mix-up"}
 {"draft_id": "01FPXP70003WYE4KPN7QB8EZRJ", "output": {"index": 1, "value": 97059, "unit": "USD millions"}, "reason": "reported 97.059 is 77.6x the guidance 1.25: likely a unit or row mix-up"}
 {"draft_id": "01FWHY1A00KZSKKKK760ZRSBNW", "output": {"index": 1, "value": 97059, "unit": "USD millions"}, "reason": "reported 97.059 is 77.6x the guidance 1.25: likely a unit or row mix-up"}
 {"draft_id": "01G3A7DP00HAP4NKBN666567K9", "output": {"index": 1, "value": 97059, "unit": "USD millions"}, "reason": "reported 97.059 is 77.6x the guidance 1.25: likely a unit or row mix-up"}

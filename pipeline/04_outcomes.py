@@ -56,7 +56,7 @@ from typing import Any, Callable
 from pydantic import ValidationError
 
 from pipeline import common, llm
-from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config
+from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config, period_named_by_end_date
 from research_record import polarity, rubric
 from research_record.schema import Evidence, Outcome
 from research_record.text import html_to_text_and_gaps, sentence_spans
@@ -881,6 +881,9 @@ def build_withdrawal_requests(
             close = company.period_end(period[1], period[0]) if period else None
             if close is None:
                 continue
+            named = period_named_by_end_date(company, a["text"], after=date.fromisoformat(a["stated_at"]))
+            if named is not None and named.startswith("Q") == a["target_period"].startswith("Q") and named != a["target_period"]:
+                continue  # the sentence's own end date puts the guidance in another period: the label is wrong, so no withdrawal is proposed against it
             horizon = min(today, close).isoformat()
             metas = [m for m in store.metas if a["stated_at"] < m["filed_at"] <= horizon]
             lines = select_withdrawal_lines(store, metas, phrases, subjects, cfg)

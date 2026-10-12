@@ -83,6 +83,7 @@ from pipeline.common import (
     Company,
     companies,
     load_config,
+    period_named_by_end_date,
     raw_paths,
     read_meta,
     stable_ulid,
@@ -825,6 +826,25 @@ def fix_na_column_period(period: str, candidate: dict[str, Any], evidence: str) 
                    f"{bound} column and not {period}, the column that is N/A")
 
 
+def fix_end_date_period(company: Company, period: str, evidence: str, stated_at: date, context: str = "") -> tuple[str, str | None]:
+    """A sentence that names its period by the date it ends ("for the fiscal year ending Jan. 31, 2020") is about the
+    fiscal period the company's calendar puts that date in, whatever label the model wrote: Lowe's names its years for
+    the year they start in, so that is fiscal 2019, and a model that reads the calendar year of the date writes FY2020.
+    Only a label of the same kind is replaced (a year for a year, a quarter for a quarter), and only when the evidence
+    names exactly one such period still ahead at `stated_at`. A sentence that names no period by end date takes it from
+    `context`, the lead-in and section heading 02 captured for it ("for the fiscal year ending Jan. 31, 2020:" above
+    "The effective income tax rate is expected to be approximately 24%").
+
+    Returns (period, note): note says the rule fired, or is None if nothing changed."""
+    named = period_named_by_end_date(company, evidence, after=stated_at)
+    where = "the evidence"
+    if named is None:
+        named, where = period_named_by_end_date(company, context, after=stated_at), "the lead-in or heading"
+    if named is None or named == period or named.startswith("Q") != period.startswith("Q"):
+        return period, None
+    return named, f"{where} names its period by end date, which is {named} on {company.name}'s fiscal calendar, not {period}"
+
+
 PERIOD_BEFORE_STATED = "period closes before stated; likely next quarter"
 _FISCAL_PERIOD = re.compile(r"^(?:Q([1-4]) )?FY(\d{4})$")
 
@@ -1292,6 +1312,8 @@ def derive_drafts(
                 excerpt = evidence_text(cand, item)
                 check_not_bare_value(excerpt, cand.get("heading"))
                 period, period_note = fix_na_column_period(period, cand, excerpt)
+                period, end_date_note = fix_end_date_period(company, period, excerpt, date.fromisoformat(cand["filed_at"]),
+                                                          " ".join(t for t in (cand.get("lead_in"), cand.get("heading")) if t))
                 check_period(period, excerpt)
                 value_column = value_column_text(cand, item, excerpt)
                 before_note = period_closes_before_stated(company, period, date.fromisoformat(cand["filed_at"]))
@@ -1312,7 +1334,7 @@ def derive_drafts(
                 low, high, parens_note = fix_parens_sign(
                     metric, low, high, excerpt, kinds, tax_rate_parens_negative=company.tax_rate_parens_negative)
                 low, high, expense_note = fix_expense_of_sign(metric, low, high, excerpt)
-                parens_note = "; ".join(n for n in (before_note, period_note, basis_note, printed_note, spread_note, parens_note, expense_note) if n) or None
+                parens_note = "; ".join(n for n in (before_note, period_note, end_date_note, basis_note, printed_note, spread_note, parens_note, expense_note) if n) or None
                 check_range_language(stated, excerpt)
                 check_numbers_in_evidence(stated, excerpt)
                 check_not_past_tense(excerpt)

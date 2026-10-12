@@ -719,3 +719,62 @@ def test_micron_gross_margin_non_gaap_q4_fy2023_is_minus_half_a_point_to_zero() 
     a = drafts[0]["assumption"]
     assert (a["target_low"], a["target_high"]) == (-0.5, 0.0)
     assert "read as positive" not in (drafts[0]["parens_note"] or "")
+
+
+# --- item 17: a period named by its end date follows the company's fiscal calendar ----------------------------------
+
+LOW = common.Company("Lowe's Companies, Inc.", "LOW", "0000060667", 1, "start")
+QCOM = common.Company("QUALCOMM Incorporated", "QCOM", "0000804328", 9)
+
+
+@pytest.mark.parametrize("text, stated, model, expect", [
+    # Lowe's fixtures, 0000060667-19-000022 and 0000060667-20-000177: the year is named for the year it starts in
+    ("Diluted earnings per share of $6.00 to $6.10 are expected for the fiscal year ending Jan. 31, 2020.", "2019-02-27", "FY2020", "FY2019"),
+    ("Diluted earnings per share of $1.50 to $1.60 are expected for the fiscal year ending Jan 29, 2021.", "2020-12-09", "FY2021", "FY2020"),
+    ("Sales are expected for the fiscal year ended January 29, 2021.", "2020-12-09", "FY2021", "FY2020"),
+    ("Sales are expected for the three months ending May 1, 2020.", "2020-02-26", "Q1 FY2021", "Q1 FY2020"),
+    # a 52/53 week year ends a few days either side of month end (Lowe's fiscal 2018 ended Feb. 1, 2019)
+    ("Sales are expected for the fiscal year ending Feb. 1, 2019.", "2018-02-28", "FY2019", "FY2018"),
+    # Qualcomm names its year for the year it ends in, so nothing moves
+    ("EPS is expected for the fiscal year ending September 28, 2025.", "2024-11-06", "FY2025", None),
+    ("EPS is expected for the three months ending December 29, 2024.", "2024-11-06", "Q1 FY2025", None),
+])
+def test_a_period_named_by_its_end_date_is_labelled_by_the_fiscal_calendar(text, stated, model, expect) -> None:
+    company = QCOM if "September" in text or "December" in text else LOW
+    period, note = structure.fix_end_date_period(company, model, text, date.fromisoformat(stated))
+    assert period == (expect or model) and (note is not None) == (expect is not None)
+
+
+def test_a_date_already_past_or_of_the_wrong_kind_or_ambiguous_leaves_the_label_alone() -> None:
+    stated = date(2020, 12, 9)
+    assert structure.fix_end_date_period(LOW, "FY2021", "Up from the fiscal year ended Jan 31, 2020.", stated)[0] == "FY2021"
+    assert structure.fix_end_date_period(LOW, "Q1 FY2021", "For the fiscal year ending Jan 29, 2021.", stated)[0] == "Q1 FY2021"
+    assert structure.fix_end_date_period(LOW, "FY2021", "For the fiscal year ending Jan 29, 2021 and the year ending Jan 28, 2022.", stated)[0] == "FY2021"
+    assert structure.fix_end_date_period(common.Company("X", "X", "0000000001"), "FY2021", "For the fiscal year ending Jan 29, 2021.", stated)[0] == "FY2021"
+
+
+def test_the_lowes_fiscal_2019_eps_draft_is_relabelled_in_derive_drafts() -> None:
+    cand = {"cik": LOW.cik, "accession": "0000060667-19-000022", "filing_type": "8-K", "filed_at": "2019-02-27", "char_start": 10, "char_end": 110,
+            "sentence": "Diluted earnings per share of $6.00 to $6.10 are expected for the fiscal year ending Jan. 31, 2020.",
+            "capture_method": "sentence", "heading": None, "lead_in": None, "table_header": None}
+    item = {"metric": "EPS GAAP", "unit": "USD per share", "target_period": "FY2020", "value_low": 6.0, "value_high": 6.1, "plus_minus": None, "plus_minus_kind": "none"}
+    result = llm.Result("c1", "succeeded", json.dumps({"items": [item]}), 1, 1)
+    drafts, rejects, _ = structure.derive_drafts({"c1": (LOW, cand)}, {"c1": result}, METRICS, KINDS)
+    (d,) = drafts[LOW.cik]
+    assert d["assumption"]["target_period"] == "FY2019" and "FY2019" in d["parens_note"] and not rejects[LOW.cik]
+
+
+def test_a_sentence_with_no_period_takes_it_from_its_lead_in_or_heading() -> None:
+    """A Lowe's 2019 release block: the tax rate sentence names no period, the lead-in above it does."""
+    cand = {"cik": LOW.cik, "accession": "0000060667-19-000022", "filing_type": "8-K", "filed_at": "2019-02-27", "char_start": 10, "char_end": 80,
+            "sentence": "The effective income tax rate is expected to be approximately 24%.", "capture_method": "sentence",
+            "heading": None, "lead_in": "for the fiscal year ending Jan. 31, 2020", "table_header": None}
+    item = {"metric": "tax rate", "unit": "percent", "target_period": "FY2020", "value_low": 24.0, "value_high": 24.0, "plus_minus": None, "plus_minus_kind": "none"}
+    result = llm.Result("c1", "succeeded", json.dumps({"items": [item]}), 1, 1)
+    drafts, rejects, _ = structure.derive_drafts({"c1": (LOW, cand)}, {"c1": result}, METRICS, KINDS)
+    (d,) = drafts[LOW.cik]
+    assert d["assumption"]["target_period"] == "FY2019" and "lead-in" in d["parens_note"]
+    # the sentence's own end date wins over the lead-in, a different kind of label is left alone
+    own = "Tax rate for the fiscal year ending Jan 29, 2021."
+    assert structure.fix_end_date_period(LOW, "FY2021", own, date(2020, 12, 9), "fiscal year ending Jan. 31, 2020")[0] == "FY2020"
+    assert structure.fix_end_date_period(LOW, "Q1 FY2020", "x", date(2019, 2, 27), "fiscal year ending Jan. 31, 2020")[0] == "Q1 FY2020"

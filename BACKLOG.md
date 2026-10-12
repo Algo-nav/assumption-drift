@@ -301,3 +301,27 @@ Fixtures, CIK 0000060667 (Lowe's):
 Fix: derive the period using `fiscal_year_named_for`, not the calendar year of the end date. Then refresh
 untouched LOW rows with `05_review --refresh-pipeline-fields` and re-run outcomes for them. Skipped rows carry
 the note "period mislabelled". No pipeline code changed; this entry is the record.
+
+Status of 17: code fix landed (`fix_end_date_period` in 03_structure, `period_named_by_end_date` in common, a withdrawal-search
+guard in 04). It relabels only a sentence, lead-in or heading that carries the end date itself: 8 Lowe's EPS rows. The Lowe's
+2019 releases print "Fiscal Year 2019" as a subheading 02 does not capture (lead_in and heading are null) and put the end date
+in the EPS bullet only, so the tax rate and operating margin bullets under it are still written FY2020 by the model and still
+proposed withdrawn (5 rows). Open: capture that subheading as the heading in 02, or carry the date from a sibling bullet.
+Also: the relabelled drafts have new draft_ids (the period is in the hash), so `05_review --refresh-pipeline-fields` leaves
+the old FY2020 review rows as "no longer drafted" and does not append the new ones; a plain 05 run is needed, and the stale rows
+need retiring by hand.
+
+Also under 17: the February 26, 2020 release's fiscal 2020 outlook (sales growth, comparable sales, operating margin change,
+EPS $6.45 to $6.65) produced no draft, so the genuinely withdrawn fiscal 2020 guidance is still absent. And the "Fiscal Year
+2019" subheading above a bullet list is not captured by 02_candidates, which leaves the 2019 tax rate and operating margin
+rows labelled FY2020 (and proposed withdrawn). After `05_review --company LOW` appended the 8 relabelled EPS rows, the old
+FY2020 EPS rows remain in the queue next to them and need retiring by hand.
+
+## 18. 03_structure's answer cache no longer matches its requests for LOW (fix before the next full regeneration)
+
+`03_structure --company LOW` projects 0 of 309 requests answered, although `--from-archive` finds all 309 archived answers
+(fingerprints are compared by `llm.current_results`, which drops an answer whose request text, prompt or schema changed).
+Something changed the request text after the archive was written; not yet identified. Find what (diff the system prompt, schema
+and per-candidate user text against the archived fingerprints), and check whether the other companies are affected before any full
+regeneration: a plain `--submit` would re-send everything (309 requests for LOW, about $0.61). 03b_verify showed the same
+0-of-127 for LOW, so the cause may be shared. No pipeline code changed; this entry is the record.

@@ -5,8 +5,9 @@ from __future__ import annotations
 import calendar
 import hashlib
 import json
+import re
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -83,6 +84,59 @@ def period_end(month: int, named_for: str, year: int, quarter: int | None = None
         index -= (4 - quarter) * 3
     y, m = divmod(index, 12)
     return date(y, m + 1, calendar.monthrange(y, m + 1)[1])
+
+
+_MONTHS = {m.lower(): i for i, m in enumerate(calendar.month_abbr) if m}
+_DATE = r"(?P<mon>[A-Za-z]{3,9})\.?\s+(?P<day>\d{1,2}),?\s+(?P<year>\d{4})"
+_YEAR_ENDING = re.compile(rf"\b(?:fiscal\s+year|fiscal|year|FY)\s+(?:ending|ended)\s+(?:on\s+)?{_DATE}", re.IGNORECASE)
+_QUARTER_ENDING = re.compile(
+    rf"\b(?:(?:three|3)[- ]months?|(?:fiscal\s+)?quarter)\s+(?:ending|ended)\s+(?:on\s+)?{_DATE}", re.IGNORECASE)
+
+
+def _named_dates(pattern: re.Pattern[str], text: str) -> set[date]:
+    found: set[date] = set()
+    for m in pattern.finditer(text):
+        month = _MONTHS.get(m["mon"][:3].lower())
+        if month is None:
+            continue
+        try:
+            found.add(date(int(m["year"]), month, int(m["day"])))
+        except ValueError:
+            continue
+    return found
+
+
+def fiscal_label_for_end(company: "Company", end: date, quarter: bool) -> str | None:
+    """The fiscal label of the period (a year, or a quarter if `quarter`) that ends on `end`, by the company's
+    fiscal_year_end_month and fiscal_year_named_for: Lowe's year ending Jan. 31, 2020 is FY2019, not FY2020. A 52/53
+    week calendar ends a few days either side of month end (Lowe's fiscal 2018 ended Feb. 1, 2019), so the date is
+    placed by the month a week earlier. None when the fiscal calendar is unknown or the date is not a period end."""
+    if company.fiscal_year_end_month is None:
+        return None
+    anchor = end - timedelta(days=7)
+    target = date(anchor.year, anchor.month, calendar.monthrange(anchor.year, anchor.month)[1])
+    for year in range(anchor.year - 1, anchor.year + 3):
+        for q in (1, 2, 3, 4) if quarter else (None,):
+            if company.period_end(year, q) == target:
+                return f"Q{q} FY{year}" if q else f"FY{year}"
+    return None
+
+
+def period_named_by_end_date(company: "Company", text: str, *, after: date | None = None) -> str | None:
+    """The period label a sentence names as "fiscal year ending <date>" ("fiscal year ended", "year ending", "FY
+    ending") or "three months ending <date>", worked out from the company's fiscal calendar and not from the calendar
+    year of the date. `after`, normally the day the guidance was stated, drops dates already past: "compared with the
+    fiscal year ended Feb. 1, 2019" is not what is guided. None when the text names no such period, or names more than
+    one (it is then not clear which one the sentence is about)."""
+    labels: set[str] = set()
+    for pattern, quarter in ((_YEAR_ENDING, False), (_QUARTER_ENDING, True)):
+        for end in _named_dates(pattern, text):
+            if after is not None and end <= after:
+                continue
+            label = fiscal_label_for_end(company, end, quarter)
+            if label:
+                labels.add(label)
+    return next(iter(labels)) if len(labels) == 1 else None
 
 
 def load_config(path: Path | str = CONFIG_PATH) -> dict[str, Any]:
