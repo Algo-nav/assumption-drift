@@ -22,6 +22,10 @@ from research_record.schema import Evidence, ResearchRecord
 SPACE_TITLE = "assumption-drift"
 DATASET_URL = "https://huggingface.co/datasets/{hf_user}/assumption-drift"
 REPO_URL = "https://github.com/Algo-nav/assumption-drift"
+WRITEUP_URL = "https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md"
+LINK_ATTRS = 'target="_blank" rel="noopener"'
+LINKS_NOTE = ("Links open in a new tab. The page runs inside a Hugging Face frame, "
+              "so a link that seems not to respond has opened behind it.")
 
 _BILLION_MILLION = {"USD billions": ("$", " billion"), "USD millions": ("$", " million")}
 
@@ -87,7 +91,7 @@ def is_table_line(excerpt: str) -> bool:
 
 
 def _link(evidence: Evidence, label: str) -> str:
-    return f'<a href="{escape(str(evidence.source_url), quote=True)}">{escape(label)}</a>'
+    return f'<a href="{escape(str(evidence.source_url), quote=True)}" {LINK_ATTRS}>{escape(label)}</a>'
 
 
 def _card(record: ResearchRecord, kind: str) -> str:
@@ -264,6 +268,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:400;margin:0}
 h1{font-family:Charter,"Bitstream Charter","Times New Roman","Liberation Serif",serif;font-size:40px;line-height:1.15;font-weight:700;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1,"onum" 0}
 .magnitude{font-size:18px;margin:12px 0 0;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"onum" 0}
 .dateline{color:var(--mute);margin:16px 0 24px}
+.dateline + .dateline{margin-top:-16px}
 hr,.rule{border:0;border-top:1px solid var(--rule);margin:0}
 table.summary{width:100%;border-collapse:collapse;margin:32px 0 8px;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"onum" 0}
 table.summary th,table.summary td{font-variant-numeric:lining-nums tabular-nums}
@@ -456,6 +461,7 @@ def render_page(
 <h1>{escape(figures.headline_sentence(summary))}</h1>
 <p class="magnitude">{escape(figures.miss_magnitude_sentence(summary, result))}</p>
 <p class="dateline">{escape(dateline)}</p>
+<p class="dateline">{escape(LINKS_NOTE)}</p>
 </header>
 <hr>
 {_summary_table(records, names)}
@@ -474,7 +480,7 @@ def render_page(
 {limit_html}
 </ol>
 {coverage_html}<footer>
-<a href="{escape(dataset_url, quote=True)}">Dataset</a> / <a href="{REPO_URL}">Repository</a> / Source: SEC EDGAR / Data CC-BY-4.0, code MIT
+<a href="{escape(dataset_url, quote=True)}" {LINK_ATTRS}>Dataset</a> / <a href="{REPO_URL}" {LINK_ATTRS}>Repository</a> / Source: SEC EDGAR / Data CC-BY-4.0, code MIT
 </footer>
 </main>
 <script>
@@ -482,6 +488,47 @@ def render_page(
 </body>
 </html>
 """
+
+
+README_TEMPLATE = """\
+---
+title: {title}
+emoji: 📉
+sdk: static
+app_file: index.html
+pinned: false
+license: cc-by-4.0
+---
+
+# {title}
+
+Every numeric guidance statement in the SEC filings of {n_companies} large US companies since 2019, matched to the reported figure and to any later filing that refers back to it. {headline} {magnitude}
+
+| Statements | Resolved | Met | Missed | Worse | Better | Never acknowledged | Acknowledged |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| {rows:,} | {resolved:,} | {met:,} | {missed:,} | {worse:,} | {better:,} | {never_ack:,} | {acknowledged:,} |
+
+- Dataset: {dataset_url}
+- GitHub: {repo_url}
+- Write-up: {writeup_url}
+
+Every row links both filings on EDGAR. The model proposed; code guards and a human reader decided. The counts of what the model got wrong are in the write-up.
+
+Data CC-BY-4.0, code MIT.
+"""
+
+
+def render_readme(result: dict[str, Any], summary: dict[str, Any], *, hf_user: str, n_companies: int) -> str:
+    """The Space's README.md: the YAML block Hugging Face reads, then the page's own sentences and numbers, all from
+    the same `result` and `summary` the page is built from, so the two cannot disagree."""
+    return README_TEMPLATE.format(
+        title=SPACE_TITLE, n_companies=n_companies,
+        headline=figures.headline_sentence(summary), magnitude=figures.miss_magnitude_sentence(summary, result),
+        rows=result["rows"], resolved=result["resolved"], met=result["by_status"].get("met", 0),
+        missed=result["missed"], worse=summary["worse"], better=summary["better"],
+        never_ack=result["missed_never_acknowledged"], acknowledged=result["acknowledged"],
+        dataset_url=DATASET_URL.format(hf_user=hf_user), repo_url=REPO_URL, writeup_url=WRITEUP_URL,
+    )
 
 
 def write_space(
@@ -499,7 +546,7 @@ def write_space(
         coverage_notes=limitations_from_card(card_text, "Coverage notes"),
     )
     (space_dir / "README.md").write_text(
-        f"---\ntitle: {SPACE_TITLE}\nsdk: static\npinned: false\nlicense: cc-by-4.0\n---\n", encoding="utf-8"
+        render_readme(result, summary, hf_user=hf_user, n_companies=len({r.company for r in records})), encoding="utf-8"
     )
     index = space_dir / "index.html"
     index.write_text(page, encoding="utf-8")

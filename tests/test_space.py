@@ -209,3 +209,34 @@ def test_strip_plot_is_inline_svg_with_one_linked_circle_per_missed_row(record_d
     assert 'data-guided="$5,000 million to $6,000 million"' in svg and 'data-ack="2025-03-01"' in svg
     assert 'id="tip" hidden' in html and "<img" not in html
     assert page(records) == html  # jitter is seeded from record_id: stable between builds
+
+
+def test_every_external_link_opens_in_a_new_tab(record_data) -> None:
+    html = page(sample(record_data))
+    anchors = re.findall(r"<a [^>]*>", html)
+    external = [a for a in anchors if re.search(r'href="(?:https?:)?//', a)]
+    assert external
+    for a in external:
+        assert 'target="_blank"' in a and 'rel="noopener"' in a, a
+
+
+def test_links_note_sits_under_the_dateline_in_the_same_style(record_data) -> None:
+    html = page(sample(record_data))
+    assert html.count('<p class="dateline">') == 2
+    assert space.LINKS_NOTE in html and "Links open in a new tab." in html
+
+
+def test_readme_has_the_header_headline_magnitude_table_links_and_licence(record_data) -> None:
+    records = sample(record_data)
+    result, summary = stats.compute(records), figures.acknowledgement_summary(records)
+    text = space.render_readme(result, summary, hf_user="Nav772", n_companies=2)
+    assert text.startswith("---\ntitle: assumption-drift\n") and "sdk: static" in text and "app_file: index.html" in text
+    assert "license: cc-by-4.0" in text and "emoji:" in text
+    assert figures.headline_sentence(summary) in text and figures.miss_magnitude_sentence(summary, result) in text
+    assert "| Statements | Resolved | Met | Missed | Worse | Better | Never acknowledged | Acknowledged |" in text
+    assert f"| {result['rows']:,} |" in text
+    for url in ("https://huggingface.co/datasets/Nav772/assumption-drift", space.REPO_URL, space.WRITEUP_URL):
+        assert url in text
+    assert "The model proposed; code guards and a human reader decided." in text
+    assert "Data CC-BY-4.0, code MIT." in text and "\u2014" not in text
+    assert page(records).count(figures.headline_sentence(summary)) >= 1
