@@ -53,7 +53,7 @@ The pipeline is six scripts and a thin schema. The interesting part is where the
 
 **Candidates.** Sentences and table rows with a forward-looking verb and a number, plus the heading and lead-in sentence above them, because "Second quarter revenue guidance of approximately $6.6 billion" names no period on its own; the heading "Second Quarter Fiscal Year 2021 Business Outlook" does.
 
-**Structure.** A small model (Claude Haiku 4.5, via the batch API) turns each candidate into metric, period, low, high, unit and basis. Total model spend for 17 companies and seven years of filings was under $20. The model proposes; it does not decide.
+**Structure.** A small model (Claude Haiku 4.5, via the batch API) turns each candidate into metric, period, low, high, unit and basis. Total model spend for 14 companies and seven years of filings was $11.05. The model proposes; it does not decide.
 
 **Guards.** Most of the code is here, and most of it was written after looking at what the model got wrong:
 
@@ -67,11 +67,39 @@ The pipeline is six scripts and a thin schema. The interesting part is where the
 - Two drafts for the same metric and period with different numbers. The old rule kept the sentence and silently dropped the table row, which once replaced Qualcomm's $9.2 to 10.2 billion quarterly guide with a $150 million Huawei component mentioned in the same release. Now both are kept, flagged, and the reviewer records which is the guide.
 - A sentence in the Business Outlook section of the next release, "Operating margin of approximately 13.0%", is next year's guide, not this year's result, however neatly it matches the metric. The outcome matcher took it anyway for a while.
 
-**Verify.** A second model pass answers yes or no on whether the structured row matches the sentence, with a one-line reason and a class. I overruled it often, in both directions. Its value is as a flag, not a judge.
+**Verify.** A second model pass answers yes or no on whether the structured row matches the sentence, with a one-line reason and a class. I overruled it in both directions; the numbers are in the next section. Its value is as a flag, not a judge.
 
-**Review.** Every row that was published was read by me against the filing. The review tool shows the sentence, the EDGAR link, the proposed outcome and the verifier's reason, and takes one key: approve, reject with a note, edit, skip, or hand-verify (which means I opened EDGAR and checked the sentence by URL; one in ten rows). Rejections carry a prefix the tooling understands ("not guidance: component figure", "duplicate", "wrong period") so the next regeneration doesn't resurrect them. After the first few companies, review moved to a dump-and-apply loop: write every pending row to a text file, decide them all in one sitting, apply the decisions through the same functions the keys use.
+**Review.** Every row that was published was read by me against the filing. The review tool shows the sentence, the EDGAR link, the proposed outcome and the verifier's reason, and takes one key: approve, reject with a note, edit, skip, or hand-verify (which means I opened EDGAR and checked the sentence by URL; 94 of the 1,134 published rows, 8.3%). Rejections carry a prefix the tooling understands ("not guidance: component figure", "duplicate", "wrong period") so the next regeneration doesn't resurrect them. After the first few companies, review moved to a dump-and-apply loop: write every pending row to a text file, decide them all in one sitting, apply the decisions through the same functions the keys use.
 
 **Publish.** Parquet and JSONL to the dataset repo, a card with the counts and limitations, and a static page with a per-company table, an SVG chart of every missed row (hover for the row, click to jump to it), and the row cards themselves with both filings linked.
+
+## What the model got wrong
+
+The model proposes; the guards and a reader decide. These are the counts for the 12 published companies, from the pipeline's own reject, skip and review files.
+
+| Stage | Count |
+|---|---|
+| Candidate blocks sent to the model | 2,627 |
+| Items the model returned | 2,485 |
+| Rejected by code guards before anyone read them | 461 (18.6%) |
+| Dropped as duplicates with equal numbers | 725 |
+| Point dropped because a range for the same item was kept | 57 |
+| Pairs with different numbers, both kept and flagged | 52 |
+| Drafts that reached review | 1,255 |
+| Rejected in review | 121 (9.6%) |
+| Published | 1,134 |
+
+The guards' most common reasons: a dollar level whose sentence describes a change (138), a value that is not in the evidence text (99), a range stated with no range language (91), no number at all (48), a unit that does not match the metric's kind (37). The last two columns of that list are the model inventing a figure or a unit; the first three are the model reading a real figure and mislabelling it.
+
+Of the 121 rejected in review, 80 were not guidance (component figures the model took for the guide, changes in basis points, the fixed non-GAAP tax rate convention), 14 were the wrong fiscal year, 14 lost a conflict with another draft for the same metric and period, 6 were duplicates, 7 other. Of the 1,134 approved rows, 8 had a field corrected by hand, 7 of them the period. That figure is a floor: the drafts file is rewritten on each run, so an edit the pipeline later absorbed does not show as an edit.
+
+The outcome matcher made 607 proposals on published rows. 10 were rejected as the wrong line (the next year's guide, the prior year's figure in an "X and Y, respectively" sentence). 60 were later changed, most by a precision fix (7.1 became 7.103) once the guards learned to read the table cell. 95 outcomes were attached by hand or by a later rule with no proposal behind them.
+
+The verifier pass agreed with the reviewer on 89% of rows (1,084 of 1,218). As a predictor of rejection it is weak: it said no on 30 of the 121 rows that were rejected and on 43 that were approved, so a "no" is right 41% of the time and catches a quarter of the real rejections. It earned its keep by pointing at 9 rows whose period or sign was wrong, not by judging.
+
+The residual error rate after review is not measured. 94 published rows (8.3%) were opened on EDGAR and checked by URL; whether a reviewer who read 1,255 rows in five weeks missed things is the question I cannot answer from inside. Errors reported by readers will be listed in the dataset discussions and corrected in the next release.
+
+Model spend: $11.05 in total across 14 companies, of which $5.90 for structuring, $2.97 for verification, $2.11 for outcome matching, and 7 cents for acknowledgements and withdrawals.
 
 ## The schema
 
