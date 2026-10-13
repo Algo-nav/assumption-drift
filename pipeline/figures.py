@@ -184,8 +184,8 @@ def headline_sentence(summary: dict[str, Any]) -> str:
 def miss_magnitude_sentence(summary: dict[str, Any], stats: dict[str, Any]) -> str:
     """The worse-side miss sizes, from `stats.compute()`'s counts, and whether any was acknowledged."""
     ack = summary["worse_acknowledged"]
-    text = (f"Of the {summary['worse']:,} worse-side misses, {stats['worse_beyond_1pct']:,} are more than 1 percent "
-            f"beyond the guide and {stats['worse_beyond_5pct']:,} are more than 5 percent beyond it. ")
+    text = (f"Of the {summary['worse']:,} worse-side misses, {stats['worse_beyond_1pct']:,} are more than 1% "
+            f"beyond the guide and {stats['worse_beyond_5pct']:,} more than 5%. ")
     return text + ("None was acknowledged." if ack == 0 else f"{ack:,} were acknowledged.")
 
 
