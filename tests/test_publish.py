@@ -362,13 +362,39 @@ def test_main_prints_how_many_rows_and_how_many_were_invalid(world, config_path,
 # --- publish: false keeps a company out of everything published, and the card says why ----------------------
 
 
-def test_the_card_names_unpublished_companies_in_one_sentence(sample_result) -> None:
-    text = render(sample_result, unpublished=["Apple Inc.", "Alphabet Inc.", "JPMorgan Chase & Co."])
-    sentence = "Apple Inc., Alphabet Inc. and JPMorgan Chase & Co. were in the company list but issued no numeric guidance the metric list covers, so they have no rows here."
-    assert text.count(sentence) == 1
-    assert "—" not in sentence  # the card's register: no em-dashes
+def test_the_card_has_a_sentence_for_no_numeric_guidance(sample_result) -> None:
+    text = render(sample_result, unpublished={"Apple Inc.": "no_numeric_guidance", "Alphabet Inc.": "no_numeric_guidance", "Costco Wholesale Corporation": "no_numeric_guidance"})
+    sentence = "Apple Inc., Alphabet Inc. and Costco Wholesale Corporation were in the company list but issued no numeric guidance in filing text, so they have no rows here."
+    assert text.count(sentence) == 1 and "—" not in sentence
     assert "issued no numeric guidance" not in render(sample_result)  # nothing is said when nobody is left out
-    assert "Costco Wholesale Corporation was in the company list but issued no numeric guidance the metric list covers, so it has no rows here." in render(sample_result, unpublished=["Costco Wholesale Corporation"])
+    assert "Costco Wholesale Corporation was in the company list but issued no numeric guidance in filing text, so it has no rows here." in render(sample_result, unpublished={"Costco Wholesale Corporation": "no_numeric_guidance"})
+
+
+def test_the_card_has_a_sentence_for_metrics_outside_the_schema(sample_result) -> None:
+    text = render(sample_result, unpublished={"JPMorgan Chase & Co.": "metrics_outside_schema"})
+    assert ("JPMorgan Chase & Co. issue numeric outlook in filings, but on metrics outside this release's schema "
+            "(for JPMorgan, net interest income and adjusted expense); not published.") in text
+
+
+def test_the_card_has_a_sentence_for_review_in_progress(sample_result) -> None:
+    text = render(sample_result, unpublished={"Micron Technology, Inc.": "review_in_progress"})
+    assert "Micron Technology, Inc. is fetched and structured; review is not finished, so it is not published." in text
+    assert "Micron Technology, Inc. and Other Co. are fetched and structured; review is not finished, so they are not published." in render(
+        sample_result, unpublished={"Micron Technology, Inc.": "review_in_progress", "Other Co.": "review_in_progress"})
+
+
+def test_the_card_build_fails_when_an_unpublished_company_has_no_reason(sample_result) -> None:
+    with pytest.raises(ValueError, match="unpublished_reason.*Apple Inc."):
+        render(sample_result, unpublished={"Apple Inc.": None})
+    with pytest.raises(ValueError, match="unpublished_reason"):
+        render(sample_result, unpublished={"Apple Inc.": "because"})
+
+
+def test_every_unpublished_company_in_config_has_a_reason() -> None:
+    cs = [c for c in common.companies(common.load_config()) if not c.publish]
+    assert {c.ticker: c.unpublished_reason for c in cs} == {
+        "AAPL": "no_numeric_guidance", "GOOGL": "no_numeric_guidance", "COST": "no_numeric_guidance",
+        "JPM": "metrics_outside_schema", "MU": "review_in_progress"}
 
 
 def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
@@ -384,7 +410,7 @@ def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table
     seed(world, COMPANY, [csv_row(record_data)])
     seed(world, OTHER, [csv_row(record_data, record_id="01ARZ3NDEKTSV4RRFFQ69G5FAW", company="Other Corp", ticker="OTHR", cik=OTHER.cik)])
     cfg = yaml.safe_load(config_path.read_text())
-    cfg["companies"].append({"name": OTHER.name, "ticker": OTHER.ticker, "cik": OTHER.cik, "fiscal_year_end_month": 1, "publish": False})
+    cfg["companies"].append({"name": OTHER.name, "ticker": OTHER.ticker, "cik": OTHER.cik, "fiscal_year_end_month": 1, "publish": False, "unpublished_reason": "no_numeric_guidance"})
     config_path.write_text(yaml.safe_dump(cfg))
     assert publish.main(["--config", str(config_path)]) == 0
     release = (world / "release" / "assumption_drift.jsonl").read_text()

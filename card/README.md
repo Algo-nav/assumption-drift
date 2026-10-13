@@ -21,7 +21,9 @@ Adobe Inc., Advanced Micro Devices, Inc., Amazon.com, Inc., Broadcom Inc., Lowe'
 January 2019 and September 2026. This dataset pairs each one with what the company later reported for that same metric
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
 It is a problem statement in data form, not a model and not a demonstration of one.
-Apple Inc., Alphabet Inc., Costco Wholesale Corporation, JPMorgan Chase & Co. and Micron Technology, Inc. were in the company list but issued no numeric guidance the metric list covers, so they have no rows here.
+Apple Inc., Alphabet Inc. and Costco Wholesale Corporation were in the company list but issued no numeric guidance in filing text, so they have no rows here.
+JPMorgan Chase & Co. issue numeric outlook in filings, but on metrics outside this release's schema (for JPMorgan, net interest income and adjusted expense); not published.
+Micron Technology, Inc. is fetched and structured; review is not finished, so it is not published.
 
 ## How a row is built
 
@@ -105,8 +107,6 @@ one the pipeline used.
   guided figure. A revision made while the period was still open, such as 'increased from our prior
   outlook of $60-65 billion', is a new guidance row, not an acknowledgement. A later release will
   record these revisions separately; when it does, the acknowledged counts will change.
-- JPMorgan issues numeric outlook (net interest income, adjusted expense) in its 8-K earnings presentations; those
-  metrics are not in this release's schema and the company is not yet published.
 - Where two drafts for the same metric and period disagree, both are kept and the reviewer records which is the guide;
   the loser is rejected with a 'conflict loser' note.
 

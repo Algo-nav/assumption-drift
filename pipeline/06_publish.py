@@ -210,9 +210,37 @@ pretty_name: {dataset}
 """
 
 
+UNPUBLISHED_REASONS = ("no_numeric_guidance", "metrics_outside_schema", "review_in_progress")
+_OUTSIDE_SCHEMA_DETAIL = {"JPMorgan Chase & Co.": ("JPMorgan", "net interest income and adjusted expense")}
+
+
+def _left_out_sentences(unpublished: dict[str, str | None]) -> str:
+    """One sentence per reason that has companies, from config. A publish: false company with no valid reason stops the build."""
+    bad = [name for name, reason in unpublished.items() if reason not in UNPUBLISHED_REASONS]
+    if bad:
+        raise ValueError(f"publish: false company without a valid unpublished_reason ({', '.join(UNPUBLISHED_REASONS)}): {', '.join(bad)}")
+    out = []
+    for reason in UNPUBLISHED_REASONS:
+        names = [n for n, r in unpublished.items() if r == reason]
+        if not names:
+            continue
+        joined, many = _join_names(names), len(names) > 1
+        if reason == "no_numeric_guidance":
+            out.append(f"{joined} {'were' if many else 'was'} in the company list but issued no numeric guidance in filing text, "
+                       f"so {'they have' if many else 'it has'} no rows here.")
+        elif reason == "metrics_outside_schema":
+            detail = ", ".join(f"{short}, {metrics}" for n in names for short, metrics in [_OUTSIDE_SCHEMA_DETAIL.get(n, (n, ""))] if metrics)
+            out.append(f"{joined} issue numeric outlook in filings, but on metrics outside this release's schema"
+                       f"{f' (for {detail})' if detail else ''}; not published.")
+        else:
+            out.append(f"{joined} {'are' if many else 'is'} fetched and structured; review is not finished, "
+                       f"so {'they are' if many else 'it is'} not published.")
+    return "\n" + "\n".join(out) if out else ""
+
+
 def render_card(
     result: dict[str, Any], *, dataset: str, generated_at: date, hf_user: str, filing_date_from: date, filing_date_to: date,
-    unpublished: list[str] | tuple[str, ...] = (),
+    unpublished: dict[str, str | None] | None = None,
 ) -> str:
     """The dataset card (SCOPE.md 5.4), sections in order: what this is, how a row is built, the
     resolution rubric, provenance guarantee, known limitations, how to cite, licence, behind a Hugging
@@ -229,9 +257,7 @@ def render_card(
     n_companies = len(result["company_table"])
     company_count = f"{_count_words(n_companies)} {'company' if n_companies == 1 else 'companies'}"
     filing_range = f"{filing_date_from:%B %Y} and {filing_date_to:%B %Y}"
-    one = len(unpublished) == 1
-    left_out = (f"\n{_join_names(list(unpublished))} {'was' if one else 'were'} in the company list but issued no numeric "
-                f"guidance the metric list covers, so {'it has' if one else 'they have'} no rows here.") if unpublished else ""
+    left_out = _left_out_sentences(unpublished or {})
 
     return _frontmatter(dataset) + f"""\
 # {dataset}
@@ -314,8 +340,6 @@ one the pipeline used.
   guided figure. A revision made while the period was still open, such as 'increased from our prior
   outlook of $60-65 billion', is a new guidance row, not an acknowledgement. A later release will
   record these revisions separately; when it does, the acknowledged counts will change.
-- JPMorgan issues numeric outlook (net interest income, adjusted expense) in its 8-K earnings presentations; those
-  metrics are not in this release's schema and the company is not yet published.
 - Where two drafts for the same metric and period disagree, both are kept and the reviewer records which is the guide;
   the loser is rejected with a 'conflict loser' note.
 
@@ -389,7 +413,7 @@ def main(argv: list[str] | None = None) -> int:
 
     chosen = companies(config, args.company)
     targets = [c for c in chosen if c.publish]  # a company with publish: false is in no release file, figure, Space or table
-    unpublished = [c.name for c in companies(config) if not c.publish]
+    unpublished = {c.name: c.unpublished_reason for c in companies(config) if not c.publish}
     records, invalid = build_records(targets, REVIEW_DIR)
     print(f"06_publish: {len(records):,} approved row(s) across {len(targets)} company(ies), {invalid:,} left out as invalid")
 
