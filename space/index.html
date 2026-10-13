@@ -9,16 +9,17 @@
 --serif:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);font-variant-numeric:tabular-nums}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"onum" 0}
 main{max-width:880px;margin:0 auto;padding:56px 24px 48px}
 a{color:var(--ink);text-decoration-color:var(--rule);text-underline-offset:3px}
 h1,h2,h3,h4{font-family:var(--serif);font-weight:400;margin:0}
 .smallcaps{font-variant:small-caps;letter-spacing:.06em;color:var(--mute)}
 .masthead .label-top{font-variant:small-caps;letter-spacing:.14em;color:var(--mute);margin:0 0 12px}
-h1{font-size:40px;line-height:1.15;font-weight:700}
+h1{font-family:Charter,"Bitstream Charter","Times New Roman","Liberation Serif",serif;font-size:40px;line-height:1.15;font-weight:700;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1,"onum" 0}
 .dateline{color:var(--mute);margin:16px 0 24px}
 hr,.rule{border:0;border-top:1px solid var(--rule);margin:0}
-table.summary{width:100%;border-collapse:collapse;margin:32px 0 8px}
+table.summary{width:100%;border-collapse:collapse;margin:32px 0 8px;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"onum" 0}
+table.summary th,table.summary td{font-variant-numeric:lining-nums tabular-nums}
 table.summary th,table.summary td{padding:8px 0 8px 12px;text-align:right;border-bottom:1px solid var(--rule);font-weight:400;vertical-align:bottom}
 table.summary thead th{font-size:13px;color:var(--mute);border-bottom-color:var(--ink)}
 table.summary th:first-child{text-align:left;padding-left:0}
