@@ -425,8 +425,8 @@ def dropped_ids(dropped):
 
 def test_on_the_pilot_every_section_draft_with_a_sentence_twin_is_dropped_and_logged() -> None:
     kept, dropped = structure.dedupe_drafts(PILOT_DRAFTS)
-    # 5 drops, not the 7 there used to be: two pairs of section drafts that disagree are now kept and flagged (see the conflict tests).
-    assert len(PILOT_DRAFTS) == 30 and len(kept) == 25 and len(dropped) == 5
+    # 3 drops, not the 7 there used to be: drafts that disagree, section or sentence, are now kept and flagged (see the conflict tests).
+    assert len(PILOT_DRAFTS) == 30 and len(kept) == 27 and len(dropped) == 3
     assert all(entry["dropped"]["capture_method"] == "section" for entry in dropped)
     # Every sentence-captured draft survives.
     sentence_ids = {d["draft_id"] for d in PILOT_DRAFTS if d["capture_method"] == "sentence"}
@@ -465,12 +465,12 @@ def test_the_key_is_cik_metric_period_and_stated_date() -> None:
               draft_stub("d", "section", 20, 6, 6, stated="2024-03-01"), draft_stub("e", "section", 20, 6, 6, cik="0000000999")]
     kept, dropped = structure.dedupe_drafts([base] + others)
     assert len(kept) == 5 and dropped == []  # none share the whole key
-    kept, dropped = structure.dedupe_drafts([base, draft_stub("f", "section", 20, 6, 6)])
+    kept, dropped = structure.dedupe_drafts([base, draft_stub("f", "section", 20, 5, 5)])
     assert [d["draft_id"] for d in kept] == ["a"] and dropped_ids(dropped) == {"f"}
 
 
 def test_a_section_draft_seen_first_still_loses_to_a_later_sentence_draft() -> None:
-    kept, dropped = structure.dedupe_drafts([draft_stub("sec", "section", 5, 1, 1), draft_stub("sen", "sentence", 50, 2, 2)])
+    kept, dropped = structure.dedupe_drafts([draft_stub("sec", "section", 5, 2, 2), draft_stub("sen", "sentence", 50, 2, 2)])
     assert [d["draft_id"] for d in kept] == ["sen"] and dropped_ids(dropped) == {"sec"}
 
 

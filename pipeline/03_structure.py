@@ -42,10 +42,12 @@ that has a GAAP and a non-GAAP entry, unless the section's own lines name a basi
 
 A figure printed as a floor ("$1.30+", "at least", "or more", "or better") is a low-only target
 whatever the model made of it. Where two drafts share (cik, metric, target_period, stated_at)
-a range is kept over a point that lies inside it; otherwise the sentence-captured one is
-kept, and each drop is logged with both sets of numbers. Two SECTION-captured drafts with
-different numbers are not a duplicate but a conflict: both are kept and marked `conflict`, the
-review queue shows the mark, and nothing here picks a winner between them.
+a range is kept over a point that lies inside it. Of the rest, drafts whose numbers agree after
+unit conversion (to half a unit of the coarser figure's last printed digit) are one statement seen
+twice: the sentence-captured one is kept, and each drop is logged with both printed figures. Drafts
+whose numbers differ, sentence or section captured, are not a duplicate but a conflict: all are
+kept and marked `conflict`, the pair is logged in the skipped file, the review queue shows the
+mark, and nothing here picks a winner between them.
 
 An 8-K outlook block the model answered that produced no draft (an empty answer, or every item
 rejected) is listed in data/drafts/{cik}.empty_blocks.jsonl, and the review queue flags it.
@@ -69,6 +71,7 @@ import json
 import re
 import sys
 from collections import Counter
+from decimal import Decimal
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -461,7 +464,8 @@ def build_requests(
 
 _PLUS_MINUS = re.compile(r"plus or minus|plus/minus|plus-or-minus|\u00b1|\+/-", re.IGNORECASE)
 _BETWEEN = re.compile(r"\bbetween\s+[~$]?\s*\d", re.IGNORECASE)
-_DASH = re.compile(r"[\d%]\s*[-\u2013\u2014]\s*[~$]?\s*\d")
+# A figure may end in a unit suffix before the dash: "$4.4B - $5.2B", "145M - 165M", "$1.2bn - $1.4bn".
+_DASH = re.compile(r"(?:[\d%]|\d(?:bn|mm|[BMKbmk]))\s*[-\u2013\u2014]\s*[~$]?\s*\d")
 _TO = re.compile(r"\bto\b", re.IGNORECASE)
 
 
@@ -1197,6 +1201,40 @@ def _numbers(d: dict[str, Any]) -> tuple[Any, Any, Any]:
     return a["target_low"], a["target_high"], a["unit"]
 
 
+_USD_SCALE = {"USD": 1.0, "USD thousands": 1e3, "USD millions": 1e6, "USD billions": 1e9}
+
+
+def _half_last_digit(value: float) -> float:
+    """Half a unit of the last digit `value` is printed with ("1.52" is 0.005, "4100.0" is 0.05)."""
+    exponent = Decimal(repr(float(value))).as_tuple().exponent
+    return 0.5 * 10.0 ** (exponent if isinstance(exponent, int) else 0)
+
+
+def _same_figure(a: float | None, unit_a: str, b: float | None, unit_b: str) -> bool:
+    """One figure printed twice. In one unit the numbers must be the same; in two dollar units ("1.52 USD billions",
+    "1515 USD millions") they must agree within half a unit of the last digit of the coarser of the two, because the
+    coarser one is a rounding of the finer."""
+    if a is None or b is None:
+        return a is None and b is None
+    if unit_a == unit_b:
+        return round(a, 6) == round(b, 6)
+    if unit_a not in _USD_SCALE or unit_b not in _USD_SCALE:
+        return False
+    scale_a, scale_b = _USD_SCALE[unit_a], _USD_SCALE[unit_b]
+    tolerance = max(_half_last_digit(a) * scale_a, _half_last_digit(b) * scale_b)
+    return abs(a * scale_a - b * scale_b) <= tolerance * (1 + 1e-9)
+
+
+def same_numbers(x: dict[str, Any], y: dict[str, Any]) -> bool:
+    (low_x, high_x, unit_x), (low_y, high_y, unit_y) = _numbers(x), _numbers(y)
+    return _same_figure(low_x, unit_x, low_y, unit_y) and _same_figure(high_x, unit_x, high_y, unit_y)
+
+
+def _printed(d: dict[str, Any]) -> str:
+    low, high, unit = _numbers(d)
+    return f"{low:g} to {high:g} {unit}" if low != high and None not in (low, high) else f"{(low if low is not None else high):g}{'+' if high is None else ''} {unit}"
+
+
 def _is_point(d: dict[str, Any]) -> bool:
     low, high, _ = _numbers(d)
     return low is not None and low == high
@@ -1220,11 +1258,12 @@ def dedupe_drafts(drafts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], l
     beside the outlook's "62.4%, plus or minus 50 basis points"), so the range is kept over the point, whichever
     way each was captured. A point that lies OUTSIDE the range disagrees with it, and is left to the rules below.
 
-    A sentence-captured draft wins over section ones, and between sentence drafts the earliest wins. Section drafts
-    are different: two of them with the same numbers are one draft seen twice (the earliest is kept), but with
-    different numbers they disagree, and nothing here can tell which is right. Both are kept, each marked
-    `conflict: true`, for a person to settle in the review queue. Every drop is returned, with both sets of
-    numbers, so nothing disappears without a trace. The drafts passed in are not changed."""
+    Drafts left on a key are grouped by their numbers (`same_numbers`: the same low, high and unit, or the same dollar
+    figure in two units to half a unit of the coarser one's last digit). One group is one statement seen twice: the
+    sentence-captured draft is kept, otherwise the earliest. Several groups disagree, and nothing here can tell which
+    is right, whatever way each was captured: every group's first draft is kept, each marked `conflict: true`, for
+    a person to settle in the review queue (`conflict_log` names the pairs). Every drop is returned, with both sets
+    of numbers and both printed figures, so nothing disappears without a trace. The drafts passed in are not changed."""
     groups: dict[tuple, list[dict[str, Any]]] = {}
     for d in drafts:
         a = d["assumption"]
@@ -1249,33 +1288,52 @@ def dedupe_drafts(drafts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], l
                 "dropped": _summary(point),
             })
         rest = [d for d in ranked if d["draft_id"] not in held_by]
-        if rest[0]["capture_method"] == "sentence":
-            winner_for = {i: rest[0] for i in range(len(rest))}
-            winners = [rest[0]]
-        else:  # every draft left is section-captured: one winner per distinct set of numbers
-            by_numbers: dict[Any, dict[str, Any]] = {}
-            for d in rest:
-                by_numbers.setdefault(_numbers(d), d)
-            conflict = len(by_numbers) > 1
-            winners = [{**d, "conflict": True} if conflict else d for d in by_numbers.values()]
-            flagged = {_numbers(d): w for d, w in zip(by_numbers.values(), winners)}
-            winner_for = {i: flagged[_numbers(d)] for i, d in enumerate(rest)}
+        clusters: list[list[dict[str, Any]]] = []  # drafts that state the same numbers; ranked order, so a sentence leads
+        for d in rest:
+            for cluster in clusters:
+                if same_numbers(cluster[0], d):
+                    cluster.append(d)
+                    break
+            else:
+                clusters.append([d])
+        conflict = len(clusters) > 1
+        winners = [{**cluster[0], "conflict": True} if conflict else cluster[0] for cluster in clusters]
         kept.extend(winners)
-        for i, d in enumerate(rest):
-            keeper = winner_for[i]
-            if keeper["draft_id"] == d["draft_id"]:
-                continue
-            differ = _numbers(d) != _numbers(keeper)
-            dropped.append({
-                "custom_id": d["custom_id"],
-                "reason": (f"duplicate of draft {keeper['draft_id']}: same cik, metric, target period and stated date; "
-                           f"kept the {keeper['capture_method']}-captured draft, dropped the {d['capture_method']}-captured one"
-                           + ("; the numbers differ" if differ else "")),
-                "kept": _summary(keeper),
-                "dropped": _summary(d),
-            })
+        for cluster, keeper in zip(clusters, winners):
+            for d in cluster[1:]:
+                dropped.append({
+                    "custom_id": d["custom_id"],
+                    "reason": (f"duplicate of draft {keeper['draft_id']}: same cik, metric, target period and stated date; "
+                               f"kept the {keeper['capture_method']}-captured draft, dropped the {d['capture_method']}-captured one"),
+                    "kept": _summary(keeper),
+                    "dropped": _summary(d),
+                    "printed": {"kept": _printed(keeper), "dropped": _printed(d)},
+                })
     kept.sort(key=lambda d: (d["assumption"]["stated_at"], d["assumption"]["evidence"]["accession_number"], d["char_start"], d["item_index"]))
     return kept, dropped
+
+
+def conflict_log(kept: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One record per pair of kept drafts that are marked `conflict` on the same (cik, metric, target_period, stated_at):
+    both ids and both printed figures. Nothing was dropped; this is the pair a person is asked to settle."""
+    groups: dict[tuple, list[dict[str, Any]]] = {}
+    for d in kept:
+        if d.get("conflict"):
+            a = d["assumption"]
+            groups.setdefault((d["cik"], a["metric"], a["target_period"], a["stated_at"]), []).append(d)
+    log: list[dict[str, Any]] = []
+    for group in groups.values():
+        for i, first in enumerate(group):
+            for second in group[i + 1:]:
+                log.append({
+                    "custom_id": second["custom_id"],
+                    "reason": (f"conflict: drafts {first['draft_id']} and {second['draft_id']} state different numbers for the same "
+                               f"cik, metric, target period and stated date; both kept"),
+                    "conflict": True,
+                    "kept": _summary(first), "also_kept": _summary(second),
+                    "printed": {"kept": _printed(first), "also_kept": _printed(second)},
+                })
+    return log
 
 
 def derive_drafts(
@@ -1361,6 +1419,7 @@ def derive_drafts(
 
     for cik in list(drafts):
         drafts[cik], dupes[cik] = dedupe_drafts(drafts[cik])
+        dupes[cik] += conflict_log(drafts[cik])
     return drafts, rejects, dupes
 
 

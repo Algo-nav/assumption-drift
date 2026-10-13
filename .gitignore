@@ -17,3 +17,6 @@ data/candidates/
 data/drafts/
 data/batches/
 data/_head/
+
+# Scratch id lists for --only runs.
+data/_work/

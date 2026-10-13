@@ -778,3 +778,83 @@ def test_a_sentence_with_no_period_takes_it_from_its_lead_in_or_heading() -> Non
     own = "Tax rate for the fiscal year ending Jan 29, 2021."
     assert structure.fix_end_date_period(LOW, "FY2021", own, date(2020, 12, 9), "fiscal year ending Jan. 31, 2020")[0] == "FY2020"
     assert structure.fix_end_date_period(LOW, "Q1 FY2020", "x", date(2019, 2, 27), "fiscal year ending Jan. 31, 2020")[0] == "Q1 FY2020"
+
+
+# --- item 12a: a dash may follow a unit suffix letter -----------------------------------------------------------------
+
+@pytest.mark.parametrize("text", [
+    "Q2 FY19 Estimates (2)(3)\nRevenues\n$5.2B\n$4.4B - $5.2B",  # 0001728949-19-000011
+    "Q3 FY19 Estimates (2)(3)\nGAAP Revenues\n$5.6B\n$9.2B - $10.2B",  # -000034
+    "Q4 FY19 Estimates (2)(3)\nRevenues\n$5.8B\n$4.3B - $5.1B",  # -000053
+    "Q1 FY20 Estimates (2)(3)\nRevenues\n$4.8B\n$4.4B - $5.2B",  # -000071
+    "MSM chip shipments\n186M\n145M - 165M", "$1.2bn - $1.4bn", "$4.4B-$5.2B", "145M–165M", "$4.4B — $5.2B",
+])
+def test_a_dash_after_a_unit_suffix_is_range_language(text) -> None:
+    assert structure.has_range_language(text)
+
+
+@pytest.mark.parametrize("text", [
+    "Forecasted diluted earnings per share $ 7.53 $ 7.63",  # Lowe's 0000060667-20-000177: two figures, no range words
+    "Revenues $5.2B - see note (2)",  # a dash that is not between figures
+    "Revenue was $5.2B, -$0.3B versus plan",  # a negative sign after a comma
+    "Q2 outlook 5B - not provided",
+    "Revenues\n$5.2B\n$4.4B",
+])
+def test_a_unit_suffix_without_a_range_is_still_not_range_language(text) -> None:
+    assert not structure.has_range_language(text)
+
+
+# --- item 20: a sentence draft no longer hides a section draft whose numbers differ -----------------------------------
+
+def dd(did, method, low, high, unit="USD billions", char=10, metric="revenue", period="Q3 FY2019"):
+    return {"draft_id": did, "custom_id": f"c-{did}", "cik": "0000000123", "capture_method": method, "char_start": char, "item_index": 0, "conflict": False,
+            "assumption": {"metric": metric, "target_period": period, "stated_at": "2019-05-01", "target_low": low, "target_high": high, "unit": unit,
+                           "text": "t", "evidence": {"accession_number": "0000000123-19-000001"}}}
+
+
+def test_the_qualcomm_q3_fy19_range_is_kept_beside_the_150_million_component_sentence() -> None:
+    kept, dropped = structure.dedupe_drafts([
+        dd("01D9RB1Q00RZQ1FNHXT7CVWGP5", "sentence", 150.0, 150.0, "USD millions", char=500),
+        dd("01D9RB1Q00R15TGGJ8NRWVN21C", "section", 9.2, 10.2, char=100)])
+    assert sorted(d["draft_id"] for d in kept) == ["01D9RB1Q00R15TGGJ8NRWVN21C", "01D9RB1Q00RZQ1FNHXT7CVWGP5"]
+    assert all(d["conflict"] is True for d in kept) and dropped == []
+    log = structure.conflict_log(kept)
+    assert len(log) == 1 and log[0]["conflict"] and {log[0]["kept"]["draft_id"], log[0]["also_kept"]["draft_id"]} == {d["draft_id"] for d in kept}
+
+
+@pytest.mark.parametrize("bn, millions", [(1.52, 1515.0), (4.0, 3950.0), (4.1, 4100.0), (5.2, 5150.0), (1.2, 1200.0)])
+def test_the_same_dollar_figure_in_billions_and_millions_is_one_draft(bn, millions) -> None:
+    kept, dropped = structure.dedupe_drafts([dd("sen", "sentence", bn, bn, char=500), dd("sec", "section", millions, millions, "USD millions", char=100)])
+    assert [d["draft_id"] for d in kept] == ["sen"] and not kept[0]["conflict"]
+    assert dropped[0]["dropped"]["draft_id"] == "sec" and dropped[0]["printed"] == {"kept": f"{bn:g} USD billions", "dropped": f"{millions:g} USD millions"}
+
+
+def test_the_float_noise_in_4_1e9_against_4100e6_does_not_make_a_conflict() -> None:
+    assert structure.same_numbers(dd("a", "sentence", 4.1, 4.1), dd("b", "section", 4100.0, 4100.0, "USD millions"))
+
+
+@pytest.mark.parametrize("bn, millions", [(1.36, 3550.0), (1.52, 1500.0), (-50.0, 50.0)])
+def test_dollar_figures_that_are_not_a_rounding_of_each_other_conflict(bn, millions) -> None:
+    unit_bn = "USD billions" if bn != -50.0 else "USD millions"
+    kept, dropped = structure.dedupe_drafts([dd("sen", "sentence", bn, bn, unit_bn, char=500), dd("sec", "section", millions, millions, "USD millions", char=100)])
+    assert len(kept) == 2 and all(d["conflict"] for d in kept) and dropped == []
+
+
+def test_two_sentences_with_different_numbers_are_both_kept_and_flagged() -> None:
+    kept, dropped = structure.dedupe_drafts([dd("s1", "sentence", 5.0, 6.0, char=10), dd("s2", "sentence", 7.0, 8.0, char=900)])
+    assert [d["draft_id"] for d in kept] == ["s1", "s2"] and all(d["conflict"] for d in kept) and dropped == []
+
+
+def test_two_sentences_with_the_same_numbers_keep_the_earliest() -> None:
+    kept, dropped = structure.dedupe_drafts([dd("s1", "sentence", 5.0, 6.0, char=10), dd("s2", "sentence", 5.0, 6.0, char=900)])
+    assert [d["draft_id"] for d in kept] == ["s1"] and not kept[0]["conflict"] and dropped[0]["dropped"]["draft_id"] == "s2"
+
+
+def test_lowes_fiscal_2022_revenue_1_to_1_5_billion_and_97_to_99_billion_are_both_kept() -> None:
+    kept, dropped = structure.dedupe_drafts([dd("sen", "sentence", 1.0, 1.5, char=500, period="FY2022"), dd("sec", "section", 97.0, 99.0, char=100, period="FY2022")])
+    assert len(kept) == 2 and all(d["conflict"] for d in kept) and dropped == []
+
+
+def test_the_same_numbers_in_the_same_unit_must_match_exactly_a_close_figure_is_a_conflict() -> None:
+    kept, _ = structure.dedupe_drafts([dd("a", "sentence", 3.5, 3.5, char=500), dd("b", "section", 3.54, 3.54, char=100)])
+    assert len(kept) == 2 and all(d["conflict"] for d in kept)

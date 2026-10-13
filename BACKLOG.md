@@ -204,25 +204,41 @@ Fourth rule, Lowe's fixtures (CIK 0000060667), two shapes:
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
 
-## 12. Qualcomm outlook tables, 2019 to mid-2020: evidence taken from the prior-year results column
+## 12. Qualcomm and Lowe's outlook tables: rows missing from two-column layouts (split 12a, 12b, 12c)
 
-Qualcomm's outlook tables from 2019 to mid-2020 have a prior-year results column beside the estimates column.
-The structurer attached the results cell as evidence, so the range guard rejected the real estimate. Evidence
-must come from the estimates cell. Fixtures:
+The original entry blamed a prior-year results column being taken as the evidence. Phase 1 (read-only) found that is
+not what happened: the model chose the estimates cell every time (Q2 FY19 revenue 4.4 to 5.2), and the range guard
+rejected it for another reason. Four separate causes sit under this item.
 
-- `0001728949-19-000011` (Q2 FY19): "Revenues $5.2B / $4.4B - $5.2B"
-- `0001728949-19-000034` (Q3 FY19): "$5.6B / $9.2B - $10.2B"
-- `0001728949-19-000053` (Q4 FY19): "$5.8B / $4.3B - $5.1B"
-- `0001728949-19-000071` (Q1 FY20): "$4.8B / $4.4B - $5.2B"
-- the Q2, Q3 and Q4 FY20 releases, same layout.
+**12a. Dash after a unit suffix in `has_range_language` (done).** `_DASH` needed a digit or `%` before the dash, so
+"$4.4B - $5.2B" and "145M - 165M" read as having no range language and the block was rejected ("a range, but the
+evidence has no 'to', 'between', dash..."). Now a dash may follow `B`, `M`, `K`, `bn` or `mm` after a digit. A lone dash
+in prose, a negative sign after a comma and two bare figures ("$ 7.53 $ 7.63") are still not range language. Fixtures:
+QCOM `0001728949-19-000011`, `-000034`, `-000053`, `-000071`, plus the negatives in tests/test_backlog_fixes.py.
+Re-derived from the archive (no model call for 03): only QCOM changed, 29 new revenue drafts from Q2 FY2019 to Q4 FY2026
+(32 rejected answers passed the guard; the rest were duplicates).
 
-Roughly seven quarters of revenue and EPS guidance are missing for QCOM because of this.
+**12b. Block stop rule in 02_candidates (next).** A section block ends at the first gap of `section_gap_lines` blank
+lines. Two consequences:
+- a sub-heading such as "Fiscal Year 2020 (comparisons to fiscal year 2019)" after 8 blank lines terminates the block
+  empty, so the bullets under it are outside any block;
+- a table whose rows are separated by a gap after the first row loses every row after it.
+Fixtures: QCOM `0001728949-19-000011`, `-000034`, `-000053`, `-000071` (GAAP EPS, non-GAAP EPS, MSM shipments and QTL
+revenue rows were never offered; the block holds only the revenue row), and Lowe's `0000060667-20-000029` (February 26,
+2020 fiscal 2020 outlook bullets, including EPS $6.38 to $6.58 and adjusted $6.45 to $6.65, outside any block; the only
+candidate was the "Target leverage ratio" sentence, and the model's EPS read from its context was rejected for lack of
+range language in the one-sentence evidence).
+Plan: test on QCOM and LOW only, diff the candidate set before and after, and report the diff before running 03. It
+shifts `char_start`s and so custom ids and draft ids, and misses the answer cache (item 18), so 03 would need new calls.
 
-Also under this item, Lowe's: the December 2020 investor update (`0000060667-20-000177`) prints forecasted
-FY EPS in a two-column low-end and high-end table ("Forecasted diluted earnings per share $ 7.53 $ 7.63").
-The range guard rejected it for lacking a dash. The guard must accept a low-end and high-end column pair.
+**12c. Evidence trimmed to the lines holding both figures (deferred).** When the model returns a range, the evidence
+for a block row could be cut to the lines that contain both figures, so a prior-year cell in the same block is not in
+the excerpt. This changes `excerpt` and `content_sha256` on published rows and needs a migration.
 
-Fix: not yet investigated. No pipeline code changed; this entry is the record.
+Also under this item, Lowe's December 2020 investor update (`0000060667-20-000177`): the reconciliation table prints
+forecasted EPS as a low-end and high-end column pair ("Forecasted diluted earnings per share $ 7.53 $ 7.63"). The guard
+still rejects it, deliberately; no low-end/high-end pair rule has been added. The same figures are carried by the
+sentence row from that release.
 
 ## 13. Component figures are being structured as the metric
 
@@ -286,6 +302,9 @@ separately. Harmless, but the flagged empty blocks are noise in review.
 
 Fix: not yet investigated. No pipeline code changed; this entry is the record.
 
+The Lowe's February 2020 outlook (`0000060667-20-000029`) is the same failure: prose bullets under a heading, with the
+guidance verb in only one bullet, so the section block is lost and the other bullets are not candidates (see 12b).
+
 ## 17. Period derivation from "fiscal year ending <date>" ignores fiscal_year_named_for (high priority, fix before publish)
 
 Period derivation from "fiscal year ending <date>" uses the calendar year of the end date and ignores
@@ -325,3 +344,41 @@ Something changed the request text after the archive was written; not yet identi
 and per-candidate user text against the archived fingerprints), and check whether the other companies are affected before any full
 regeneration: a plain `--submit` would re-send everything (309 requests for LOW, about $0.61). 03b_verify showed the same
 0-of-127 for LOW, so the cause may be shared. No pipeline code changed; this entry is the record.
+
+## 19. Adobe targets table is never a candidate
+
+Adobe `0000796343-24-000250` prints its fiscal 2025 and first quarter fiscal 2025 targets as a label and value table
+(Total revenue "$23.30 billion to $23.55 billion", EPS "GAAP: $15.80 to $16.10", "Non-GAAP: $20.20 to $20.50"). The
+lead-in "The following table summarizes Adobe's fiscal year 2025 targets1:" ends in a colon, so it is not treated as a
+heading and opens no section block, and the label and value rows carry no guidance verb, so no sentence candidate is made
+either. Only the footnote sentences ("Targets assume non-GAAP operating margin of ~46 percent...") were captured. This is a
+single-column table with no results column, so it is not a two-column problem. Fix: not yet investigated. No pipeline
+code changed; this entry is the record.
+
+## 20. Section-versus-sentence dedupe dropped the section number when the numbers differed (fixed)
+
+`dedupe_drafts` kept the sentence-captured draft over any section draft on the same (cik, metric, period, stated date), even
+when the numbers differed. QCOM Q3 FY19 (`0001728949-19-000034`) lost its real revenue range, 9.2 to 10.2 USD billions
+(section draft `01D9RB1Q00R15TGGJ8NRWVN21C`, block `b-0000804328-000172894919000034-11387`), to a $150 million sentence
+about QTL revenues from Huawei (`01D9RB1Q00RZQ1FNHXT7CVWGP5`), which is a component figure (see item 13) and was rejected in
+review. 64 section drafts were dropped this way across six companies, 53 of them NVDA, mostly the same figure printed in
+USD billions and USD millions.
+
+Fix: drafts on one key are equal when low, high and unit agree after unit normalisation, within half a unit of the last
+printed digit of the coarser figure (1.52 USD bn = 1515 USD m, 4.0 bn = 3950 m, 4.1e9 = 4100e6); in one unit they must match
+exactly. Equal drafts dedupe (sentence kept, else earliest), and the skip record carries both printed figures. Drafts that
+are not equal are all kept with `conflict: true`, sentence against section and sentence against sentence, and the pair is
+logged in `{cik}.skipped.jsonl` with both ids (`conflict_log`). The range-kept-over-point rule is unchanged: it drops 57
+points across NVDA (55) and CRM (2), all table midpoints inside the sentence's range, all with an approved kept draft.
+Re-derived from the archive: 54 newly kept drafts across 11 companies. Tests in tests/test_backlog_fixes.py; the old
+"sentence wins over a different section" tests were rewritten to the new rule.
+Review of the new conflict rows is open; 03b and 04 have not been run for them.
+
+Follow-through on 20: the range-over-point rule was reviewed and stays as it is. It drops 57 points (NVDA 55, CRM 2), every
+one a table midpoint inside the sentence's plus-or-minus range, and every kept range draft is approved.
+`03b_verify` and `04_outcomes` take `--only PATH` (a text file of draft ids, one per line; ids not found are reported and
+skipped; 04 merges the listed drafts' rows into data/outcomes/ and leaves the rest as they are). The 54 newly kept ids are in
+data/_work/new_drafts_item20.txt (data/_work/ is gitignored). `rr review --filter conflict` lists every row with
+conflict=true. New conflict rows are in the review CSVs; the dumps are data/review/<ticker>_conflicts.txt.
+Note: `05_review --refresh-pipeline-fields` does not rewrite the `conflict` column on rows a person has touched, so an
+approved row whose draft is now in conflict keeps conflict=false and carries a pending change proposal instead.

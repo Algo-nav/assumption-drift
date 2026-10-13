@@ -410,9 +410,9 @@ def test_a_point_outside_the_range_is_a_disagreement_and_is_left_to_the_conflict
     assert ids(kept) == ["pt", "rg"] and all(d["conflict"] for d in kept) and dropped == []  # nothing chosen, both flagged
 
 
-def test_a_point_outside_the_range_still_loses_to_a_sentence_as_it_always_did() -> None:
+def test_a_point_outside_the_range_no_longer_loses_to_a_sentence() -> None:
     kept, dropped = structure.dedupe_drafts([stub("pt", "sentence", 10, 65.0, 65.0), stub("rg", "section", 90, 61.9, 62.9)])
-    assert ids(kept) == ["pt"] and dropped[0]["reason"].startswith("duplicate of draft pt") and "the numbers differ" in dropped[0]["reason"]
+    assert ids(kept) == ["pt", "rg"] and all(d["conflict"] for d in kept) and dropped == []
 
 
 def test_points_and_ranges_in_different_units_are_not_compared() -> None:
@@ -434,10 +434,9 @@ def test_a_floor_holds_a_point_at_or_above_it_and_a_ceiling_one_at_or_below_it()
 
 def test_a_point_is_held_by_the_first_range_that_holds_it_a_sentence_before_a_section() -> None:
     kept, dropped = structure.dedupe_drafts([stub("pt", "section", 5, 5.7, 5.7), stub("sec", "section", 20, 5.5, 6.5), stub("sen", "sentence", 90, 5.0, 6.0)])
-    assert ids(kept) == ["sen"]  # the section range then loses to the sentence range, as sections do
+    assert ids(kept) == ["sec", "sen"] and all(d["conflict"] for d in kept)  # the two ranges differ: both kept, flagged
     held = next(e for e in dropped if e["dropped"]["draft_id"] == "pt")
-    assert held["kept"]["draft_id"] == "sen" and held["reason"].startswith("range kept over point")
-    assert next(e for e in dropped if e["dropped"]["draft_id"] == "sec")["reason"].startswith("duplicate of draft sen")
+    assert held["kept"]["draft_id"] == "sen" and held["reason"].startswith("range kept over point") and len(dropped) == 1
 
 
 def test_a_range_still_conflicts_with_a_different_range_and_a_dropped_point_does_not_hide_it() -> None:

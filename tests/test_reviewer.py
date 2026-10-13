@@ -860,3 +860,7 @@ def test_apply_still_refuses_y_and_n_on_a_pending_acknowledgement() -> None:
     for decision in ("y", "n"):
         updated, why = rv._apply_one(pending(), decision, "rejected: no")
         assert updated is None and "acknowledgement is pending" in why
+
+
+def test_the_conflict_filter_lists_every_row_with_conflict_true() -> None:
+    assert rv.parse_filter("conflict")({**row("R1"), "conflict": "true"}) and not rv.parse_filter("conflict")({**row("R2"), "conflict": "false"})

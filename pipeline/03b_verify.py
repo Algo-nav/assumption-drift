@@ -51,7 +51,7 @@ from pathlib import Path
 from typing import Any
 
 from pipeline import llm
-from pipeline.common import CONFIG_PATH, REVIEW_DIR, Company, companies, load_config
+from pipeline.common import CONFIG_PATH, REVIEW_DIR, Company, companies, load_config, read_id_list
 
 review = importlib.import_module("pipeline.05_review")
 
@@ -166,15 +166,17 @@ def is_plus_minus_no(row: dict[str, str]) -> bool:
     return row.get("aid_verify") == "no" and bool(_PLUS_MINUS.search(row.get("assumption.evidence.excerpt", "")))
 
 
-def build_requests(targets: list[Company], review_dir: Path | None = None, *, only_plus_minus_no: bool = False
-                   ) -> tuple[list[llm.LlmRequest], dict[str, tuple[Company, str]]]:
+def build_requests(targets: list[Company], review_dir: Path | None = None, *, only_plus_minus_no: bool = False,
+                   only_ids: set[str] | None = None) -> tuple[list[llm.LlmRequest], dict[str, tuple[Company, str]]]:
     """(requests, custom_id -> (company, record_id)), one request per verifiable row, in file order. With
-    `only_plus_minus_no`, only the rows is_plus_minus_no picks."""
+    `only_plus_minus_no`, only the rows is_plus_minus_no picks; with `only_ids`, only the rows with those record_ids."""
     requests: list[llm.LlmRequest] = []
     index: dict[str, tuple[Company, str]] = {}
     for company in targets:
         for row in load_rows(company, review_dir):
             if not is_verifiable(row) or (only_plus_minus_no and not is_plus_minus_no(row)):
+                continue
+            if only_ids is not None and row["record_id"] not in only_ids:
                 continue
             cid = custom_id(row)
             requests.append(llm.LlmRequest(cid, VERIFY_SYSTEM, build_prompt(row, company), MAX_TOKENS, VERIFY_SCHEMA))
@@ -262,13 +264,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--submit", action="store_true", help="really call the API and rewrite data/review/; without it this is a dry run")
     parser.add_argument("--rerun-plus-minus-no", action="store_true",
                         help="check only the rows whose current verdict is no and whose excerpt has a plus or minus; every other row is left as it is")
+    parser.add_argument("--only", type=Path, metavar="PATH",
+                        help="a text file of draft ids, one per line: check those rows and nothing else (every other row keeps its verdict)")
     parser.add_argument("--wait-minutes", type=float, default=60)
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
     cfg = llm.LlmConfig.from_config(config["llm"])
     targets = companies(config, args.company)
-    requests, index = build_requests(targets, only_plus_minus_no=args.rerun_plus_minus_no)
+    only_ids = read_id_list(args.only) if args.only else None
+    requests, index = build_requests(targets, only_plus_minus_no=args.rerun_plus_minus_no, only_ids=only_ids)
+    if only_ids is not None:
+        found = {record_id for _, record_id in index.values()}
+        print(f"{STEP}: --only: {len(found):,} of {len(only_ids):,} ids found in the review rows of the selected companies"
+              + (f"; not found, skipped: {', '.join(sorted(only_ids - found))}" if only_ids - found else ""))
 
     archive, ledger = llm.RawArchive(STEP), llm.Ledger()
     have, todo = plan_requests(requests, archive.load(), cfg.model)

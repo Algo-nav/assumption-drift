@@ -27,6 +27,7 @@ prints the EDGAR URL again, and asks whether to mark that row hand-verified on t
 
   verify-no      only rows where aid_verify == "no"
   no-note        only rows with an empty reviewer_note
+  conflict       only rows with conflict=true (two drafts on one metric, period and date that state different numbers)
   ids=A,B,C      only rows whose record_id is A, B, or C
   ack-pending    only rows with `ack_pending_review=true`: 04 found an acknowledgement for a row that was
                  already reviewed, and it waits in the `aid_ack_proposed_*` columns
@@ -367,6 +368,8 @@ def parse_filter(spec: str) -> Callable[[dict[str, str]], bool]:
         return lambda row: is_unreviewed(row) and not is_fast(row)
     if spec == "no-note":
         return lambda row: not row.get(REVIEWER_NOTE)
+    if spec == "conflict":
+        return lambda row: row.get("conflict") == "true"
     if spec == "ack-pending":
         return lambda row: row.get(ACK_PENDING) == "true"
     if spec == "change-pending":

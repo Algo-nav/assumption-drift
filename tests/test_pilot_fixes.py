@@ -367,9 +367,9 @@ def test_of_three_section_drafts_two_that_agree_are_one_and_the_third_conflicts_
     assert [e["dropped"]["draft_id"] for e in dropped] == ["b"] and dropped[0]["kept"]["draft_id"] == "a"
 
 
-def test_a_sentence_draft_still_wins_over_sections_that_disagree_with_each_other() -> None:
+def test_a_sentence_draft_no_longer_hides_sections_that_disagree_with_it() -> None:
     kept, dropped = structure.dedupe_drafts([stub("s", "sentence", 50, 9.0, 9.0), stub("a", "section", 10, 5.0, 6.0), stub("b", "section", 90, 7.0, 8.0)])
-    assert [(d["draft_id"], d["conflict"]) for d in kept] == [("s", False)] and {e["dropped"]["draft_id"] for e in dropped} == {"a", "b"}
+    assert sorted((d["draft_id"], d["conflict"]) for d in kept) == [("a", True), ("b", True), ("s", True)] and dropped == []
 
 
 def test_conflicts_are_only_within_one_key() -> None:
@@ -393,7 +393,8 @@ def test_two_sections_of_one_filing_that_disagree_reach_the_review_csv_as_two_ro
     results = {"b-1": llm.Result("b-1", "succeeded", json.dumps({"items": [item(5.0, 6.0)]}), 1, 1, None, "b"),
                "b-2": llm.Result("b-2", "succeeded", json.dumps({"items": [item(7.0, 8.0)]}), 1, 1, None, "b")}
     drafts, rejects, dupes = structure.derive_drafts(index, results, METRICS, KINDS)
-    assert len(drafts[company.cik]) == 2 and dupes[company.cik] == [] and rejects[company.cik] == []
+    assert len(drafts[company.cik]) == 2 and rejects[company.cik] == []
+    assert [e["conflict"] for e in dupes[company.cik]] == [True]  # the pair is logged, nothing is dropped
     assert [d["conflict"] for d in drafts[company.cik]] == [True, True]
     rows = [review.build_row(d, None, date(2026, 9, 20)) for d in drafts[company.cik]]
     assert [(r["conflict"], r["approved"]) for r in rows] == [("true", "false"), ("true", "false")]  # neither chosen, neither approved

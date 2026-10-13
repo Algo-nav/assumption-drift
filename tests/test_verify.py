@@ -378,3 +378,19 @@ def test_a_row_answered_at_the_retry_cap_is_done_and_the_others_keep_their_finge
     have, todo = verify.plan_requests([cut], {"v-cut": _result(retried, "succeeded")}, "m")
     assert set(have) == {"v-cut"} and todo == []
     assert verify.MAX_TOKENS == 220  # unchanged: raising it would resend every archived row
+
+
+def test_only_checks_the_listed_ids_and_reports_an_unknown_one(world, config_path, monkeypatch, capsys, tmp_path) -> None:
+    seed(world, COMPANY, [row("R1"), row("R2"), row("R3", aid_verify="yes", aid_verify_reason="earlier")])
+    only = tmp_path / "ids.txt"
+    only.write_text("R1\nR2\n# a comment\n\nNOPE\n")
+    client = fakes.FakeAnthropic(respond=respond)
+    monkeypatch.setattr(llm, "make_client", lambda: client)
+    assert verify.main(["--config", str(config_path), "--submit", "--only", str(only)]) == 0
+    sent = {cid for cid in llm.RawArchive(verify.STEP).load() if cid.startswith("v-")}
+    assert sent == {"v-R1", "v-R2"}  # exactly two rows were processed
+    on_disk = {r["record_id"]: r for r in read_csv(world, COMPANY)}
+    assert (on_disk["R1"]["aid_verify"], on_disk["R2"]["aid_verify"]) == ("yes", "yes")
+    assert (on_disk["R3"]["aid_verify"], on_disk["R3"]["aid_verify_reason"]) == ("yes", "earlier")  # not sent, not touched
+    out = capsys.readouterr().out
+    assert "--only: 2 of 3 ids found" in out and "not found, skipped: NOPE" in out

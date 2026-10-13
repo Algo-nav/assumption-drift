@@ -56,7 +56,7 @@ from typing import Any, Callable
 from pydantic import ValidationError
 
 from pipeline import common, llm
-from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config, period_named_by_end_date
+from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config, period_named_by_end_date, read_id_list
 from research_record import polarity, rubric
 from research_record.schema import Evidence, Outcome
 from research_record.text import html_to_text_and_gaps, sentence_spans
@@ -938,6 +938,10 @@ def derive_withdrawals(
 # --- running ---------------------------------------------------------------
 
 
+def read_jsonl(path: Path) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()] if path.exists() else []
+
+
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows and not path.exists():  # a dry run must not leave empty files that look like output
         return
@@ -999,6 +1003,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--company", action="append", metavar="TICKER")
     parser.add_argument("--stage", choices=["outcomes", "ack", "withdrawal", "all"], default="all")
     parser.add_argument("--submit", action="store_true", help="really call the API and write data/outcomes/; without it this is a dry run")
+    parser.add_argument("--only", type=Path, metavar="PATH",
+                        help="a text file of draft ids, one per line: look at those drafts and nothing else; their rows are "
+                             "merged into data/outcomes/ and every other row is left as it is")
     parser.add_argument("--wait-minutes", type=float, default=60)
     args = parser.parse_args(argv)
 
@@ -1008,6 +1015,12 @@ def main(argv: list[str] | None = None) -> int:
     targets = companies(config, args.company)
     by_cik = {c.cik: c for c in targets}
     drafts = {c.cik: load_drafts(c) for c in targets}
+    only_ids = read_id_list(args.only) if args.only else None
+    if only_ids is not None:
+        drafts = {cik: [d for d in v if d["draft_id"] in only_ids] for cik, v in drafts.items()}
+        found = {d["draft_id"] for v in drafts.values() for d in v}
+        print(f"04_outcomes: --only: {len(found):,} of {len(only_ids):,} ids found in the drafts of the selected companies"
+              + (f"; not found, skipped: {', '.join(sorted(only_ids - found))}" if only_ids - found else ""))
     stores = {c.cik: DocStore(c) for c in targets}
     today = date.today()
     print(f"04_outcomes: {sum(len(v) for v in drafts.values()):,} drafts to look at")
@@ -1058,8 +1071,13 @@ def main(argv: list[str] | None = None) -> int:
                 "withdrawal": withdrawals.get(did),
             })
         if args.submit:  # a dry run never writes to data/outcomes/: with stale or missing answers it would empty what is there
-            write_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl", rows)
-            write_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl", [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])])
+            mine = [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])]
+            out_rows, out_rejects = rows, mine
+            if only_ids is not None:  # merge: the other drafts' rows and rejects stay exactly as they are
+                out_rows = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl") if r["draft_id"] not in only_ids] + rows
+                out_rejects = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl") if r["draft_id"] not in only_ids] + mine
+            write_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl", out_rows)
+            write_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl", out_rejects)
         print(f"  {company.ticker}: {len(rows):,} drafts, {sum(1 for r in rows if r['outcome'])} with an outcome, "
               f"{sum(1 for r in rows if r['acknowledgement'])} acknowledged, {sum(1 for r in rows if r['withdrawal'])} withdrawn")
     if not args.submit:

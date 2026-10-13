@@ -1366,3 +1366,20 @@ def test_a_draft_whose_own_end_date_puts_it_in_another_period_is_not_searched_fo
 
     assert withdrawal_requests(eps("FY2020"), company=lowes)[1] == {}  # mislabelled: caught by the end date
     assert withdrawal_requests(eps("FY2019"), company=lowes)[1] == {}  # right label: closed 2020-01-31, before the release
+
+
+def test_only_looks_at_the_listed_drafts_merges_their_rows_and_reports_an_unknown_id(world, config_path, monkeypatch, capsys, tmp_path) -> None:
+    seed_drafts(world, draft(), draft("D2", period="Q4 FY2030"))
+    (world / "outcomes").mkdir()
+    keep = {"draft_id": "D2", "outcome": None, "outcome_reason": "kept as it was", "acknowledgement": None, "withdrawal": None}
+    (world / "outcomes" / f"{COMPANY.cik}.jsonl").write_text(json.dumps(keep) + "\n")
+    only = tmp_path / "ids.txt"
+    only.write_text("D1\nNOPE\n")
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    assert outcomes.main(["--config", str(config_path), "--submit", "--only", str(only)]) == 0
+    assert {cid for cid in llm.RawArchive("04_outcomes").load()} == {"o-D1"}  # exactly one draft was processed
+    rows = {r["draft_id"]: r for r in read_outcomes(world)}
+    assert set(rows) == {"D1", "D2"} and rows["D1"]["outcome"]["reported_value"] == 4.8
+    assert rows["D2"]["outcome_reason"] == "kept as it was"  # the other draft's row is exactly as it was
+    out = capsys.readouterr().out
+    assert "--only: 1 of 2 ids found" in out and "not found, skipped: NOPE" in out

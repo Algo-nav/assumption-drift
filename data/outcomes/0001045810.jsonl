@@ -210,3 +210,7 @@
 {"draft_id": "01M0XNVN00MQ1HPFFN3Q3X6EVY", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M0XNVN0045C0SACBR8X72BVN", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M0XNVN001W6CT5D0QBVS1RC9", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01E8T8F500Y30K4V9HWXHVD0G4", "outcome": null, "outcome_reason": "multi-column, unconfirmed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01FVZX8900X6V9B8SCQY830206", "outcome": {"reported_value": 3.563, "reported_at": "2022-05-25", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000073/q1fy23pr.htm", "accession_number": "0001045810-22-000073", "filing_type": "8-K", "filed_at": "2022-05-25", "fetched_at": "2026-09-20T06:42:34Z", "content_sha256": "43978b7d1bc9a609d75f84dd2f8874b8ee317401c5e2296541d0de7f80205d68", "excerpt": "Operating expenses $3,563 $2,029 $1,673 Up 76% Up 113%"}}, "outcome_reason": null, "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01KJ91GV00SW6WASBY8ZQPR9HG", "outcome": null, "outcome_reason": "model output rejected", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01KJ91GV00KQDPJPHS98G6W7W9", "outcome": null, "outcome_reason": "multi-column, unconfirmed", "acknowledgement": null, "withdrawal": null}

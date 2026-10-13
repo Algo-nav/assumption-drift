@@ -139,6 +139,12 @@ def period_named_by_end_date(company: "Company", text: str, *, after: date | Non
     return next(iter(labels)) if len(labels) == 1 else None
 
 
+def read_id_list(path: Path | str) -> set[str]:
+    """The ids in a text file, one per line (blank lines and #-comments ignored): the argument of `--only`."""
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    return {line.strip() for line in lines if line.strip() and not line.strip().startswith("#")}
+
+
 def load_config(path: Path | str = CONFIG_PATH) -> dict[str, Any]:
     with open(path, encoding="utf-8") as fh:
         config = yaml.safe_load(fh)
