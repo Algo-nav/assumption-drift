@@ -1005,3 +1005,15 @@ def test_proposal_functions_never_set_approved_on_a_rejected_row() -> None:
     for out in (review.propose_change(row, fresh), review.propose_acknowledgement(row, {**fresh, "acknowledged_at": "2026-10-06"}),
                 review.refresh_row(row, fresh)):
         assert out["approved"] == "false" and out["reviewer_note"].startswith(REJECTED_NOTE)
+
+
+def test_rederive_status_fixes_a_stale_proposed_status_on_a_touched_row_and_changes_nothing_else(parts) -> None:
+    draft, outcome_row, _ = parts
+    row = review.build_row(draft, outcome_row, TODAY)  # 4800 outside 5000 to 6000: missed
+    touched = {**row, "aid_proposed_status": "met", "approved": "true", "reviewer_note": "looks right", "hand_verified": "true"}
+    fixed = review.rederive_status(touched)
+    assert fixed["aid_proposed_status"] == "missed"
+    assert {k: v for k, v in fixed.items() if k != "aid_proposed_status"} == {k: v for k, v in touched.items() if k != "aid_proposed_status"}
+    assert review.rederive_status(row) is row  # already right: the same row comes back
+    flag = {**row, "empty_block": "true"}
+    assert review.rederive_status(flag) is flag

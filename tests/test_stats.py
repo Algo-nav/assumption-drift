@@ -177,8 +177,8 @@ def test_compute_company_table_has_rows_status_counts_and_never_ack_share(record
     b = _record(record_data, company="Beta Corp", status="met", outcome={**record_data()["outcome"], "reported_value": 5_500.0})
     result = stats.compute([a, b])
     table = {row["company"]: row for row in result["company_table"]}
-    assert table["Alpha Corp"] == {"company": "Alpha Corp", "rows": 1, "by_status": {"missed": 1}, "missed_never_acknowledged_share": 1.0}
-    assert table["Beta Corp"] == {"company": "Beta Corp", "rows": 1, "by_status": {"met": 1}, "missed_never_acknowledged_share": None}
+    assert table["Alpha Corp"] == {"company": "Alpha Corp", "rows": 1, "by_status": {"missed": 1}, "missed_never_acknowledged_share": 1.0, "acknowledged": 0}
+    assert table["Beta Corp"] == {"company": "Beta Corp", "rows": 1, "by_status": {"met": 1}, "missed_never_acknowledged_share": None, "acknowledged": 0}
 
 
 def test_format_stats_renders_a_company_table_with_a_header(record_data) -> None:
@@ -224,3 +224,12 @@ def test_run_as_json_counts_invalid_rows_too(tmp_path, record_data) -> None:
     path.write_text("not json\n" + json.dumps(record_data(), default=str) + "\n", encoding="utf-8")
     parsed = json.loads(stats.run(path, as_json=True))
     assert parsed["rows"] == 1 and parsed["invalid"] == 1
+
+
+def test_stats_reports_resolved_and_acknowledged_totals_and_a_per_company_acknowledged_column(record_data) -> None:
+    a = _record(record_data, company="Alpha Corp")
+    b = _record(record_data, company="Beta Corp", status="met", outcome={**record_data()["outcome"], "reported_value": 5_500.0})
+    result = stats.compute([a, b])
+    assert result["resolved"] == 2 and result["acknowledged"] == 0
+    text = stats.format_stats(result)
+    assert "Resolved (met + missed): 2" in text and "Acknowledged (rows with an acknowledgement): 0" in text and "acknowledged" in text.splitlines()[-3]

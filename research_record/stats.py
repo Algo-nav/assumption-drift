@@ -91,6 +91,7 @@ def _company_row(company: str, records: list[ResearchRecord]) -> dict[str, Any]:
         "rows": len(records),
         "by_status": dict(sorted(Counter(r.status for r in records).items())),
         "missed_never_acknowledged_share": (never_acknowledged / len(missed)) if missed else None,
+        "acknowledged": sum(1 for r in records if r.acknowledged_at is not None),
     }
 
 
@@ -109,6 +110,8 @@ def compute(records: list[ResearchRecord]) -> dict[str, Any]:
     return {
         "rows": len(records),
         "by_status": dict(sorted(by_status.items())),
+        "resolved": by_status["met"] + by_status["missed"],
+        "acknowledged": sum(1 for r in records if r.acknowledged_at is not None),
         "median_days_to_falsifiable": statistics.median(falsifiable) if falsifiable else None,
         "missed": len(missed),
         "missed_never_acknowledged": never_acknowledged,
@@ -132,7 +135,7 @@ def _company_table_lines(company_table: list[dict[str, Any]]) -> list[str]:
     if not company_table:
         return ["  (no rows)"]
     columns = ["met", "missed", "withdrawn", "unresolved"]
-    header = ["company", "rows", *columns, "never-ack share"]
+    header = ["company", "rows", *columns, "acknowledged", "never-ack share"]
     widths = [max(len(header[i]), *(len(_cell(row, header[i], columns)) for row in company_table)) for i in range(len(header))]
     lines = ["  " + "  ".join(h.ljust(w) for h, w in zip(header, widths))]
     for row in company_table:
@@ -146,6 +149,8 @@ def _cell(row: dict[str, Any], column: str, status_columns: list[str]) -> str:
         return row["company"]
     if column == "rows":
         return str(row["rows"])
+    if column == "acknowledged":
+        return str(row["acknowledged"])
     if column == "never-ack share":
         share = row["missed_never_acknowledged_share"]
         return f"{share:.0%}" if share is not None else "-"
@@ -159,6 +164,8 @@ def format_stats(stats: dict[str, Any]) -> str:
     lines = [
         f"rows: {stats['rows']:,}",
         f"by status: {stats['by_status']}",
+        f"Resolved (met + missed): {stats['resolved']:,}",
+        f"Acknowledged (rows with an acknowledgement): {stats['acknowledged']:,}",
         f"median days to falsifiable: {stats['median_days_to_falsifiable']}",
         f"missed: {stats['missed']:,}, never acknowledged: {stats['missed_never_acknowledged']:,}"
         + (f" ({share:.0%})" if share is not None else ""),

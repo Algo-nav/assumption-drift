@@ -113,6 +113,7 @@ from pydantic import BaseModel, ValidationError
 from pipeline.common import CANDIDATES_DIR, CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, RAW_DIR, REVIEW_DIR, Company, companies, load_config, stable_ulid
 from research_record import rubric
 from research_record.schema import ResearchRecord
+from research_record.validate import unflatten_csv_row
 from research_record.text import html_to_text
 
 REVIEWER = "navneet"
@@ -549,6 +550,24 @@ def block_ids_with_a_draft(drafts: dict[str, dict[str, Any]]) -> set[str]:
     return ids
 
 
+#: (record_id, old, new, is_point_target) for every row `rederive_status` flipped in the last `refresh_pipeline_fields` call.
+STATUS_FLIPS: list[tuple[str, str, str, bool]] = []
+
+
+def rederive_status(row: dict[str, str]) -> dict[str, str]:
+    """`aid_proposed_status` is a fact the rubric derives from the row's own targets, outcome and withdrawal note, not a
+    judgement, so it is recomputed on every row, touched or not. Approval, hand_verified, reviewer_note and the assumption
+    fields are the reviewer's and are not read for anything but the arithmetic. A row that does not parse is left as it is."""
+    if row.get("empty_block") == "true" or not row.get("assumption.metric"):
+        return row
+    try:
+        record = ResearchRecord.model_validate(unflatten_csv_row(row))
+    except (ValidationError, KeyError, ValueError):
+        return row
+    status = proposed_status(record, withdrawn=bool(row.get("aid_withdrawal_note")))
+    return row if status == row.get("aid_proposed_status") else {**row, "aid_proposed_status": status}
+
+
 def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None = None) -> tuple[list[dict[str, str]], Counter]:
     """Rewrite the pipeline-owned columns on every row of the company's CSV that nobody has touched yet, from
     the current data/drafts/ and data/outcomes/. A row with a human edit, an empty-block flag (it is not a
@@ -605,6 +624,17 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
         new_row = refresh_row(row, fresh)
         stats["changed" if new_row != row else "unchanged"] += 1
         refreshed.append(new_row)
+    STATUS_FLIPS.clear()
+    rederived = []
+    for row in refreshed:
+        new_row = rederive_status(row)
+        if new_row is not row:
+            stats["status_flipped"] += 1
+            stats[f"flip {row.get('aid_proposed_status', '')}->{new_row['aid_proposed_status']}"] += 1
+            STATUS_FLIPS.append((row["record_id"], row.get("aid_proposed_status", ""), new_row["aid_proposed_status"],
+                                 row.get("assumption.target_low") == row.get("assumption.target_high") != ""))
+        rederived.append(new_row)
+    refreshed = rederived
     rehashed = [recompute_content_sha256(row, raw_dir) for row in refreshed]
     stats["content_sha256_recomputed"] = sum(1 for old, new in zip(refreshed, rehashed) if old != new)
     write_csv(path, rehashed)
@@ -640,6 +670,11 @@ def main(argv: list[str] | None = None) -> int:
                   f"{sum(r.get('ack_pending_review') == 'true' for r in rows)} ack-pending in all; "
                   f"{stats['change_proposed']} newly proposed change(s), "
                   f"{sum(r.get('change_pending_review') == 'true' for r in rows)} change-pending in all")
+            flips = {k[5:]: v for k, v in stats.items() if k.startswith("flip ")}
+            print(f"     status re-derived on every row: {stats['status_flipped']} flipped {flips or ''}")
+            for rid, old, new, point in STATUS_FLIPS:
+                if not (point and (old, new) == ("met", "missed")):
+                    print(f"       not a point-target met->missed flip: {rid} {old}->{new}")
         return 0
 
     print("rows per company per status ('status' is the schema field, always open for a draft;")

@@ -1,6 +1,6 @@
 # What 12 companies guided in their SEC filings, and what happened next
 
-A dataset of 1,046 numeric guidance statements from SEC filings, each matched to the figure the company later reported and to any later filing that referred back to it. Plus what it took to build it with a small model, a lot of code guards, and a human reading every row.
+A dataset of 1,134 numeric guidance statements from SEC filings, each matched to the figure the company later reported and to any later filing that referred back to it. Plus what it took to build it with a small model, a lot of code guards, and a human reading every row.
 
 - Dataset (CC-BY-4.0): [Nav772/assumption-drift](https://huggingface.co/datasets/Nav772/assumption-drift)
 - Page with every row: [Space](https://huggingface.co/spaces/Nav772/assumption-drift)
@@ -16,16 +16,16 @@ I wanted the answer as a table, not an anecdote. So for 12 large US companies (N
 
 | | |
 |---|---|
-| Guidance statements | 1,046 |
-| Resolved (outcome reported) | 619 |
-| Met (inside the guided range) | 213 |
-| Missed | 406 |
-| Missed, worse than guided | 92 |
-| Missed, better than guided | 314 |
-| Missed and never acknowledged in a later filing | 397 (98%) |
+| Guidance statements | 1,134 |
+| Resolved (outcome reported) | 649 |
+| Met (inside the guided range) | 208 |
+| Missed | 441 |
+| Missed, worse than guided | 100 |
+| Missed, better than guided | 341 |
+| Missed and never acknowledged in a later filing | 432 (98%) |
 | Acknowledgements, all on beats | 9 |
 
-Zero of the 92 worse-side misses was ever referred to again in a filing. The nine acknowledgements are all beats, and nearly all are one company (Target), which writes sentences like "above the high end of the Company's guidance range" when it beats.
+Zero of the 100 worse-side misses was ever referred to again in a filing. The nine acknowledgements are all beats, and eight of the nine are one company (Target), which writes sentences like "above the high end of the Company's guidance range" when it beats.
 
 One example of the shape the data has. Meta's 2025 capex guidance, as printed:
 
@@ -63,7 +63,8 @@ The pipeline is six scripts and a thin schema. The interesting part is where the
 - "Operating margin is expected to increase 310 to 340 basis points" is a change, not a level, and is not guidance for the metric.
 - "An approximate $0.20 reduction to EPS due to macroeconomic headwinds" is a component of the guide, not an EPS floor.
 - "Adjusted EBITDA of approximately 61 percent of revenue" is not a metric we track, however confidently the model maps it to operating margin.
-- A 2019 outlook table with a prior-year results column next to the estimates column: the model attached the wrong cell as evidence and the range guard rejected the real one. Seven quarters of one company's guidance are still missing because of this; it's in the backlog.
+- A 2019 outlook table with a prior-year results column next to the estimates column. The cause turned out to be smaller than it looked: the range guard would not accept a dash after a unit letter, so '$4.4B - $5.2B' was rejected as having no range language. The revenue rows are back; the EPS and shipment rows in the same tables are still missing because block capture stops at the first blank-line gap. Both are in the backlog.
+- Two drafts for the same metric and period with different numbers. The old rule kept the sentence and silently dropped the table row, which once replaced Qualcomm's $9.2 to 10.2 billion quarterly guide with a $150 million Huawei component mentioned in the same release. Now both are kept, flagged, and the reviewer records which is the guide.
 - A sentence in the Business Outlook section of the next release, "Operating margin of approximately 13.0%", is next year's guide, not this year's result, however neatly it matches the metric. The outcome matcher took it anyway for a while.
 
 **Verify.** A second model pass answers yes or no on whether the structured row matches the sentence, with a one-line reason and a class. I overruled it often, in both directions. Its value is as a flag, not a judge.
@@ -81,11 +82,11 @@ It is a thin Pydantic model, deliberately. The thing I was curious about is whet
 ## Limitations
 
 - Filings only. Guidance given on earnings calls is not in EDGAR and is not here. Microsoft, for example, only started putting its outlook table into the 8-K in 2024.
-- Point targets with no printed tolerance ("approximately $6.6 billion") are taken as the printed number. Broadcom supplies a dozen small misses on that rule.
+- Point targets with no printed tolerance ("approximately $6.6 billion") are taken as the printed number. Broadcom supplies most of the small misses on that rule: it guides to a point ('approximately $14.0 billion') and reports $14,054 million.
 - Floors ("at least $X") can only be met or missed, never beaten.
 - Home Depot and Lowe's do not print margins or tax rates as reported lines in their releases; those outcomes have to be derived from two lines in the 10-K and most are still unresolved.
 - Preliminary estimates filed after a quarter closes (NVIDIA, August 2022) are guidance under the current rule and will be flagged separately.
-- Apple, Alphabet, Costco and JPMorgan issue no numeric guidance in filing text at all. That is a finding too.
+- Apple, Alphabet and Costco issue no numeric guidance in filing text at all. That is a finding too. JPMorgan does, in its 8-K earnings presentations (net interest income, adjusted expense), but those metrics are outside this release's schema.
 
 ## What I'd like from you
 

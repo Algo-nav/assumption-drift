@@ -5,6 +5,10 @@ Flags approved rows with a reported value whose evidence excerpt (a) uses
 forward-looking language, (b) shows the reported number inside a range, or
 (c) does not contain the reported value in any 0/1/2-decimal format, also scaled
 by 1000 and 1000000, or with one trailing footnote digit ("$1.331" for 1.33).
+
+A flagged row whose record_id is in data/audit_allowlist.csv (record_id, reason) has been looked at and is
+reported as "allowed"; it does not count toward the total and does not fail the gate. The exit status is 1
+when any flagged row is not allowed.
 """
 import csv
 import glob
@@ -83,10 +87,19 @@ def reasons(value, excerpt):
     return why
 
 
+def load_allowlist():
+    path = os.path.join(ROOT, "data", "audit_allowlist.csv")
+    if not os.path.exists(path):
+        return {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        return {r["record_id"]: r.get("reason", "") for r in csv.DictReader(fh) if r.get("record_id")}
+
+
 def main():
-    total = 0
+    allowed_reason = load_allowlist()
+    total = allowed_total = 0
     for path in sorted(glob.glob(os.path.join(ROOT, "data", "review", "*.csv"))):
-        n = 0
+        n = allowed = 0
         rows = []
         with open(path, newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
@@ -96,19 +109,25 @@ def main():
                 excerpt = r.get("outcome.evidence.excerpt") or ""
                 why = reasons(val, excerpt)
                 if why:
-                    n += 1
+                    if r["record_id"] in allowed_reason:
+                        allowed += 1
+                    else:
+                        n += 1
                     rows.append((r, val, excerpt, why))
         print(f"== {os.path.basename(path)} ==")
         for r, val, excerpt, why in rows:
             snippet = " ".join(excerpt.split())[:100]
+            tag = "ALLOWED " if r["record_id"] in allowed_reason else ""
             print(
-                f"{r['record_id']} | {r['ticker']} | {r['assumption.metric']} | "
+                f"{tag}{r['record_id']} | {r['ticker']} | {r['assumption.metric']} | "
                 f"{r['assumption.target_period']} | {val} | [{';'.join(why)}] {snippet}"
             )
-        print(f"-- {n} flagged")
+        print(f"-- {n} flagged" + (f", {allowed} allowed" if allowed else ""))
         total += n
-    print(f"TOTAL flagged: {total}")
+        allowed_total += allowed
+    print(f"TOTAL flagged: {total} (allowed: {allowed_total})")
+    return 1 if total else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

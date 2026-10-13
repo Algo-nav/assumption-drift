@@ -46,9 +46,9 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-11, the release holds **1,046 rows**: 213 met, 406 missed, 424 unresolved, 3 withdrawn.
-Of the misses, 314 were better than guided and 92 worse than guided; median days from the guidance to the
-filing that made it checkable was 92, and
+As of 2026-10-13, the release holds **1,134 rows**: 208 met, 441 missed, 482 unresolved, 3 withdrawn.
+Of the misses, 341 were better than guided and 100 worse than guided; median days from the guidance to the
+filing that made it checkable was 91, and
 98% of misses were never acknowledged in a later filing.
 
 By company:
@@ -56,17 +56,17 @@ By company:
 | company | rows | met | missed | withdrawn | unresolved | never-acknowledged share |
 | --- | --- | --- | --- | --- | --- | --- |
 | Adobe Inc. | 8 | 0 | 0 | 0 | 8 | n/a |
-| Advanced Micro Devices, Inc. | 95 | 36 | 19 | 0 | 40 | 100% |
+| Advanced Micro Devices, Inc. | 96 | 37 | 19 | 0 | 40 | 100% |
 | Amazon.com, Inc. | 30 | 10 | 18 | 0 | 2 | 100% |
-| Broadcom Inc. | 37 | 10 | 16 | 1 | 10 | 100% |
-| Lowe's Companies, Inc. | 75 | 0 | 3 | 0 | 72 | 100% |
+| Broadcom Inc. | 34 | 1 | 27 | 1 | 5 | 100% |
+| Lowe's Companies, Inc. | 110 | 0 | 4 | 0 | 106 | 100% |
 | Meta Platforms, Inc. | 80 | 37 | 27 | 0 | 16 | 100% |
 | Microsoft Corporation | 5 | 0 | 0 | 0 | 5 | n/a |
-| NVIDIA Corporation | 212 | 58 | 79 | 0 | 75 | 100% |
-| QUALCOMM Incorporated | 52 | 13 | 23 | 0 | 16 | 100% |
-| Salesforce, Inc. | 317 | 18 | 168 | 0 | 131 | 99% |
-| Target Corporation | 82 | 27 | 38 | 2 | 15 | 79% |
-| The Home Depot, Inc. | 53 | 4 | 15 | 0 | 34 | 100% |
+| NVIDIA Corporation | 212 | 43 | 94 | 0 | 75 | 100% |
+| QUALCOMM Incorporated | 85 | 33 | 28 | 0 | 24 | 100% |
+| Salesforce, Inc. | 316 | 16 | 170 | 0 | 130 | 99% |
+| Target Corporation | 82 | 27 | 39 | 2 | 14 | 79% |
+| The Home Depot, Inc. | 76 | 4 | 15 | 0 | 57 | 100% |
 
 ![Missed rows: when the gap was acknowledged](figures/falsifiable_vs_acknowledged.png)
 ![Worse and better than guided, acknowledged or not](figures/acknowledgement_by_company.png)
@@ -105,14 +105,18 @@ one the pipeline used.
   guided figure. A revision made while the period was still open, such as 'increased from our prior
   outlook of $60-65 billion', is a new guidance row, not an acknowledgement. A later release will
   record these revisions separately; when it does, the acknowledged counts will change.
+- JPMorgan issues numeric outlook (net interest income, adjusted expense) in its 8-K earnings presentations; those
+  metrics are not in this release's schema and the company is not yet published.
+- Where two drafts for the same metric and period disagree, both are kept and the reviewer records which is the guide;
+  the loser is rejected with a 'conflict loser' note.
 
 ## Coverage notes
 
 - Lowe's and Home Depot: most margin and tax rate rows are unresolved because those companies do not
   print the reported figure as a line in the release; it must be derived from two reported lines.
   These will resolve in a later release.
-- Qualcomm: guidance from early 2019 to late 2020 is not yet included because of a two-column table
-  layout the parser does not read. Coverage starts at Q1 FY2021.
+- Qualcomm's 2019 to 2020 quarterly revenue ranges from the outlook tables are in this release; the EPS and MSM
+  shipment rows in the same tables are not yet captured (backlog item 12b).
 - Adobe: the revenue and EPS targets table is not yet parsed; Adobe rows are non-GAAP operating margin
   only.
 - Microsoft: guidance appeared in filing text only from August 2024; earlier guidance was given on
@@ -120,13 +124,13 @@ one the pipeline used.
 - Broadcom: adjusted EBITDA guidance is not a tracked metric; rows are revenue and, from 2026,
   non-GAAP operating margin.
 - Micron is reviewed separately and not in this release.
-- Apple, Alphabet, Costco and JPMorgan issue no numeric guidance in filing text.
+- Apple, Alphabet and Costco issue no numeric guidance in filing text.
 
 ## How to cite
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-11.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-13.
 
 ## Licence
 

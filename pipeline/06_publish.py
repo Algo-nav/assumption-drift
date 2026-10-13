@@ -314,14 +314,18 @@ one the pipeline used.
   guided figure. A revision made while the period was still open, such as 'increased from our prior
   outlook of $60-65 billion', is a new guidance row, not an acknowledgement. A later release will
   record these revisions separately; when it does, the acknowledged counts will change.
+- JPMorgan issues numeric outlook (net interest income, adjusted expense) in its 8-K earnings presentations; those
+  metrics are not in this release's schema and the company is not yet published.
+- Where two drafts for the same metric and period disagree, both are kept and the reviewer records which is the guide;
+  the loser is rejected with a 'conflict loser' note.
 
 ## Coverage notes
 
 - Lowe's and Home Depot: most margin and tax rate rows are unresolved because those companies do not
   print the reported figure as a line in the release; it must be derived from two reported lines.
   These will resolve in a later release.
-- Qualcomm: guidance from early 2019 to late 2020 is not yet included because of a two-column table
-  layout the parser does not read. Coverage starts at Q1 FY2021.
+- Qualcomm's 2019 to 2020 quarterly revenue ranges from the outlook tables are in this release; the EPS and MSM
+  shipment rows in the same tables are not yet captured (backlog item 12b).
 - Adobe: the revenue and EPS targets table is not yet parsed; Adobe rows are non-GAAP operating margin
   only.
 - Microsoft: guidance appeared in filing text only from August 2024; earlier guidance was given on
@@ -329,7 +333,7 @@ one the pipeline used.
 - Broadcom: adjusted EBITDA guidance is not a tracked metric; rows are revenue and, from 2026,
   non-GAAP operating margin.
 - Micron is reviewed separately and not in this release.
-- Apple, Alphabet, Costco and JPMorgan issue no numeric guidance in filing text.
+- Apple, Alphabet and Costco issue no numeric guidance in filing text.
 
 ## How to cite
 
