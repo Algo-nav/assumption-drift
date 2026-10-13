@@ -372,7 +372,7 @@ def test_the_card_has_a_sentence_for_no_numeric_guidance(sample_result) -> None:
 
 def test_the_card_has_a_sentence_for_metrics_outside_the_schema(sample_result) -> None:
     text = render(sample_result, unpublished={"JPMorgan Chase & Co.": "metrics_outside_schema"})
-    assert ("JPMorgan Chase & Co. issue numeric outlook in filings, but on metrics outside this release's schema "
+    assert ("JPMorgan Chase & Co. issues numeric outlook in filings, but on metrics outside this release's schema "
             "(for JPMorgan, net interest income and adjusted expense); not published.") in text
 
 
@@ -425,3 +425,10 @@ def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table
 
 def test_company_count_is_spelled_out_to_twenty_then_digits() -> None:
     assert [publish._count_words(n) for n in (1, 3, 12, 20, 21)] == ["one", "three", "twelve", "twenty", "21"]
+
+
+def test_metrics_outside_schema_sentence_agrees_in_number(sample_result) -> None:
+    one = render(sample_result, unpublished={"JPMorgan Chase & Co.": "metrics_outside_schema"})
+    assert "JPMorgan Chase & Co. issues numeric outlook" in one
+    two = render(sample_result, unpublished={"JPMorgan Chase & Co.": "metrics_outside_schema", "Other Co.": "metrics_outside_schema"})
+    assert "JPMorgan Chase & Co. and Other Co. issue numeric outlook" in two

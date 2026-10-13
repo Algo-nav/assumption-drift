@@ -230,7 +230,7 @@ def _left_out_sentences(unpublished: dict[str, str | None]) -> str:
                        f"so {'they have' if many else 'it has'} no rows here.")
         elif reason == "metrics_outside_schema":
             detail = ", ".join(f"{short}, {metrics}" for n in names for short, metrics in [_OUTSIDE_SCHEMA_DETAIL.get(n, (n, ""))] if metrics)
-            out.append(f"{joined} issue numeric outlook in filings, but on metrics outside this release's schema"
+            out.append(f"{joined} {'issue' if many else 'issues'} numeric outlook in filings, but on metrics outside this release's schema"
                        f"{f' (for {detail})' if detail else ''}; not published.")
         else:
             out.append(f"{joined} {'are' if many else 'is'} fetched and structured; review is not finished, "

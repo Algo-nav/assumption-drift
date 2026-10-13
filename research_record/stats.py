@@ -70,6 +70,28 @@ def is_floor(record: ResearchRecord) -> bool:
     return a.target_low is not None and a.target_high is None
 
 
+def _miss_fraction(record: ResearchRecord) -> float | None:
+    """How far the reported value sits beyond the guided bound, as a fraction of that bound: the range edge
+    nearest the reported value, or the point itself. None when there is no outcome, the value is inside the
+    range, or the bound is zero."""
+    a = record.assumption
+    if record.outcome is None or record.outcome.reported_value is None:
+        return None
+    value = record.outcome.reported_value
+    if rubric.is_point_guidance(a.target_low, a.target_high):
+        edge = a.target_low
+    else:
+        landed = rubric.side(a.target_low, a.target_high, value)
+        edge = a.target_high if landed == "above" else a.target_low if landed == "below" else None
+    if not edge:
+        return None
+    return abs(value - edge) / abs(edge)
+
+
+def _beyond(group: list[ResearchRecord], threshold: float) -> int:
+    return sum(1 for r in group if (f := _miss_fraction(r)) is not None and f > threshold)
+
+
 def _median(values: list[float | int]) -> float | None:
     return statistics.median(values) if values else None
 
@@ -117,6 +139,10 @@ def compute(records: list[ResearchRecord]) -> dict[str, Any]:
         "missed_never_acknowledged": never_acknowledged,
         "missed_never_acknowledged_share": (never_acknowledged / len(missed)) if missed else None,
         "missed_by_direction": dict(sorted(by_direction.items())),
+        "worse_beyond_1pct": _beyond(missed_by_direction_records["worse"], 0.01),
+        "worse_beyond_5pct": _beyond(missed_by_direction_records["worse"], 0.05),
+        "better_beyond_1pct": _beyond(missed_by_direction_records["better"], 0.01),
+        "better_beyond_5pct": _beyond(missed_by_direction_records["better"], 0.05),
         "missed_floors": sum(1 for r in missed if is_floor(r)),
         "median_days_to_falsifiable_by_direction": {
             d: _median([r.days_to_falsifiable for r in group if r.days_to_falsifiable is not None])
@@ -171,6 +197,10 @@ def format_stats(stats: dict[str, Any]) -> str:
         + (f" ({share:.0%})" if share is not None else ""),
         f"missed by direction (better or worse than guided, by each metric's polarity): {stats['missed_by_direction']}",
         f"missed as one-sided floors (only a value below a floor can be missed; a floor has no ceiling): {stats['missed_floors']:,}",
+        f"worse-side misses beyond the guided bound: more than 1 percent {stats['worse_beyond_1pct']:,}, "
+        f"more than 5 percent {stats['worse_beyond_5pct']:,}",
+        f"better-side misses beyond the guided bound: more than 1 percent {stats['better_beyond_1pct']:,}, "
+        f"more than 5 percent {stats['better_beyond_5pct']:,}",
         f"median days to falsifiable by direction: {stats['median_days_to_falsifiable_by_direction']}",
         f"acknowledged rate by direction: "
         f"{ {d: (f'{v:.0%}' if v is not None else None) for d, v in stats['acknowledged_rate_by_direction'].items()} }",

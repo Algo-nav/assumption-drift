@@ -262,6 +262,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:400;margin:0}
 .smallcaps{font-variant:small-caps;letter-spacing:.06em;color:var(--mute)}
 .masthead .label-top{font-variant:small-caps;letter-spacing:.14em;color:var(--mute);margin:0 0 12px}
 h1{font-family:Charter,"Bitstream Charter","Times New Roman","Liberation Serif",serif;font-size:40px;line-height:1.15;font-weight:700;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1,"onum" 0}
+.magnitude{font-size:18px;margin:12px 0 0;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"onum" 0}
 .dateline{color:var(--mute);margin:16px 0 24px}
 hr,.rule{border:0;border-top:1px solid var(--rule);margin:0}
 table.summary{width:100%;border-collapse:collapse;margin:32px 0 8px;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"onum" 0}
@@ -453,6 +454,7 @@ def render_page(
 <header class="masthead">
 <p class="label-top">{SPACE_TITLE}</p>
 <h1>{escape(figures.headline_sentence(summary))}</h1>
+<p class="magnitude">{escape(figures.miss_magnitude_sentence(summary, result))}</p>
 <p class="dateline">{escape(dateline)}</p>
 </header>
 <hr>

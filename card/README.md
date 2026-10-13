@@ -22,7 +22,7 @@ January 2019 and September 2026. This dataset pairs each one with what the compa
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
 It is a problem statement in data form, not a model and not a demonstration of one.
 Apple Inc., Alphabet Inc. and Costco Wholesale Corporation were in the company list but issued no numeric guidance in filing text, so they have no rows here.
-JPMorgan Chase & Co. issue numeric outlook in filings, but on metrics outside this release's schema (for JPMorgan, net interest income and adjusted expense); not published.
+JPMorgan Chase & Co. issues numeric outlook in filings, but on metrics outside this release's schema (for JPMorgan, net interest income and adjusted expense); not published.
 Micron Technology, Inc. is fetched and structured; review is not finished, so it is not published.
 
 ## How a row is built

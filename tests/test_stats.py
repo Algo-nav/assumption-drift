@@ -233,3 +233,39 @@ def test_stats_reports_resolved_and_acknowledged_totals_and_a_per_company_acknow
     assert result["resolved"] == 2 and result["acknowledged"] == 0
     text = stats.format_stats(result)
     assert "Resolved (met + missed): 2" in text and "Acknowledged (rows with an acknowledgement): 0" in text and "acknowledged" in text.splitlines()[-3]
+
+
+# --- miss size beyond the guided bound -------------------------------------------------------------------
+
+
+def _reported(record_data, value, **overrides):
+    return _record(record_data, status="missed", outcome={**record_data()["outcome"], "reported_value": value}, **overrides)
+
+
+def test_compute_counts_worse_misses_beyond_1_and_5_percent_of_the_nearest_range_edge(record_data) -> None:
+    # range [5000, 6000]: 4900 is 2% under 5000 (>1 only), 4700 is 6% under (>1 and >5), 4980 is 0.4% (neither)
+    rows = [_reported(record_data, v) for v in (4_900.0, 4_700.0, 4_980.0)]
+    result = stats.compute(rows)
+    assert (result["worse_beyond_1pct"], result["worse_beyond_5pct"]) == (2, 1)
+    assert (result["better_beyond_1pct"], result["better_beyond_5pct"]) == (0, 0)
+
+
+def test_compute_measures_a_point_guide_against_the_point(record_data) -> None:
+    assumption = {**record_data()["assumption"], "target_low": 5_000.0, "target_high": 5_000.0}
+    rows = [_reported(record_data, 4_700.0, assumption=assumption), _reported(record_data, 4_990.0, assumption=assumption)]
+    result = stats.compute(rows)
+    assert (result["worse_beyond_1pct"], result["worse_beyond_5pct"]) == (1, 1)
+
+
+def test_compute_counts_better_side_misses_separately(record_data) -> None:
+    # revenue, higher is better: 6300 is 5% over 6000 (>1 only), 6500 is 8.3% over (>1 and >5)
+    rows = [_reported(record_data, 6_300.0), _reported(record_data, 6_500.0), _reported(record_data, 4_000.0)]
+    result = stats.compute(rows)
+    assert (result["better_beyond_1pct"], result["better_beyond_5pct"]) == (2, 1)
+    assert (result["worse_beyond_1pct"], result["worse_beyond_5pct"]) == (1, 1)
+
+
+def test_format_stats_prints_the_four_counts(record_data) -> None:
+    text = stats.format_stats(stats.compute([_reported(record_data, 4_700.0), _reported(record_data, 6_500.0)]))
+    assert "worse-side misses beyond the guided bound: more than 1 percent 1, more than 5 percent 1" in text
+    assert "better-side misses beyond the guided bound: more than 1 percent 1, more than 5 percent 1" in text

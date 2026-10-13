@@ -203,3 +203,12 @@ def test_figures_module_source_has_no_em_dash() -> None:
 
     source = pathlib.Path(figures.__file__).read_text(encoding="utf-8")
     assert "—" not in source
+
+
+def test_miss_magnitude_sentence_none_acknowledged_and_some_acknowledged() -> None:
+    counts = {"worse_beyond_1pct": 40, "worse_beyond_5pct": 12}
+    none = figures.miss_magnitude_sentence({"worse": 55, "worse_acknowledged": 0}, counts)
+    assert none == ("Of the 55 worse-side misses, 40 are more than 1 percent beyond the guide and 12 are more than 5 percent "
+                    "beyond it. None was acknowledged.")
+    some = figures.miss_magnitude_sentence({"worse": 55, "worse_acknowledged": 3}, counts)
+    assert some.endswith("3 were acknowledged.") and "None" not in some
