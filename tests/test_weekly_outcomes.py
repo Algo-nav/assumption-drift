@@ -249,3 +249,13 @@ def test_as_of_moves_with_the_run_date(world, config_path, monkeypatch, record_d
         assert outcomes.main(["--config", str(config_path), "--from-review", "--accessions", scope(world, CONFERENCE), "--sync", "--submit"]) == 0
         reasons[day] = read_outcomes(world)[0]["outcome_reason"]
     assert reasons == {"2024-04-01": "period not closed", "2024-09-01": "no later 8-K release for that period found"}
+
+
+def test_merge_in_place_keeps_row_order():
+    """Backlog 23: a re-checked row stays where it was, so the weekly diff shows only what changed."""
+    old = [{"draft_id": i, "outcome_reason": "r"} for i in "abcd"]
+    new = [{"draft_id": "b", "outcome_reason": "r"}, {"draft_id": "a", "outcome_reason": "changed"}, {"draft_id": "z", "outcome_reason": "r"}]
+    merged = outcomes._merge_in_place(old, new, {"a", "b", "c", "z"})
+    assert [r["draft_id"] for r in merged] == ["a", "b", "d", "z"]  # c is gone, z is new and last
+    assert merged[0]["outcome_reason"] == "changed"
+    assert merged[1:3] == [new[0], old[3]]

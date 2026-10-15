@@ -449,3 +449,10 @@ Found by the weekly-refresh simulation.
 - **JPMorgan.** The 8-K earnings *presentation* candidate was skipped because its excerpt was over the excerpt length limit
   (`dropped_too_long` in 02_candidates). Not a bug in the guard, but a number-bearing outlook in that presentation is currently
   never seen. Decide whether to raise the limit for presentations or split the slide text.
+
+## 23. Weekly diffs touched every company's outcome file (fixed)
+
+The 2026-10-15 refresh rewrote 14 `data/outcomes/*.jsonl` files, about 250 lines. The reason text carries no run date; the churn was
+row order. In `--from-review` / `--only` mode, 04 wrote the untouched rows followed by the re-checked rows, so every re-checked row
+moved to the end of its file. Fix: `_merge_in_place` replaces each re-checked row where it stands, appends new rows, drops rows that
+are gone (rows and rejects). A row whose content is unchanged is now byte-identical, so it is not in the diff.

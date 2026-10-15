@@ -1064,6 +1064,21 @@ def select_from_review(
     return picks, known
 
 
+def _merge_in_place(old: list[dict[str, Any]], new: list[dict[str, Any]], only_ids: set[str]) -> list[dict[str, Any]]:
+    """`old` with the rows of `only_ids` replaced by `new`. A row that is still there keeps its place in the file (so a weekly
+    diff shows only what changed, not every re-checked row moved to the end); rows that are new go last, rows that are gone drop."""
+    by_id: dict[str, list[dict[str, Any]]] = {}
+    for r in new:
+        by_id.setdefault(r["draft_id"], []).append(r)
+    out: list[dict[str, Any]] = []
+    for r in old:
+        if r["draft_id"] not in only_ids:
+            out.append(r)
+        elif by_id.get(r["draft_id"]):
+            out.append(by_id[r["draft_id"]].pop(0))
+    return out + [r for rows in by_id.values() for r in rows]
+
+
 def _today() -> date:
     return date.today()
 
@@ -1187,8 +1202,8 @@ def main(argv: list[str] | None = None) -> int:
         mine = [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])]
         out_rows, out_rejects = rows, mine
         if only_ids is not None:  # merge: the other drafts' rows and rejects stay exactly as they are
-            out_rows = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl") if r["draft_id"] not in only_ids] + rows
-            out_rejects = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl") if r["draft_id"] not in only_ids] + mine
+            out_rows = _merge_in_place(read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl"), rows, only_ids)
+            out_rejects = _merge_in_place(read_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl"), mine, only_ids)
         plan[company.cik] = (out_rows, out_rejects)
         print(f"  {company.ticker}: {len(rows):,} drafts, {sum(1 for r in rows if r['outcome'])} with an outcome, "
               f"{sum(1 for r in rows if r['acknowledgement'])} acknowledged, {sum(1 for r in rows if r['withdrawal'])} withdrawn")
