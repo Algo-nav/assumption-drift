@@ -1,0 +1,124 @@
+── 1/8 ── 01M3QSRT0051NJY5WXX90NQ6Z2 ── MUrevenue  Q1 FY2027  (stated 2026-09-30)
+target: 60.0 to 63.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Revenue
+$61.5 billion ± $1.5 billion — $61.5 billion ± $1.5 billion
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/8 ── 01M3QSRT004CTWNKMXD4QW237Q ── MUgross margin GAAP  Q1 FY2027  (stated 2026-09-30)
+target: 85.95 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Gross margin
+Approximately 85.95% 0.30 % A Approximately 86.25%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/8 ── 01M3QSRT00RHCG2743H169WDEY ── MUgross margin non-GAAP  Q1 FY2027  (stated 2026-09-30)
+target: 86.25 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Gross margin
+Approximately 85.95% 0.30 % A Approximately 86.25%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/8 ── 01M3QSRT00M3MX83907JKB2841 ── MUoperating expenses GAAP  Q1 FY2027  (stated 2026-09-30)
+target: 2.31 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Operating expenses
+Approximately $2.31 billion $253 million B Approximately $2.06 billion
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/8 ── 01M3QSRT00PCPWQC84X6RP33MG ── MUoperating expenses non-GAAP  Q1 FY2027  (stated 2026-09-30)
+target: 2.06 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Operating expenses
+Approximately $2.31 billion $253 million B Approximately $2.06 billion
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/8 ── 01M3QSRT00BTXM6GRV7STA772W ── MUEPS GAAP  Q1 FY2027  (stated 2026-09-30)
+target: 36.84 to 38.84 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Diluted earnings per share(1)
+$37.84 ± $1.00 $0.31 A, B, C $38.15 ± $1.00
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows GAAP diluted EPS of $37.84 ± $1.00, which equals a range of $36.84 to $38.84, but this figure appears in the first column labeled 'FQ1-27 GAAP Outlook' while the claim specifies the )  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 7/8 ── 01M3QSRT00A7PECZVKFMBGXKBY ── MUEPS non-GAAP  Q1 FY2027  (stated 2026-09-30)
+target: 37.15 to 39.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Diluted earnings per share(1)
+$37.84 ± $1.00 $0.31 A, B, C $38.15 ± $1.00
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows non-GAAP diluted EPS of $38.15 ± $1.00, which is a range of $37.15 to $39.15, but the claim states $37.15 to $39.15 per share. The center point in the excerpt is $38.15, not $37.15 a)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 8/8 ── 01M3QSRT00ZRGTNYT4E0X07S67 ── MU    (stated 2026-09-30)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: 4 item(s) returned, all rejected: target_period 'FQ1 FY2027' is not like FY2027 or Q3 FY2027
+EDGAR: https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm
+
+excerpt:
+  Revenue
+$61.5 billion ± $1.5 billion $61.5 billion ± $1.5 billion
+Gross margin
+Approximately 85.95% Approximately 86.25%
+Operating expenses
+Approximately $2.31 billion Approximately $2.06 billion
+Diluted earnings per share
+$37.84 ± $1.00 $38.15 ± $1.00
+Further information regarding Micron’s business outlook is included in the prepared remarks and slides, which have been posted at investors.micron.
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
