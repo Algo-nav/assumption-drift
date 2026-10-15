@@ -48,25 +48,22 @@
 {"draft_id": "01JCETQ100WD6ZPPMVCBR5BMK1", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JCETQ1000FWFQGN4HNEYXJP0", "outcome": {"reported_value": -1.8, "reported_at": "2025-02-25", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/354950/000035495025000030/hd_exhibit991x02022025.htm", "accession_number": "0000354950-25-000030", "filing_type": "8-K", "filed_at": "2025-02-25", "fetched_at": "2026-10-01T12:43:38Z", "content_sha256": "fe8cf8ee6c4374091e7d5913e5080e8031d51783ba100fe00ddded602c293dd9", "excerpt": "Comparable sales for fiscal 2024 decreased 1.8%, and comparable sales in the U.S. decreased 1.8%."}}, "outcome_reason": null, "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JCETQ100WD7ED7BXZ31QPRRA", "outcome": null, "outcome_reason": "model output rejected", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01JMX6EG00VFKS9XP7R48CZ5CV", "outcome": null, "outcome_reason": "the model found no line reporting that metric for that period", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JMX6EG0034XVMG383RASQCT1", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JMX6EG00GZHYYWA8Z7A2742T", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JMX6EG005QHAFYPB3H5ETH5E", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JMX6EG008R7YV0GW0JSG9QQG", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01JMX6EG00N96TARVGQBE7XWRT", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01JVNFTW007P97P78TKDQPEK4E", "outcome": null, "outcome_reason": "multi-column, unconfirmed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JVNFTW00D53S6BJ127ZNY9SZ", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JVNFTW00EP7W1B7MAPQ1W2YZ", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JVNFTW007N16VZAXXH8SMPH2", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JVNFTW00HES5GK22XJZV2489", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01JVNFTW00T1G2P5HWVCC2V8AQ", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01K2ZT09005W879NXDC9B4WJ0F", "outcome": null, "outcome_reason": "multi-column, unconfirmed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01K2ZT0900H2TKDVSWWDMJ5B3X", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01K2ZT0900QKMNHA9RCEE7490K", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01K2ZT0900E9WJZN0HCG37M0HY", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01K2ZT09000W5FSDRDQNP3WPNQ", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KAA45P00X37ZCG85R31XJPFQ", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KAA45P00XZ3SN3C1YZESABBR", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01JMX6EG00HGF55TTCPPJ3TM32", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KJ6F44003CCAV1SA2GEC52XH", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KJ6F44004XYQ7S3Z9SFS0ESK", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KJ6F4400CD4DJ5J0K7WET64S", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
@@ -79,4 +76,7 @@
 {"draft_id": "01M092NX00W45Y2ZVF5WBZG093", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M092NX00GZAXXZ7C6WA93J2Q", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M092NX005BKS45DFZT7D279D", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01JMX6EG00HGF55TTCPPJ3TM32", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01JMX6EG00N96TARVGQBE7XWRT", "outcome": null, "outcome_reason": "the matching release has no line naming the metric with a number", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01JMX6EG00VFKS9XP7R48CZ5CV", "outcome": null, "outcome_reason": "the model found no line reporting that metric for that period", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01JVNFTW007P97P78TKDQPEK4E", "outcome": null, "outcome_reason": "multi-column, unconfirmed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01K2ZT09005W879NXDC9B4WJ0F", "outcome": null, "outcome_reason": "multi-column, unconfirmed", "acknowledgement": null, "withdrawal": null}
