@@ -27,9 +27,9 @@ Micron Technology, Inc. is fetched and structured; review is not finished, so it
 
 ## How a row is built
 
-A row starts as a sentence or a table in an 8-K, 10-K or 10-Q filing that names a metric, a number or
-range, and a period. A later filing reporting the same metric for the same period supplies the outcome,
-when one exists. Every candidate row was drafted by a language model reading the filing text.
+A row starts as a sentence or a table in an 8-K earnings release that names a metric, a number or
+range, and a period. 10-Qs and 10-Ks are searched later, for references back to those figures (acknowledgements). A later 8-K release reporting the same metric for the same period supplies the
+outcome, when one exists. Every candidate row was drafted by a language model reading the filing text.
 
 ## The resolution rubric
 

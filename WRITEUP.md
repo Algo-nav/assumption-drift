@@ -10,7 +10,7 @@ A dataset of 1,134 numeric guidance statements from SEC filings, each matched to
 
 Companies put numbers in their filings about the future. "We expect fiscal 2025 capital expenditures to be in the range of $60-65 billion." A few quarters later the number is known. Does any later filing ever go back and say what happened to the earlier number?
 
-I wanted the answer as a table, not an anecdote. So for 12 large US companies (NVIDIA, Meta, Amazon, Microsoft, Broadcom, Qualcomm, AMD, Adobe, Salesforce, Target, Home Depot, Lowe's) I took every numeric forward-looking figure in their 8-K earnings releases, 10-Ks and 10-Qs since 2019, matched each to the reported outcome for that metric and period, and then searched every subsequent filing for a sentence that refers back to the guided figure.
+I wanted the answer as a table, not an anecdote. So for 12 large US companies (NVIDIA, Meta, Amazon, Microsoft, Broadcom, Qualcomm, AMD, Adobe, Salesforce, Target, Home Depot, Lowe's) I took every numeric forward-looking figure in their 8-K earnings releases since 2019, matched each to the reported outcome for that metric and period, and then searched every subsequent filing, 10-Qs and 10-Ks included, for a sentence that refers back to the guided figure.
 
 ## What the table says
 

@@ -49,6 +49,27 @@ The model steps use claude-haiku-4-5 through the Message Batches API and nothing
 (`llm.budget_usd`) covers every step, and is checked against the worst case before anything is
 submitted. Raw model output is archived in `data/batches/`, so no request is ever paid for twice.
 
+## Weekly refresh
+
+`.github/workflows/weekly-refresh.yml` runs `scripts/weekly_refresh.sh` every Saturday at 06:00 UTC (and on demand, with a
+spend cap and an optional `back_days` for a test). It reads each company's new EDGAR filings, drafts the new guidance, has the
+checker look at the new rows, attaches outcomes, acknowledgements and withdrawals to the rows already in the queue, and advances
+`data/manifest.json` only if every stage succeeded. Model spend is capped for the whole run (`MAX_USD`, default 1.00) and every
+stage's spend is appended to `data/spend_ledger.jsonl`.
+
+Nothing is published without review. The job never pushes to `main` and never runs `06_publish`: it pushes a `refresh/<date>`
+branch and opens an issue with the counts, the spend and the branch name. Ack and withdrawal findings on a row someone has
+already reviewed arrive as proposals, never as overwrites.
+
+To review a refresh, read the branch as it is; there is nothing to unzip. `data/refresh/<date>/summary.json` is the summary, and
+`<ticker>_new.txt` and `<ticker>_pending.txt` are the cards for the new rows and the new proposals. Either review in the terminal
+(`rr review data/review/<cik>.csv --filter no-note`, on the branch checked out) or read the dump and write a
+`record_id,decision,note` CSV and apply it with `rr review data/review/<cik>.csv --apply decisions.csv`; the issue lists the
+command for each dump.
+
+To publish: merge the reviewed branch into `main`, then run `python -m pipeline.06_publish` (a dry run; `--live` as before),
+review the diff to `data/release/`, `card/` and `space/`, and commit it.
+
 ## Layout
 
 ```

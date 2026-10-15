@@ -1,0 +1,103 @@
+name: Weekly refresh
+
+# Reads new filings, drafts and checks the new rows, attaches outcomes, and pushes the result to a refresh/<date> branch
+# with an issue that summarises it. It never pushes to main and never publishes.
+on:
+  schedule:
+    - cron: "0 6 * * 6"
+  workflow_dispatch:
+    inputs:
+      max_usd:
+        description: "Cap on model spend for the whole run, USD"
+        default: "1.00"
+      back_days:
+        description: "Move the manifest back this many days first (a manual test only)"
+        default: "0"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: weekly-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAX_USD: ${{ inputs.max_usd || '1.00' }}
+      BACK_DAYS: ${{ inputs.back_days || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[pipeline]"
+
+      - name: Date, and whether this date already has a branch
+        id: when
+        run: |
+          DATE="$(date -u +%F)"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "REFRESH_DATE=$DATE" >> "$GITHUB_ENV"
+          # a second run the same day would start from main's old manifest and read the same filings again
+          if git ls-remote --exit-code --heads origin "refresh/$DATE" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "refresh/$DATE already exists; nothing to do"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Refresh
+        id: run
+        if: steps.when.outputs.exists == 'false'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set +e
+          scripts/weekly_refresh.sh --max-usd "$MAX_USD" --back-days "$BACK_DAYS"
+          echo "rc=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Commit to refresh/<date> and push
+        if: steps.run.outputs.rc == '0'
+        run: |
+          DATE="${{ steps.when.outputs.date }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "refresh/$DATE"
+          git add data/review data/outcomes data/manifest.json data/spend_ledger.jsonl "data/refresh/$DATE"
+          git commit -m "Weekly refresh $DATE"
+          git push origin "refresh/$DATE"
+
+      - name: Open the issue
+        if: steps.run.outputs.rc == '0'
+        run: |
+          DATE="${{ steps.when.outputs.date }}"
+          S="data/refresh/$DATE/summary.json"
+          python -m pipeline.refresh issue --summary "$S" --branch "refresh/$DATE" > issue_body.md
+          gh issue create --title "$(python -m pipeline.refresh issue --summary "$S" --branch "refresh/$DATE" --title)" --body-file issue_body.md
+
+      - name: Open the issue (EDGAR blocked)
+        if: steps.run.outputs.rc == '3'
+        run: |
+          CODE="$(cat data/_work/blocked.txt 2>/dev/null || echo '?')"
+          printf 'The weekly refresh stopped at 01_fetch: EDGAR answered HTTP %s. Nothing was advanced or pushed.\n\nRe-run it from the Actions tab (workflow_dispatch) after a few minutes.\n' "$CODE" > issue_body.md
+          gh issue create --title "Refresh ${{ steps.when.outputs.date }}: EDGAR blocked the runner (HTTP $CODE)" --body-file issue_body.md
+          exit 3
+
+      - name: Open the issue (failure)
+        if: steps.run.outputs.rc != '' && steps.run.outputs.rc != '0' && steps.run.outputs.rc != '3'
+        run: |
+          STAGE="$(cat data/_work/failure.txt 2>/dev/null || echo 'unknown stage')"
+          { printf 'The weekly refresh failed at: %s. Nothing was advanced or pushed.\n\nLast 40 log lines:\n\n```\n' "$STAGE"
+            tail -n 40 data/_work/refresh.log 2>/dev/null
+            printf '```\n'; } > issue_body.md
+          gh issue create --title "Refresh ${{ steps.when.outputs.date }}: failed at ${STAGE%% *}" --body-file issue_body.md
+          exit 1

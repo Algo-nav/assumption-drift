@@ -435,3 +435,17 @@ Known limits, to decide before the workflow is written:
    count will be lower. Pick the weekly `--max-usd` after one real run.
 5. Not done: the workflow file, `03c_suggest` in the sequence, `rr validate` on a runner (it reads data/raw, so it can only check new
    rows), HF upload (stays manual; `--live` needs `HF_TOKEN`), and whether GitHub's shared runner IPs are accepted by the SEC (untested).
+
+## 22. Micron "FQ1 FY2027" is rejected by the period guard; a JPMorgan presentation candidate was skipped over the excerpt limit
+
+Found by the weekly-refresh simulation.
+
+- **Micron.** Micron labels its quarters "FQ1 FY2027". The period guard in 03_structure does not accept that form (the rejection
+  reads `target_period 'FQ1 FY2027' is not like FY2027 or Q3 FY2027`), so all 4 items the model returned for the September 30, 2026
+  outlook block (heading "Non-GAAP(2) Outlook", lead-in "guidance for the first quarter of 2027") were rejected and the block
+  produced no draft. The only trace is an empty-block flag row in the review queue (record_id `01M3QSRT00ZRGTNYT4E0X07S67`, which
+  `03b_verify` correctly skips: a flag is not a draft). Fix: make the guard (and the period normaliser) read `FQn FYyyyy` as
+  `Qn FYyyyy`, then re-run the block. **Fixture: accession 0000723125-26-000018** (needs the cached 8-K exhibit; filed 2026-09-30).
+- **JPMorgan.** The 8-K earnings *presentation* candidate was skipped because its excerpt was over the excerpt length limit
+  (`dropped_too_long` in 02_candidates). Not a bug in the guard, but a number-bearing outlook in that presentation is currently
+  never seen. Decide whether to raise the limit for presentations or split the slide text.
