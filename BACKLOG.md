@@ -382,3 +382,56 @@ data/_work/new_drafts_item20.txt (data/_work/ is gitignored). `rr review --filte
 conflict=true. New conflict rows are in the review CSVs; the dumps are data/review/<ticker>_conflicts.txt.
 Note: `05_review --refresh-pipeline-fields` does not rewrite the `conflict` column on rows a person has touched, so an
 approved row whose draft is now in conflict keeps conflict=false and carries a pending change proposal instead.
+
+## 21. Weekly refresh: a job that reads only what is new, on a runner with only the tracked files (phase 2a done; the workflow file is not written)
+
+Why: a fresh checkout has the review CSVs, the outcomes and the release, and none of data/raw, candidates, drafts, batches. The
+investigation (phase 1) found that 04 would write an empty `data/outcomes/<cik>.jsonl` over a tracked file when it had no drafts, that
+03b would re-send every row in the queue, that 03/04 had no scope but "everything", and that the lifetime budget and the pending-batch
+state live in untracked files. What was decided and built:
+
+- **Where "how far have we read" lives:** `data/manifest.json` (tracked), not the review CSVs (they only show 8-Ks that produced
+  drafts, so every quiet 8-K and every 10-Q would be fetched and re-sent each week) and not the release (approved rows of the 12
+  published companies only). `processed_through` plus, per company, `last_filing_date` and `accessions_on_last_date` (the accessions
+  filed that day, so the next run can start at `last_filing_date` inclusive and not fetch them twice). `pipeline/manifest.py`:
+  `bootstrap` (from data/raw sidecars; run once, 14 companies, processed through 2026-09-20), `load_manifest`, `advance`. A company
+  moves only if every one of its new filings fetched cleanly; an incomplete run (SEC block) moves nothing; `processed_through` moves
+  only when every company in the manifest advanced. `config.yaml` has no `edgar.date_to` any more: 01 (full mode) uses today, 04 uses
+  04 uses today (the run date) as `as_of` and does not read it, 06 uses it as the end of the filing range on the card and the Space.
+- **01_fetch --since-manifest:** per company from `last_filing_date` to today, skipping the manifest's accessions; writes
+  `data/_work/new_filings.json` (cik, accession, form, filing_date, path, status; plus run_date, the ciks covered, `complete`). Exit 3
+  on a 403/429 with the status code in the message and `complete: false`. A company not in the manifest (AAPL, GOOGL, COST) is left alone.
+- **02, 03, 04 --accessions PATH** take that file. 02 and 03 merge into their files (a filing's old rows are replaced, other rows stay);
+  04's `DocStore` sees only those filings.
+- **03, 03b, 04 --sync and --max-usd:** `--sync` sends one by one whatever `llm.sync_below` says (a runner cannot resume a batch: the
+  state file is untracked, and the 1,990-request batch took ten hours). `--max-usd` is a per-run ceiling across the stages of one run
+  (`llm.RunCap`), checked before anything is sent against the worst case at the price the run will pay (sync is 2x batch). The
+  lifetime `llm.budget_usd` check is unchanged but reads the untracked ledger, so on a runner it starts at $0: the per-run cap is the
+  ceiling there. Each stage that spends appends `{date, stage, requests, usd}` to `data/spend_ledger.jsonl` (tracked; tests write to a tmp file).
+- **04 --from-review:** the drafts are rebuilt from the review CSVs (`05_review.draft_stub`): outcome stage = rows with no outcome and
+  reason "period not closed", "no later 8-K release…" or "outcome search not run"; ack stage = those plus missed rows with no
+  acknowledgement whose `ack_days` window is open on `as_of`; withdrawal stage = rows whose period has not closed; plus the drafts in
+  data/drafts of the listed filings. Rows merge into data/outcomes and keep what they had. **04 refuses (exit 6) to write an empty
+  result over a non-empty `data/outcomes/<cik>.jsonl` unless `--force`.**
+- **05_review --attach-outcomes:** 04's results onto existing rows, nothing else on them (see its docstring); an untouched row is
+  filled, a touched row gets a proposal (`propose_change` for an outcome, `propose_acknowledgement`, a withdrawal inside the same
+  proposal). No drafts, candidates or raw needed. `--refresh-pipeline-fields` is unchanged and still needs data/drafts and candidates.
+- **03b --only keeps the row order** (no `sort_rows` on write); a plain run still sorts.
+- **06_publish:** `pending_rows(company)` (approved false, blank reviewer_note, not an empty-block flag); "Filings processed through
+  <manifest date>. <N> rows pending review." / "No rows pending review." under the Space dateline and under the card's title.
+- `scripts/simulate_fresh_checkout.sh` runs the whole sequence on `git archive HEAD` (plus the uncommitted change set) in a temp dir.
+
+Known limits, to decide before the workflow is written:
+
+1. **`max_docs`.** The outcome search reads at most `outcomes.max_docs` (3) releases, earliest first, among the filings it can see.
+   With a store holding only the new filings, a row whose results release was filed in an EARLIER week and was skipped then (no line
+   naming the metric, say) is not found later, and a row whose release is the 4th or later in a busy week is missed. This is the cost of not
+   re-downloading history (about 130 filings of 10-K/10-Q size every week). The rows stay "unresolved", with the reason on them.
+2. **`as_of` is the run date** (changed from the manifest's `processed_through`, which was a week stale and only describes what to fetch).
+3. **The simulation could not run the model stages** (no `ANTHROPIC_API_KEY` in the environment; `.env` was off limits): 03, 03b and 04 were
+   dry runs, so no new rows, outcomes or acknowledgements were produced. Run `ANTHROPIC_API_KEY=… scripts/simulate_fresh_checkout.sh` once.
+4. Sync pricing: an earnings-heavy window (the two-week set-back: 71 requests, offline estimate 247k input tokens) projects to $0.28 worst
+   case at batch prices, $0.56 at sync prices, over a $0.50 cap. The offline estimate (3 characters a token) runs high; the API's exact
+   count will be lower. Pick the weekly `--max-usd` after one real run.
+5. Not done: the workflow file, `03c_suggest` in the sequence, `rr validate` on a runner (it reads data/raw, so it can only check new
+   rows), HF upload (stays manual; `--live` needs `HF_TOKEN`), and whether GitHub's shared runner IPs are accepted by the SEC (untested).

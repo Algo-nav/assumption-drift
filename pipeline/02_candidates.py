@@ -1,6 +1,6 @@
 """Phase 1, step 2: candidate sentences from the cached filings.
 
-    python -m pipeline.02_candidates [--config PATH] [--company TICKER ...]
+    python -m pipeline.02_candidates [--config PATH] [--company TICKER ...] [--accessions PATH]
 
 Two ways in, recorded on every candidate as `capture_method`:
 
@@ -23,6 +23,10 @@ Every candidate also carries its context: the nearest preceding lead-in line (a
 line ending in a colon), the heading it sits under (8-K only), and the sentences
 either side. NVIDIA's "outlook for the third quarter of fiscal 2027 is as
 follows:" is where the period lives for the bullets beneath it.
+
+With --accessions PATH (the data/_work/new_filings.json that 01_fetch --since-manifest wrote) only those filings are read,
+and their candidates replace that filing's rows in data/candidates/{cik}.jsonl; every other row in the file stays, and a
+company with no filing in the list is not touched.
 
 Reads   data/raw/{cik}/*.meta.json and the .html beside each
 Writes  data/candidates/{cik}.jsonl, one candidate per line, rewritten each run
@@ -53,6 +57,7 @@ from pipeline.common import (
     RAW_DIR,
     Company,
     companies,
+    load_accession_scope,
     load_config,
     read_meta,
 )
@@ -391,8 +396,10 @@ def candidates_for_document(
 
 
 def build_company(
-    company: Company, cfg: dict[str, Any], out_dir: Path = CANDIDATES_DIR
+    company: Company, cfg: dict[str, Any], out_dir: Path = CANDIDATES_DIR, accessions: set[str] | None = None
 ) -> Counter:
+    """Rewrite the company's candidates file. With `accessions`, read only those filings and merge: the rows of other
+    filings already in the file are kept."""
     settings = Settings.from_config(cfg)
     stats: Counter = Counter()
     rows: list[dict[str, Any]] = []
@@ -401,6 +408,8 @@ def build_company(
         print(f"  {company.ticker} has no fiscal_year_end_month in config.yaml: table headers are not checked against the filing date")
 
     for meta, html_path in cached_documents(company):
+        if accessions is not None and meta["accession"] not in accessions:
+            continue
         try:
             content = html_path.read_bytes()
         except FileNotFoundError:
@@ -427,6 +436,10 @@ def build_company(
 
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{company.cik}.jsonl"
+    if accessions is not None and out.exists():
+        kept = [r for r in (json.loads(line) for line in out.read_text(encoding="utf-8").splitlines() if line.strip())
+                if r["accession"] not in accessions]
+        rows = sorted(kept + rows, key=lambda r: (r["filed_at"], r["accession"]))  # stable: a filing's rows keep their order
     tmp = out.with_name(out.name + ".tmp")
     tmp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
     os.replace(tmp, out)
@@ -439,6 +452,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Extract candidate guidance sentences from data/raw/.")
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER", help="limit to this ticker; repeatable")
+    parser.add_argument("--accessions", type=Path, metavar="PATH",
+                        help="a new_filings.json: read only the filings it lists and merge their candidates into the files")
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
@@ -446,9 +461,12 @@ def main(argv: list[str] | None = None) -> int:
     if not targets:
         print("No companies to process. Check `companies:` in config.yaml.", file=sys.stderr)
         return 2
+    scope = load_accession_scope(args.accessions) if args.accessions else None
     for company in targets:
+        if scope is not None and company.cik not in scope:
+            continue  # nothing new for this company: its file is left as it is
         print(f"== {company.ticker} {company.name} ({company.cik})")
-        stats = build_company(company, config["candidates"])
+        stats = build_company(company, config["candidates"], accessions=scope[company.cik] if scope is not None else None)
         print("   " + "  ".join(f"{k}={v}" for k, v in sorted(stats.items())))
     return 0
 

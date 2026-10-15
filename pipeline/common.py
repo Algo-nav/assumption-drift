@@ -21,6 +21,10 @@ DRAFTS_DIR = REPO_ROOT / "data" / "drafts"
 OUTCOMES_DIR = REPO_ROOT / "data" / "outcomes"
 REVIEW_DIR = REPO_ROOT / "data" / "review"
 RELEASE_DIR = REPO_ROOT / "data" / "release"
+MANIFEST_PATH = REPO_ROOT / "data" / "manifest.json"
+SPEND_LEDGER_PATH = REPO_ROOT / "data" / "spend_ledger.jsonl"
+WORK_DIR = REPO_ROOT / "data" / "_work"
+NEW_FILINGS_PATH = WORK_DIR / "new_filings.json"
 CARD_DIR = REPO_ROOT / "card"
 FIGURES_DIR = CARD_DIR / "figures"
 
@@ -210,3 +214,14 @@ def stable_ulid(key: str, when: date) -> str:
     millis = int(datetime(when.year, when.month, when.day, tzinfo=timezone.utc).timestamp() * 1000)
     value = (millis << 80) | int.from_bytes(hashlib.sha256(key.encode("utf-8")).digest()[:10], "big")
     return "".join(_CROCKFORD[(value >> shift) & 31] for shift in range(125, -1, -5))
+
+
+def load_accession_scope(path: Path | str) -> dict[str, set[str]]:
+    """cik -> the accession numbers in a `new_filings.json` (01_fetch --since-manifest) that have a document on disk: the
+    argument of `--accessions` in 02, 03 and 04. An entry with no path (an 8-K with no earnings exhibit) has nothing to read."""
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    scope: dict[str, set[str]] = {}
+    for filing in payload.get("filings", []):
+        if filing.get("path"):
+            scope.setdefault(filing["cik"], set()).add(filing["accession"])
+    return scope

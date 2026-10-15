@@ -419,6 +419,7 @@ def render_page(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
     limitations: list[str], hf_user: str, generated_at: date,
     filings_from: date | None = None, filings_to: date | None = None, coverage_notes: list[str] | None = None,
+    status_line: str | None = None,
 ) -> str:
     """The whole page as one string. `result` is `stats.compute()`, `summary` is
     `figures.acknowledgement_summary()`, both already computed from `records`. The filing range in the
@@ -461,7 +462,7 @@ def render_page(
 <h1>{escape(figures.headline_sentence(summary))}</h1>
 <p class="magnitude">{escape(figures.miss_magnitude_sentence(summary, result))}</p>
 <p class="dateline">{escape(dateline)}</p>
-<p class="dateline">{escape(LINKS_NOTE)}</p>
+{f'<p class="dateline">{escape(status_line)}</p>' + chr(10) if status_line else ''}<p class="dateline">{escape(LINKS_NOTE)}</p>
 </header>
 <hr>
 {_summary_table(records, names)}
@@ -534,7 +535,7 @@ def render_readme(result: dict[str, Any], summary: dict[str, Any], *, hf_user: s
 def write_space(
     records: list[ResearchRecord], result: dict[str, Any], summary: dict[str, Any], *,
     card_text: str, hf_user: str, generated_at: date, space_dir: Path,
-    filings_from: date | None = None, filings_to: date | None = None,
+    filings_from: date | None = None, filings_to: date | None = None, status_line: str | None = None,
 ) -> Path:
     """Write space/index.html and the Space's README.md (the YAML block Hugging Face reads to know the
     Space is static). Returns the index path."""
@@ -543,7 +544,7 @@ def write_space(
         records, result, summary,
         limitations=limitations_from_card(card_text), hf_user=hf_user, generated_at=generated_at,
         filings_from=filings_from, filings_to=filings_to,
-        coverage_notes=limitations_from_card(card_text, "Coverage notes"),
+        coverage_notes=limitations_from_card(card_text, "Coverage notes"), status_line=status_line,
     )
     (space_dir / "README.md").write_text(
         render_readme(result, summary, hf_user=hf_user, n_companies=len({r.company for r in records})), encoding="utf-8"

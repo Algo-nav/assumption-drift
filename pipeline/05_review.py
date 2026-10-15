@@ -89,6 +89,22 @@ bytes: SEC injects a per-request script tag into the raw HTML, so a raw-byte has
 by a later fetch. This is a fact about the cached document, not a judgement call a human made, so it is
 never treated as a human edit to preserve.
 
+    python -m pipeline.05_review --attach-outcomes [--company TICKER ...]
+
+The weekly refresh's version of the above, for a runner that has data/review/ and data/outcomes/ and nothing else. It
+applies what 04 found (an outcome, an acknowledgement, a withdrawal) to rows already in the queue, and changes nothing
+else on them: no assumption field, no claim, no flag, no `aid_verify*`, no `aid_derived_snapshot`, no reviewer column, no
+row order. It needs no data/drafts/, no candidates and no raw filings; the draft it builds `build_row` from is rebuilt from
+the row itself (`draft_stub`).
+
+  an untouched row   (approved false, hand_verified false, no reviewer_note): the outcome columns, the days to it, the
+                     acknowledgement columns and `aid_withdrawal_note` are filled in where the row has none, and
+                     `aid_proposed_status` is re-derived. A row's outcome or acknowledgement is never replaced.
+                     `aid_outcome_note` is brought up to date while the row has no outcome (the reason it has none).
+  a touched row      nothing is filled. A new outcome goes to `propose_change` (the `change_pending_review` flow `rr review`
+                     shows as a PROPOSED OUTCOME; an earlier pending proposal is kept and added to), a new acknowledgement
+                     to `propose_acknowledgement`, a new withdrawal into the same proposal as `aid_withdrawal_note`.
+
 Reads   data/drafts/{cik}.jsonl, data/drafts/{cik}.empty_blocks.jsonl, data/outcomes/{cik}.jsonl, data/raw/{cik}/*.html
 Writes  data/review/{cik}.csv
 """
@@ -312,6 +328,27 @@ def build_row(draft: dict[str, Any], outcome_row: dict[str, Any] | None, today: 
     )
     row["aid_derived_snapshot"] = derived_snapshot(row)
     return row
+
+
+def draft_stub(row: dict[str, str]) -> dict[str, Any] | None:
+    """A draft rebuilt from a review row, for the stages that need a draft but have only the queue (a runner has no
+    data/drafts/). It carries what 04_outcomes reads (draft_id, company, ticker, cik, the assumption) and what `build_row`
+    reads from a draft, taken from the row's own columns, so a number a reviewer corrected is the number searched for.
+    It has no `custom_id` or `char_start`, which the queue does not keep, so `period_context` cannot be rebuilt from it:
+    never use it to refresh a row, only to read it. None for a flag row or a row that is not a valid record."""
+    if row.get("empty_block") == "true" or not row.get("assumption.metric"):
+        return None
+    try:
+        record = ResearchRecord.model_validate(unflatten_csv_row(row))
+    except (ValidationError, KeyError, ValueError):
+        return None
+    return {
+        "draft_id": row["record_id"], "company": record.company, "ticker": record.ticker, "cik": record.cik,
+        "assumption": record.assumption.model_dump(mode="json"), "conflict": row.get("conflict") == "true",
+        "capture_method": row.get("aid_capture_method") or None, "heading": row.get("aid_heading") or None,
+        "lead_in": row.get("aid_lead_in") or None, "table_header": row.get("aid_table_header") or None,
+        "value_column": row.get("aid_value_column") or None, "parens_note": row.get("aid_flag_note") or None,
+    }
 
 
 def build_empty_block_row(block: dict[str, Any]) -> dict[str, str]:
@@ -641,10 +678,94 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
     return rehashed, stats
 
 
+#: What an outcome fills on a row that has none, and what an acknowledgement fills on a row that has none.
+OUTCOME_FILL_COLUMNS = [c for c in COLUMNS if c.startswith("outcome.")] + ["days_to_falsifiable"]
+ACK_FILL_COLUMNS = ["acknowledged_at", "days_to_acknowledged"] + [c for c in COLUMNS if c.startswith("acknowledgement_evidence.")]
+
+
+def _add_to_proposal(row: dict[str, str], extra: dict[str, str]) -> dict[str, str]:
+    """`extra` added to the row's pending change proposal (or started), unless a reviewer already rejected this very change."""
+    if f"[{change_hash(extra)}]" in row.get("reviewer_note", ""):
+        return row
+    try:
+        pending = json.loads(row.get("aid_proposed_change") or "{}") if row.get("change_pending_review") == "true" else {}
+    except json.JSONDecodeError:
+        pending = {}
+    return {**row, "change_pending_review": "true", "aid_proposed_change": json.dumps({**pending, **extra}, sort_keys=True)}
+
+
+def attach_row(row: dict[str, str], outcome_row: dict[str, Any] | None, today: date) -> tuple[dict[str, str], Counter]:
+    """`row` with what 04 found for it applied (see the module docstring), and what was done."""
+    stats: Counter = Counter()
+    draft = draft_stub(row)
+    if outcome_row is None or draft is None:
+        return row, stats
+    fresh = build_row(draft, outcome_row, today, None)
+    touched = not untouched_by_a_human(row)
+    new = dict(row)
+    new_outcome = not row.get("outcome.reported_value") and bool(fresh["outcome.reported_value"])
+    new_ack = not row.get("acknowledged_at") and bool(fresh["acknowledged_at"])
+    new_withdrawal = not row.get("aid_withdrawal_note") and bool(fresh["aid_withdrawal_note"])
+
+    if new_outcome:
+        if not touched:
+            new.update({c: fresh[c] for c in OUTCOME_FILL_COLUMNS + ["aid_outcome_note"]})
+        else:
+            own = {**row, **{c: fresh[c] for c in OUTCOME_FILL_COLUMNS + ["aid_outcome_note"]}}  # only the outcome differs from the row
+            proposed = propose_change(row, own)  # declines (no proposal) when a reviewer already rejected this very outcome
+            new = _add_to_proposal({**row}, json.loads(proposed["aid_proposed_change"])) if proposed.get("aid_proposed_change") else new
+            new["aid_derived_snapshot"] = row.get("aid_derived_snapshot", "")  # propose_change refreshed it from `own`
+        stats["outcome_filled" if not touched else "outcome_proposed"] += (not touched) or new != row
+    elif not touched and not row.get("outcome.reported_value") and fresh["aid_outcome_note"] != row.get("aid_outcome_note"):
+        new["aid_outcome_note"] = fresh["aid_outcome_note"]
+        stats["reason_updated"] += 1
+
+    if new_ack:
+        if not touched:
+            new.update({c: fresh[c] for c in ACK_FILL_COLUMNS})
+            stats["ack_filled"] += 1
+        else:
+            new = propose_acknowledgement(new, fresh)
+            stats["ack_proposed"] += new.get("ack_pending_review") == "true" and row.get("ack_pending_review") != "true"
+
+    if new_withdrawal:
+        if not touched:
+            new["aid_withdrawal_note"] = fresh["aid_withdrawal_note"]
+            stats["withdrawal_filled"] += 1
+        else:
+            extra = {"aid_withdrawal_note": fresh["aid_withdrawal_note"], "aid_proposed_status": fresh["aid_proposed_status"]}
+            before = new
+            new = _add_to_proposal(new, extra)
+            stats["withdrawal_proposed"] += new != before
+
+    if not touched and (new_outcome or new_withdrawal):
+        new = rederive_status(new)
+    return new, stats
+
+
+def attach_outcomes(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
+    """Apply 04's findings for the company to its review rows. The file is rewritten only if a row changed, in its own order."""
+    path = REVIEW_DIR / f"{company.cik}.csv"
+    rows = read_csv(path) if path.exists() else []
+    outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
+    stats: Counter = Counter(rows=len(rows))
+    out = []
+    for row in rows:
+        new, row_stats = attach_row(row, outcomes.get(row["record_id"]), today)
+        stats.update(row_stats)
+        out.append(new)
+    if out != rows:
+        write_csv(path, out)
+    return out, stats
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Write the review queue CSVs.")
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER")
+    parser.add_argument("--attach-outcomes", action="store_true",
+                         help="apply 04's outcome, acknowledgement and withdrawal results to existing rows and change nothing else: "
+                              "untouched rows are filled in, touched rows get a proposal")
     parser.add_argument("--refresh-pipeline-fields", action="store_true",
                          help="rewrite assumption/outcome/acknowledgement/aid_ columns on untouched rows (approved=false, "
                               "hand_verified=false, no reviewer_note) from the current data/drafts/ and data/outcomes/; "
@@ -654,6 +775,13 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config(args.config)
     targets = companies(config, args.company)
     today = date.today()
+
+    if args.attach_outcomes:
+        for company in targets:
+            _, stats = attach_outcomes(company, today)
+            if stats["rows"]:
+                print(f"  {company.ticker}: {stats['rows']:,} rows; " + (", ".join(f"{k.replace('_', ' ')} {v}" for k, v in sorted(stats.items()) if k != "rows" and v) or "nothing to attach"))
+        return 0
 
     if args.refresh_pipeline_fields:
         print("refreshing assumption/outcome/acknowledgement/aid_ columns on rows nobody has touched "

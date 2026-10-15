@@ -1,7 +1,8 @@
 """Phase 2, step 2: what the company later reported, and whether it ever admitted a miss.
 
     python -m pipeline.04_outcomes [--company TICKER ...] [--stage outcomes|ack|withdrawal|all]
-                                   [--submit] [--wait-minutes M]
+                                   [--submit] [--wait-minutes M] [--only PATH]
+                                   [--from-review] [--accessions PATH] [--sync] [--max-usd USD] [--force]
 
 A dry run unless --submit is given. Three stages, each a Haiku batch behind the same
 cost gate as 03_structure (one budget across all of them):
@@ -31,6 +32,27 @@ Nothing the model returns is trusted blindly. Values are converted between units
 code, a value wildly off the guidance is rejected as a unit or row mix-up, and every
 outcome carries the verbatim line it came from. "No outcome" always has a reason.
 
+The weekly refresh (a runner has no data/drafts/ and only the new filings in data/raw/) uses four more flags:
+
+  --accessions PATH  the new_filings.json 01_fetch --since-manifest wrote: the document store holds only those filings, so
+                     every search is a search of the NEW filings.
+  --from-review      the drafts are rebuilt from the review CSVs (05_review.draft_stub, so a number a reviewer corrected is
+                     the number searched for): for the outcome stage, rows with no outcome whose reason is "period not
+                     closed", "no later 8-K release for that period found" or "outcome search not run"; for the
+                     acknowledgement stage those rows plus missed rows with no acknowledgement whose `ack_days` window is
+                     still open; for the withdrawal stage rows whose period has not closed. The drafts in data/drafts/ that
+                     belong to the listed filings are added. Rows are merged into data/outcomes/ and a row keeps what it had
+                     unless this run found it: an outcome, acknowledgement or withdrawal already there is never replaced
+                     by "nothing found". The outcome search takes at most `max_docs` releases, earliest first, among the
+                     filings it can see, so a row whose release was filed in an earlier week and was skipped is not found.
+  --sync, --max-usd  as in 03_structure: one by one whatever `llm.sync_below` says; a ceiling on the run's spend (all three
+                     stages together); each stage appends (date, stage, requests, usd) to data/spend_ledger.jsonl.
+  --force            write an empty result over a non-empty data/outcomes/{cik}.jsonl. Without it that is refused (exit 6),
+                     whatever the cause: a runner that has no data/drafts/ would otherwise empty the tracked files.
+
+`as_of`, the date a period must have closed by to expect an outcome, is the run date (today). The manifest's
+`processed_through` is for 01_fetch's scope only; 04 does not read it.
+
 Reads   data/drafts/{cik}.jsonl, data/raw/{cik}/
 Writes  data/outcomes/{cik}.jsonl          one row per draft: outcome, acknowledgement, withdrawal, reasons
         data/outcomes/{cik}.rejects.jsonl  model answers that failed a check, with the reason
@@ -56,13 +78,15 @@ from typing import Any, Callable
 from pydantic import ValidationError
 
 from pipeline import common, llm
-from pipeline.common import CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, Company, companies, load_config, period_named_by_end_date, read_id_list
+from pipeline.common import (CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, REVIEW_DIR, Company, companies, load_accession_scope, load_config,
+                             period_named_by_end_date, read_id_list)
 from research_record import polarity, rubric
 from research_record.schema import Evidence, Outcome
 from research_record.text import html_to_text_and_gaps, sentence_spans
 
 candidates_step = importlib.import_module("pipeline.02_candidates")
 structure_step = importlib.import_module("pipeline.03_structure")
+review_step = importlib.import_module("pipeline.05_review")
 
 STEP_OUTCOMES = "04_outcomes"
 STEP_ACK = "04_acknowledgements"
@@ -270,13 +294,15 @@ class DocStore:
     `metas` is the 8-K exhibits, and is what the outcome and withdrawal searches read. `all_metas` is every intact
     cached filing, the 10-Q and the 10-K included, and is what the acknowledgement search reads. Both are oldest first."""
 
-    def __init__(self, company: Company) -> None:
+    def __init__(self, company: Company, accessions: set[str] | None = None) -> None:
+        """`accessions`, when given, are the only filings this store can see (the weekly refresh's new filings)."""
         folder = common.RAW_DIR / company.cik
         metas = [common.read_meta(p) for p in folder.glob("*.meta.json")] if folder.exists() else []
         self.company = company
         self.folder = folder
         self.all_metas = sorted(
-            (m for m in metas if m and m.get("http_status") == 200 and (folder / f"{m['accession']}.html").exists()),
+            (m for m in metas if m and m.get("http_status") == 200 and (folder / f"{m['accession']}.html").exists()
+             and (accessions is None or m["accession"] in accessions)),
             key=lambda m: (m["filed_at"], m["accession"]),
         )
         self.metas = [m for m in self.all_metas if m["filing_type"] == "8-K"]
@@ -965,7 +991,8 @@ class Stopped(Exception):
         self.code = code
 
 
-def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: float, check) -> dict[str, llm.Result]:
+def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: float, check,
+           force_sync: bool = False, cap: llm.RunCap | None = None) -> dict[str, llm.Result]:
     """Project, print, and (with --submit) run one stage. The answers to every request, this run's and earlier ones.
     Raises Stopped when the run cannot go on."""
     archive = llm.RawArchive(step)
@@ -984,7 +1011,8 @@ def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: f
         raise Stopped(3)
     try:
         outcome = llm.run_batch(client, cfg, step, todo, projection=projection, canary_check=check,
-                                ledger=ledger, archive=archive, wait_seconds=wait_minutes * 60)
+                                ledger=ledger, archive=archive, wait_seconds=wait_minutes * 60,
+                                force_sync=force_sync, cap=cap, spend_log=common.SPEND_LEDGER_PATH)
     except llm.BudgetExceeded as exc:
         print(f"STOPPED: {exc}", file=sys.stderr)
         raise Stopped(3) from exc
@@ -997,6 +1025,49 @@ def _stage(client, cfg, ledger, step, requests, *, submit: bool, wait_minutes: f
     return llm.current_results(archive.load(), requests, cfg.model)  # run_batch answers only the requests it was given
 
 
+#: The reasons a row has no outcome that a later filing can change. "period not closed": the results are not out yet. "no
+#: later 8-K release...": none had been fetched when it was last looked at. "outcome search not run": 04 has not seen the row.
+UNRESOLVED_REASONS = ("period not closed", "no later 8-K release", "outcome search not run")
+
+
+def select_from_review(
+    company: Company, rows: list[dict[str, str]], *, as_of: date, ack_days: int
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, dict[str, Any]]]:
+    """({"outcome": stubs, "ack": stubs, "withdrawal": stubs}, outcomes already on the missed rows chosen for "ack").
+
+    outcome     no outcome yet, for a reason a later filing can change (UNRESOLVED_REASONS).
+    ack         those rows too (an outcome found this run may be a miss), and every row with an outcome the rubric calls
+                missed, no acknowledgement, and a window (`ack_days` from the outcome) that is still open on `as_of`.
+    withdrawal  a period that has not closed on `as_of` and no withdrawal found yet.
+    The second value is the outcome of each "ack" row that has one, in the shape build_ack_requests reads."""
+    picks: dict[str, list[dict[str, Any]]] = {"outcome": [], "ack": [], "withdrawal": []}
+    known: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        stub = review_step.draft_stub(row)
+        if stub is None:
+            continue
+        a = stub["assumption"]
+        if not row.get("outcome.reported_value"):
+            if (row.get("aid_outcome_note") or "").startswith(UNRESOLVED_REASONS):
+                picks["outcome"].append(stub)
+                picks["ack"].append(stub)
+        elif not row.get("acknowledged_at") and row.get("outcome.reported_at"):
+            reported = date.fromisoformat(row["outcome.reported_at"])
+            value = float(row["outcome.reported_value"])
+            if reported + timedelta(days=ack_days) >= as_of and rubric.resolve(a["target_low"], a["target_high"], value, reviewed=True) == "missed":
+                picks["ack"].append(stub)
+                known[stub["draft_id"]] = {"reported_value": value, "reported_at": row["outcome.reported_at"]}
+        period = parse_period(a["target_period"])
+        close = company.period_end(period[1], period[0]) if period else None
+        if close is not None and close > as_of and not row.get("aid_withdrawal_note"):
+            picks["withdrawal"].append(stub)
+    return picks, known
+
+
+def _today() -> date:
+    return date.today()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Find outcomes, acknowledgements and withdrawals for draft assumptions.")
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
@@ -1006,6 +1077,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--only", type=Path, metavar="PATH",
                         help="a text file of draft ids, one per line: look at those drafts and nothing else; their rows are "
                              "merged into data/outcomes/ and every other row is left as it is")
+    parser.add_argument("--from-review", action="store_true",
+                        help="build the drafts from the review CSVs (the unresolved rows, the missed rows with no acknowledgement, the "
+                             "open-period rows) plus the new drafts; merge the rows into data/outcomes/")
+    parser.add_argument("--accessions", type=Path, metavar="PATH",
+                        help="a new_filings.json: search only the filings it lists, and add the drafts of those filings")
+    parser.add_argument("--sync", action="store_true", help="send every request one by one, whatever llm.sync_below says")
+    parser.add_argument("--max-usd", type=float, metavar="USD", help="ceiling on this run's spend, all stages together")
+    parser.add_argument("--force", action="store_true", help="allow an empty result to replace a non-empty data/outcomes/{cik}.jsonl")
     parser.add_argument("--wait-minutes", type=float, default=60)
     args = parser.parse_args(argv)
 
@@ -1014,19 +1093,45 @@ def main(argv: list[str] | None = None) -> int:
     number = candidates_step.Settings.from_config(config["candidates"]).number
     targets = companies(config, args.company)
     by_cik = {c.cik: c for c in targets}
+    today = _today()
+    as_of = today  # the run date; the manifest's processed_through says what to fetch, not what has closed
+    scope = load_accession_scope(args.accessions) if args.accessions else None
+    cap = llm.RunCap(args.max_usd) if args.max_usd is not None else None
+
     drafts = {c.cik: load_drafts(c) for c in targets}
     only_ids = read_id_list(args.only) if args.only else None
+    if scope is not None:  # the drafts of the new filings only: an old draft's filing is not in the store, and is not "new"
+        drafts = {cik: [d for d in v if d["assumption"]["evidence"]["accession_number"] in scope.get(cik, set())] for cik, v in drafts.items()}
     if only_ids is not None:
         drafts = {cik: [d for d in v if d["draft_id"] in only_ids] for cik, v in drafts.items()}
         found = {d["draft_id"] for v in drafts.values() for d in v}
         print(f"04_outcomes: --only: {len(found):,} of {len(only_ids):,} ids found in the drafts of the selected companies"
               + (f"; not found, skipped: {', '.join(sorted(only_ids - found))}" if only_ids - found else ""))
-    stores = {c.cik: DocStore(c) for c in targets}
-    today = date.today()
+    stage_drafts = {"outcome": drafts, "ack": drafts, "withdrawal": drafts}
+    known_outcomes: dict[str, dict[str, Any]] = {}
+    previous: dict[str, dict[str, dict[str, Any]]] = {}
+    if args.from_review:
+        picked = {"outcome": {}, "ack": {}, "withdrawal": {}}
+        for c in targets:
+            path = REVIEW_DIR / f"{c.cik}.csv"
+            picks, known = select_from_review(c, review_step.read_csv(path) if path.exists() else [], as_of=as_of, ack_days=int(ocfg["ack_days"]))
+            known_outcomes.update(known)
+            new = {d["draft_id"]: d for d in drafts[c.cik]}  # a draft in data/drafts/ is fresher than its stub
+            for stage in picked:
+                merged = {s["draft_id"]: s for s in picks[stage]}
+                merged.update(new)
+                picked[stage][c.cik] = list(merged.values())
+            previous[c.cik] = {r["draft_id"]: r for r in read_jsonl(OUTCOMES_DIR / f"{c.cik}.jsonl")}
+        stage_drafts = picked
+        drafts = {c.cik: list({d["draft_id"]: d for st in picked for d in picked[st][c.cik]}.values()) for c in targets}
+        only_ids = {d["draft_id"] for v in drafts.values() for d in v}
+    stores = {c.cik: DocStore(c, scope.get(c.cik, set()) if scope is not None else None) for c in targets}
     print(f"04_outcomes: {sum(len(v) for v in drafts.values()):,} drafts to look at")
 
     client, ledger = llm.make_client(), llm.Ledger()
-    requests, o_index, reasons = build_outcome_requests(drafts, stores, ocfg, number, today=today, as_of=date.fromisoformat(config["edgar"]["date_to"]))
+    if args.sync:
+        cfg = dataclasses.replace(cfg, sync_below=sys.maxsize)
+    requests, o_index, reasons = build_outcome_requests(stage_drafts["outcome"], stores, ocfg, number, today=today, as_of=as_of)
     print(f"  {len(requests):,} drafts have a matching later release with candidate lines; "
           f"{len(reasons):,} have no request, with a reason recorded")
 
@@ -1034,7 +1139,8 @@ def main(argv: list[str] | None = None) -> int:
 
     def run(stage: str, step: str, reqs: list[llm.LlmRequest], check) -> dict[str, llm.Result]:
         if args.stage in (stage, "all"):
-            return _stage(client, cfg, ledger, step, reqs, submit=args.submit, wait_minutes=args.wait_minutes, check=check)
+            return _stage(client, cfg, ledger, step, reqs, submit=args.submit, wait_minutes=args.wait_minutes, check=check,
+                          force_sync=args.sync, cap=cap)
         return llm.current_results(llm.RawArchive(step).load(), reqs, cfg.model)
 
     try:
@@ -1043,14 +1149,14 @@ def main(argv: list[str] | None = None) -> int:
         rejects += o_rejects
         reasons.update(o_reasons)
 
-        ack_requests, k_index = build_ack_requests(drafts, outcomes, stores, ocfg, number, today=today)
+        ack_requests, k_index = build_ack_requests(stage_drafts["ack"], {**known_outcomes, **outcomes}, stores, ocfg, number, today=today)
         if args.stage in ("ack", "all"):
             print(f"  {len(outcomes):,} outcomes found, {len(ack_requests):,} of them misses with candidate acknowledgement lines")
         k_results = run("ack", STEP_ACK, ack_requests, _json_check("indices"))
         acks, k_rejects = derive_acknowledgements(k_index, k_results, stores)
         rejects += k_rejects
 
-        w_requests, w_index = build_withdrawal_requests(drafts, by_cik, stores, ocfg, today=today)
+        w_requests, w_index = build_withdrawal_requests(stage_drafts["withdrawal"], by_cik, stores, ocfg, today=today)
         if args.stage in ("withdrawal", "all"):
             print(f"  {len(w_requests):,} drafts have a candidate withdrawal sentence in an 8-K exhibit before their period closed")
         w_results = run("withdrawal", STEP_WITHDRAWAL, w_requests, _json_check("indices"))
@@ -1059,27 +1165,46 @@ def main(argv: list[str] | None = None) -> int:
     except Stopped as stop:
         return stop.code
 
+    plan: dict[str, tuple[list[dict[str, Any]], list[dict[str, Any]]]] = {}
     for company in targets:
         rows = []
         for d in drafts[company.cik]:
             did = d["draft_id"]
-            rows.append({
+            row = {
                 "draft_id": did,
                 "outcome": outcomes.get(did),
                 "outcome_reason": None if did in outcomes else reasons.get(did, "outcome search not run"),
                 "acknowledgement": acks.get(did),
                 "withdrawal": withdrawals.get(did),
-            })
-        if args.submit:  # a dry run never writes to data/outcomes/: with stale or missing answers it would empty what is there
-            mine = [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])]
-            out_rows, out_rejects = rows, mine
-            if only_ids is not None:  # merge: the other drafts' rows and rejects stay exactly as they are
-                out_rows = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl") if r["draft_id"] not in only_ids] + rows
-                out_rejects = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl") if r["draft_id"] not in only_ids] + mine
-            write_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl", out_rows)
-            write_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl", out_rejects)
+            }
+            if args.from_review and did in previous[company.cik]:  # keep what the row had; this run adds, it never takes away
+                old = previous[company.cik][did]
+                row["outcome"] = row["outcome"] or old.get("outcome")
+                row["outcome_reason"] = None if row["outcome"] else (reasons[did] if did in reasons else old.get("outcome_reason"))
+                row["acknowledgement"] = row["acknowledgement"] or old.get("acknowledgement")
+                row["withdrawal"] = row["withdrawal"] or old.get("withdrawal")
+            rows.append(row)
+        mine = [r for r in rejects if any(r["draft_id"] == d["draft_id"] for d in drafts[company.cik])]
+        out_rows, out_rejects = rows, mine
+        if only_ids is not None:  # merge: the other drafts' rows and rejects stay exactly as they are
+            out_rows = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl") if r["draft_id"] not in only_ids] + rows
+            out_rejects = [r for r in read_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl") if r["draft_id"] not in only_ids] + mine
+        plan[company.cik] = (out_rows, out_rejects)
         print(f"  {company.ticker}: {len(rows):,} drafts, {sum(1 for r in rows if r['outcome'])} with an outcome, "
               f"{sum(1 for r in rows if r['acknowledgement'])} acknowledged, {sum(1 for r in rows if r['withdrawal'])} withdrawn")
+
+    if args.submit:  # a dry run never writes to data/outcomes/: with stale or missing answers it would empty what is there
+        refused = [c.ticker for c in targets if not plan[c.cik][0] and read_jsonl(OUTCOMES_DIR / f"{c.cik}.jsonl")]
+        if refused and not args.force:
+            print(f"REFUSED: the result for {', '.join(refused)} is empty and data/outcomes/ already holds rows for "
+                  f"{'it' if len(refused) == 1 else 'them'}. Writing it would empty the file. Nothing was written. This usually means "
+                  "data/drafts/ is missing (a fresh checkout): use --from-review or --only. If an empty result is what you want, add --force.",
+                  file=sys.stderr)
+            return 6
+        for company in targets:
+            out_rows, out_rejects = plan[company.cik]
+            write_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl", out_rows)
+            write_jsonl(OUTCOMES_DIR / f"{company.cik}.rejects.jsonl", out_rejects)
     if not args.submit:
         print("dry run: nothing was submitted, and nothing was written to data/outcomes/. Add --submit to run the batches.")
     return 0

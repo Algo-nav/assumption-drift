@@ -1,6 +1,7 @@
 """Phase 1, step 1: EDGAR fetch and local cache.
 
     python -m pipeline.01_fetch [--config PATH] [--company TICKER ...] [--list-only]
+    python -m pipeline.01_fetch --since-manifest [PATH] [--new-filings PATH] [--company TICKER ...]
 
 Discovery uses the browse-edgar Atom feed (one company and form type at a time)
 and each filing's index page. EDGAR full-text search was tried and set aside: in a
@@ -10,6 +11,13 @@ What gets cached, one document per filing:
     8-K    the earnings release exhibit, typed EX-99.1 or EX-99 (Target files EX-99)
     10-K   the primary document
     10-Q   the primary document
+
+--since-manifest is the weekly refresh. For each company in data/manifest.json it looks from `last_filing_date`
+(inclusive) up to today, skips the accessions the manifest already lists for that date, caches what is new, and writes
+data/_work/new_filings.json: one entry per filing found (cik, accession, form, filing_date, path, status), plus
+`run_date`, the ciks covered and `complete`. A company that is not in the manifest is left alone. `pipeline.manifest
+advance` reads that file and moves each company forward only if all of its filings fetched cleanly. An SEC block
+(HTTP 403 or 429) stops the run with exit 3 and writes the file with `complete: false`, which advances nothing.
 
 Cache layout: data/raw/{cik}/{accession}.html plus {accession}.meta.json holding
 fetched_at, final URL, HTTP status, and two hashes. Only a 200 response is ever
@@ -48,7 +56,9 @@ from urllib.parse import urljoin, urlsplit
 
 import requests
 
-from pipeline.common import CONFIG_PATH, RAW_DIR, Company, companies, load_config, raw_paths, read_meta
+from pipeline import common
+from pipeline.common import CONFIG_PATH, RAW_DIR, REPO_ROOT, Company, companies, load_config, raw_paths, read_meta
+from pipeline.manifest import ManifestError, load_manifest
 from research_record.schema import ALLOWED_HOSTS
 from research_record.text import html_to_text
 
@@ -282,10 +292,15 @@ def parse_feed(content: bytes) -> list[Filing]:
     return filings
 
 
-def discover(client: EdgarClient, company: Company, config: dict[str, Any]) -> list[Filing]:
+def discover(
+    client: EdgarClient, company: Company, config: dict[str, Any], *,
+    date_from: date | None = None, date_to: date | None = None, skip_accessions: frozenset[str] | set[str] = frozenset(),
+) -> list[Filing]:
+    """The company's wanted filings in [date_from, date_to], oldest first. `date_from` defaults to the config's, `date_to`
+    to the config's if it has one and otherwise to today; `skip_accessions` are left out (the manifest's own)."""
     edgar = config["edgar"]
-    date_from = date.fromisoformat(edgar["date_from"])
-    date_to = date.fromisoformat(edgar["date_to"])
+    date_from = date_from or date.fromisoformat(edgar["date_from"])
+    date_to = date_to or (date.fromisoformat(edgar["date_to"]) if edgar.get("date_to") else date.today())
     wanted = set(edgar["filing_types"])
     dateb = (date_to + timedelta(days=1)).strftime("%Y%m%d")
 
@@ -299,7 +314,7 @@ def discover(client: EdgarClient, company: Company, config: dict[str, Any]) -> l
             page = parse_feed(got.content)
             for filing in page:
                 # The feed matches "10-K" as a prefix, so 10-K/A and 8-K/A arrive too.
-                if filing.form in wanted and date_from <= filing.filed_at <= date_to:
+                if filing.form in wanted and date_from <= filing.filed_at <= date_to and filing.accession not in skip_accessions:
                     found[filing.accession] = filing
             if len(page) < FEED_PAGE or min(f.filed_at for f in page) < date_from:
                 break
@@ -461,28 +476,49 @@ def rehash_all_cached_documents(raw_dir: Path | None = None) -> Counter:
 # --- run -------------------------------------------------------------------
 
 
+def _repo_path(path: Path) -> str:
+    try:
+        return path.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
 def fetch_company(
-    client: EdgarClient, company: Company, config: dict[str, Any], *, list_only: bool = False
+    client: EdgarClient, company: Company, config: dict[str, Any], *, list_only: bool = False,
+    date_from: date | None = None, date_to: date | None = None, skip_accessions: frozenset[str] | set[str] = frozenset(),
+    report: list[dict[str, Any]] | None = None,
 ) -> Counter:
+    """Cache the company's new filings. With `report`, one dict per filing found is appended to it: cik, accession, form,
+    filing_date, path (the cached html, None when nothing was cached) and status (fetched, cached, no_exhibit, failed, would_fetch)."""
     stats: Counter = Counter()
-    filings = discover(client, company, config)
+    filings = discover(client, company, config, date_from=date_from, date_to=date_to, skip_accessions=skip_accessions)
     stats["filings"] = len(filings)
+
+    def note(filing: Filing, status: str, cached: bool) -> None:
+        if report is not None:
+            report.append({"cik": company.cik, "accession": filing.accession, "form": filing.form, "filing_date": filing.filed_at.isoformat(),
+                           "path": _repo_path(raw_paths(company.cik, filing.accession)[0]) if cached else None, "status": status})
+
     for filing in filings:
         label = f"{company.ticker:<5} {filing.form:<5} {filing.filed_at} {filing.accession}"
         if is_cached(company, filing.accession):
             stats["cached"] += 1
+            note(filing, "cached", True)
             continue
         index = client.get(filing.index_url)
         if index.status != 200:
             stats["failed"] += 1
+            note(filing, "failed", False)
             print(f"{label}  index HTTP {index.status}, skipped", file=sys.stderr)
             continue
         row = pick_document(filing.form, parse_index(index.content))
         if row is None:
             stats["no_exhibit" if filing.form == "8-K" else "failed"] += 1
+            note(filing, "no_exhibit" if filing.form == "8-K" else "failed", False)
             continue
         if list_only:
             stats["would_fetch"] += 1
+            note(filing, "would_fetch", False)
             print(f"{label}  {row.type:<8} {row.path}")
             continue
         try:
@@ -491,15 +527,23 @@ def fetch_company(
             raise
         except EdgarError as exc:
             stats["failed"] += 1
+            note(filing, "failed", False)
             print(f"{label}  {exc}", file=sys.stderr)
             continue
         if got is None:
             stats["failed"] += 1
+            note(filing, "failed", False)
             print(f"{label}  {row.type} non-200, not cached", file=sys.stderr)
             continue
         stats["fetched"] += 1
+        note(filing, "fetched", True)
         print(f"{label}  {row.type:<8} {len(got.content):>9,} B")
     return stats
+
+
+def write_new_filings(path: Path, *, run_date: date, complete: bool, covered: list[str], filings: list[dict[str, Any]]) -> None:
+    payload = {"run_date": run_date.isoformat(), "complete": complete, "companies": covered, "filings": filings}
+    _write_atomic(path, (json.dumps(payload, indent=2) + "\n").encode("utf-8"))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -507,6 +551,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=CONFIG_PATH)
     parser.add_argument("--company", action="append", metavar="TICKER", help="limit to this ticker; repeatable")
     parser.add_argument("--list-only", action="store_true", help="discover and print, download nothing")
+    parser.add_argument("--since-manifest", nargs="?", const="", default=None, metavar="PATH",
+                        help="the weekly refresh: per company, from its manifest last_filing_date (inclusive) to today, skipping the "
+                             "manifest's accessions; writes --new-filings. A company not in the manifest is left alone")
+    parser.add_argument("--new-filings", type=Path, default=None, metavar="PATH",
+                        help="where --since-manifest writes its list of filings (default data/_work/new_filings.json)")
     parser.add_argument("--rehash", action="store_true",
                          help="recompute raw_sha256 and content_sha256 on every already-cached document's sidecar, "
                               "from the bytes already on disk; fetches nothing, ignores --company")
@@ -523,23 +572,56 @@ def main(argv: list[str] | None = None) -> int:
         print("No companies to fetch. Check `companies:` in config.yaml.", file=sys.stderr)
         return 2
 
+    manifest = None
+    if args.since_manifest is not None:
+        try:
+            manifest = load_manifest(Path(args.since_manifest) if args.since_manifest else None)
+        except ManifestError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 2
+        left_out = [c.ticker for c in targets if c.cik not in manifest.companies]
+        if left_out:
+            print(f"not in the manifest, left alone: {', '.join(left_out)}")
+        targets = [c for c in targets if c.cik in manifest.companies]
+        if not targets:
+            print("No companies to fetch: none of them is in the manifest.", file=sys.stderr)
+            return 2
+
     edgar = config["edgar"]
     client = EdgarClient(edgar["user_agent"], edgar["max_rps"])
     started = time.monotonic()
+    today = date.today()
+    report: list[dict[str, Any]] = []
+    covered: list[str] = []
+
+    def save(complete: bool) -> None:
+        if manifest is not None and not args.list_only:
+            write_new_filings(args.new_filings or common.NEW_FILINGS_PATH, run_date=today, complete=complete, covered=covered, filings=report)
+            print(f"wrote {args.new_filings or common.NEW_FILINGS_PATH}: {len(report)} filing(s), complete={complete}")
+
     try:
         smoke_test(client)
         totals: Counter = Counter()
         for company in targets:
             print(f"== {company.ticker} {company.name} ({company.cik})")
-            stats = fetch_company(client, company, config, list_only=args.list_only)
+            if manifest is not None:
+                state = manifest.companies[company.cik]
+                stats = fetch_company(client, company, config, list_only=args.list_only, date_from=state.last_filing_date,
+                                      date_to=today, skip_accessions=set(state.accessions_on_last_date), report=report)
+            else:
+                stats = fetch_company(client, company, config, list_only=args.list_only)
+            covered.append(company.cik)
             totals.update(stats)
             print("   " + "  ".join(f"{k}={v}" for k, v in sorted(stats.items())))
     except Blocked as exc:
+        save(False)
         print(f"STOPPED: {exc}", file=sys.stderr)
         return 3
     except EdgarError as exc:
+        save(False)
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
+    save(True)
 
     elapsed = time.monotonic() - started
     print(f"done: {client.request_count} requests in {elapsed:.0f}s ({client.request_count / max(elapsed, 1e-9):.1f}/s)  "

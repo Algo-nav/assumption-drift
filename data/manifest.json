@@ -1,0 +1,91 @@
+{
+  "processed_through": "2026-09-20",
+  "companies": {
+    "0000002488": {
+      "last_filing_date": "2026-08-19",
+      "accessions_on_last_date": [
+        "0000002488-26-000163"
+      ]
+    },
+    "0000019617": {
+      "last_filing_date": "2026-08-06",
+      "accessions_on_last_date": [
+        "0001628280-26-054343"
+      ]
+    },
+    "0000027419": {
+      "last_filing_date": "2026-08-28",
+      "accessions_on_last_date": [
+        "0000027419-26-000042"
+      ]
+    },
+    "0000060667": {
+      "last_filing_date": "2026-08-27",
+      "accessions_on_last_date": [
+        "0000060667-26-000117"
+      ]
+    },
+    "0000354950": {
+      "last_filing_date": "2026-08-25",
+      "accessions_on_last_date": [
+        "0001628280-26-058715"
+      ]
+    },
+    "0000723125": {
+      "last_filing_date": "2026-08-26",
+      "accessions_on_last_date": [
+        "0001104659-26-101067"
+      ]
+    },
+    "0000789019": {
+      "last_filing_date": "2026-09-02",
+      "accessions_on_last_date": [
+        "0001193125-26-380280"
+      ]
+    },
+    "0000796343": {
+      "last_filing_date": "2026-09-10",
+      "accessions_on_last_date": [
+        "0000796343-26-000147"
+      ]
+    },
+    "0000804328": {
+      "last_filing_date": "2026-07-29",
+      "accessions_on_last_date": [
+        "0000804328-26-000085",
+        "0000804328-26-000086"
+      ]
+    },
+    "0001018724": {
+      "last_filing_date": "2026-07-31",
+      "accessions_on_last_date": [
+        "0001018724-26-000026"
+      ]
+    },
+    "0001045810": {
+      "last_filing_date": "2026-08-26",
+      "accessions_on_last_date": [
+        "0001045810-26-000073",
+        "0001045810-26-000075"
+      ]
+    },
+    "0001108524": {
+      "last_filing_date": "2026-09-17",
+      "accessions_on_last_date": [
+        "0001108524-26-000210"
+      ]
+    },
+    "0001326801": {
+      "last_filing_date": "2026-07-30",
+      "accessions_on_last_date": [
+        "0001628280-26-050705"
+      ]
+    },
+    "0001730168": {
+      "last_filing_date": "2026-09-10",
+      "accessions_on_last_date": [
+        "0001730168-26-000080"
+      ]
+    }
+  }
+}

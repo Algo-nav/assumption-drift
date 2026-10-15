@@ -2,6 +2,7 @@
 
     python -m pipeline.03_structure [--company TICKER ...] [--filing-type FORM ...]
                                     [--limit N | --per-company N] [--submit] [--wait-minutes M]
+                                    [--accessions PATH] [--sync] [--max-usd USD]
 
 A dry run unless --submit is given: it builds every request, counts input tokens,
 prints the projected cost and submits nothing, and it writes nothing to data/drafts/.
@@ -52,6 +53,13 @@ mark, and nothing here picks a winner between them.
 An 8-K outlook block the model answered that produced no draft (an empty answer, or every item
 rejected) is listed in data/drafts/{cik}.empty_blocks.jsonl, and the review queue flags it.
 
+The weekly refresh runs it with three more flags. --accessions PATH (the new_filings.json that 01_fetch --since-manifest
+wrote) restricts the requests to the candidates of those filings, and the four files below are then MERGED: a filing's old
+rows are replaced and every other row stays. --sync sends every request one by one, whatever `llm.sync_below` says.
+--max-usd USD is a ceiling on what this run may spend: if the worst case of what is about to be sent (at the price it
+will be sent at) is more than the cap, it stops with exit 4 before sending anything. Each stage that spends appends a line
+(date, stage, requests, usd) to data/spend_ledger.jsonl, which is tracked.
+
 Every output is a draft. Nothing from this step is trusted until a human has approved
 it in the review queue (05_review.py).
 
@@ -78,13 +86,14 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from pipeline import llm
+from pipeline import common, llm
 from pipeline.common import (
     CANDIDATES_DIR,
     CONFIG_PATH,
     DRAFTS_DIR,
     Company,
     companies,
+    load_accession_scope,
     load_config,
     period_named_by_end_date,
     raw_paths,
@@ -417,8 +426,10 @@ def build_requests(
     limit: int | None = None,
     per_company: int | None = None,
     metrics: list[str] | None = None,
+    accessions: dict[str, set[str]] | None = None,
 ) -> tuple[list[llm.LlmRequest], dict[str, tuple[Company, dict[str, Any]]], dict[str, list[dict[str, Any]]]]:
-    """(requests, custom_id -> (company, candidate), skipped rows per cik)."""
+    """(requests, custom_id -> (company, candidate), skipped rows per cik). With `accessions` (cik -> accession numbers),
+    only the candidates of those filings are used."""
     metrics = metrics or load_config()["metrics"]
     sentence_system, block_system = system_prompt(metrics, block=False), system_prompt(metrics, block=True)
     sentence_schema, block_schema = item_schema(metrics, block=False), item_schema(metrics, block=True)
@@ -431,6 +442,8 @@ def build_requests(
         seen: set[tuple[str, str]] = set()
         pairs: list[tuple[llm.LlmRequest, dict[str, Any]]] = []
         for cand in load_candidates(company, filing_types, candidates_dir):
+            if accessions is not None and cand["accession"] not in accessions.get(company.cik, set()):
+                continue
             cid = custom_id(cand)
             if not is_block(cand) and len(cand["sentence"]) > EXCERPT_LIMIT:
                 skipped[company.cik].append({"custom_id": cid, "reason": f"sentence is {len(cand['sentence'])} chars, over the {EXCERPT_LIMIT} char excerpt limit"})
@@ -1476,10 +1489,34 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
 
 
+def _filing_of(row: dict[str, Any]) -> str:
+    """The accession (no dashes) a row of any of the four output files belongs to, from its custom_id `c-{cik}-{accession}-{char}`."""
+    return str(row["custom_id"]).split("-")[2]
+
+
+def write_scoped(path: Path, rows: list[dict[str, Any]], accessions: set[str] | None) -> None:
+    """write_jsonl, or with `accessions` a merge: the rows already in the file that belong to other filings stay, and this
+    run's rows (which cover only the listed filings) are added after them."""
+    if accessions is not None and path.exists():
+        done = {a.replace("-", "") for a in accessions}
+        kept = [r for r in (json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+                if _filing_of(r) not in done]
+        rows = kept + rows
+    write_jsonl(path, rows)
+
+
 def canary_check(text: str) -> None:
     payload = llm.parse_json_text(text)
     if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
         raise RuntimeError(f"canary output is not {{items: [...]}}: {text[:200]!r}")
+
+
+def write_company(company: Company, drafts, rejects, skipped, dupes, empties, scope: dict[str, set[str]] | None) -> None:
+    only = scope.get(company.cik, set()) if scope is not None else None
+    write_scoped(DRAFTS_DIR / f"{company.cik}.jsonl", drafts.get(company.cik, []), only)
+    write_scoped(DRAFTS_DIR / f"{company.cik}.rejects.jsonl", rejects.get(company.cik, []), only)
+    write_scoped(DRAFTS_DIR / f"{company.cik}.skipped.jsonl", skipped[company.cik] + dupes.get(company.cik, []), only)
+    write_scoped(DRAFTS_DIR / f"{company.cik}.empty_blocks.jsonl", empties.get(company.cik, []), only)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1497,6 +1534,11 @@ def main(argv: list[str] | None = None) -> int:
                              "after the model (a guard, a sign or range rule); a change to the prompt or the metric list "
                              "needs --submit, because the model has not seen it")
     parser.add_argument("--wait-minutes", type=float, default=60)
+    parser.add_argument("--accessions", type=Path, metavar="PATH",
+                        help="a new_filings.json: only the candidates of the filings it lists; the output files are merged, not replaced")
+    parser.add_argument("--sync", action="store_true", help="send every request one by one, whatever llm.sync_below says")
+    parser.add_argument("--max-usd", type=float, metavar="USD",
+                        help="ceiling on this run's spend: stop before sending if the worst case of what is about to go is more")
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
@@ -1504,7 +1546,10 @@ def main(argv: list[str] | None = None) -> int:
     metrics = config["metrics"]
     targets = companies(config, args.company)
     filing_types = set(args.filing_type or ["8-K"])
-    requests, index, skipped = build_requests(targets, filing_types, limit=args.limit, per_company=args.per_company, metrics=metrics)
+    scope = load_accession_scope(args.accessions) if args.accessions else None
+    cap = llm.RunCap(args.max_usd) if args.max_usd is not None else None
+    requests, index, skipped = build_requests(targets, filing_types, limit=args.limit, per_company=args.per_company, metrics=metrics,
+                                              accessions=scope)
 
     archive, ledger = llm.RawArchive(STEP), llm.Ledger()
     if args.from_archive:
@@ -1513,10 +1558,7 @@ def main(argv: list[str] | None = None) -> int:
         drafts, rejects, dupes = derive_drafts(index, answered, metrics, config["metric_kinds"])
         empties = find_empty_blocks(index, answered, drafts, rejects, dupes)
         for company in targets:
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl", drafts.get(company.cik, []))
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.rejects.jsonl", rejects.get(company.cik, []))
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.skipped.jsonl", skipped[company.cik] + dupes.get(company.cik, []))
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.empty_blocks.jsonl", empties.get(company.cik, []))
+            write_company(company, drafts, rejects, skipped, dupes, empties, scope)
             print(f"  {company.ticker}: {len(drafts.get(company.cik, [])):,} drafts, {len(rejects.get(company.cik, []))} rejected, "
                   f"{len(dupes.get(company.cik, []))} duplicates dropped, {len(empties.get(company.cik, []))} outlook blocks with no draft")
         return 0
@@ -1541,7 +1583,8 @@ def main(argv: list[str] | None = None) -> int:
             return 3
         try:
             outcome = llm.run_batch(client, cfg, STEP, todo, projection=projection, canary_check=canary_check,
-                                    ledger=ledger, archive=archive, wait_seconds=args.wait_minutes * 60)
+                                    ledger=ledger, archive=archive, wait_seconds=args.wait_minutes * 60,
+                                    force_sync=args.sync, cap=cap, spend_log=common.SPEND_LEDGER_PATH)
         except llm.BudgetExceeded as exc:
             print(f"STOPPED: {exc}", file=sys.stderr)
             return 4
@@ -1565,10 +1608,7 @@ def main(argv: list[str] | None = None) -> int:
     empties = find_empty_blocks(index, results, drafts, rejects, dupes)
     for company in targets:
         if args.submit:  # a dry run never writes to data/drafts/: with stale answers it would empty what is there
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl", drafts.get(company.cik, []))
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.rejects.jsonl", rejects.get(company.cik, []))
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.skipped.jsonl", skipped[company.cik] + dupes.get(company.cik, []))
-            write_jsonl(DRAFTS_DIR / f"{company.cik}.empty_blocks.jsonl", empties.get(company.cik, []))
+            write_company(company, drafts, rejects, skipped, dupes, empties, scope)
         print(f"  {company.ticker}: {len(drafts.get(company.cik, [])):,} drafts, {len(rejects.get(company.cik, []))} rejected, "
               f"{len(skipped[company.cik])} skipped before sending, {len(dupes.get(company.cik, []))} duplicates dropped, "
               f"{len(empties.get(company.cik, []))} outlook blocks with no draft")

@@ -29,7 +29,12 @@ happens without `--live`. `--live` additionally uploads `data/release/` and `car
 `config.yaml`. Refused, before anything at all is written, if `hf.user` is still the `"{HF_USER}"`
 placeholder: a live run that fails to upload is worse than one that never tried.
 
-Reads   data/review/{cik}.csv
+The card (under its title) and the Space (under its dateline) both say "Filings processed through <date>. <N> rows pending
+review." (`status_line`): the date is `processed_through` in data/manifest.json, the same date the filing range of the card
+and the Space ends on, and N is the number of rows `pending_rows` finds across the published companies ("No rows pending
+review." when there are none). A missing manifest stops the run before anything is written.
+
+Reads   data/review/{cik}.csv, data/manifest.json
 Writes  data/release/assumption_drift.parquet, .jsonl; card/README.md; card/figures/*.png
 """
 
@@ -50,6 +55,7 @@ from pydantic import ValidationError
 
 from pipeline import figures, space
 from pipeline.common import CARD_DIR, CONFIG_PATH, FIGURES_DIR, RELEASE_DIR, REPO_ROOT, REVIEW_DIR, Company, companies, load_config
+from pipeline.manifest import ManifestError, load_manifest
 from research_record import polarity, rubric, stats
 from research_record.schema import ResearchRecord
 from research_record.validate import unflatten_csv_row
@@ -74,6 +80,21 @@ def approved_rows(company: Company, review_dir: Path = REVIEW_DIR) -> list[dict[
     if not path.exists():
         return []
     return [r for r in review.read_csv(path) if r.get("approved") == "true" and r.get("empty_block") != "true"]
+
+
+def pending_rows(company: Company, review_dir: Path = REVIEW_DIR) -> list[dict[str, str]]:
+    """A company's review rows nobody has decided on: not approved, no reviewer note, and not an outlook-block flag (a flag
+    is not a record). A row with a note but no approval has been looked at, so it is not pending."""
+    path = review_dir / f"{company.cik}.csv"
+    if not path.exists():
+        return []
+    return [r for r in review.read_csv(path)
+            if r.get("approved") != "true" and not r.get("reviewer_note", "").strip() and r.get("empty_block") != "true"]
+
+
+def format_status_line(processed_through: date, pending: int) -> str:
+    waiting = "No rows pending review." if pending == 0 else f"{pending:,} {'row' if pending == 1 else 'rows'} pending review."
+    return f"Filings processed through {processed_through.isoformat()}. {waiting}"
 
 
 def resolve_status(record: ResearchRecord, row: dict[str, str]) -> ResearchRecord:
@@ -240,7 +261,7 @@ def _left_out_sentences(unpublished: dict[str, str | None]) -> str:
 
 def render_card(
     result: dict[str, Any], *, dataset: str, generated_at: date, hf_user: str, filing_date_from: date, filing_date_to: date,
-    unpublished: dict[str, str | None] | None = None,
+    unpublished: dict[str, str | None] | None = None, status_line: str = "",
 ) -> str:
     """The dataset card (SCOPE.md 5.4), sections in order: what this is, how a row is built, the
     resolution rubric, provenance guarantee, known limitations, how to cite, licence, behind a Hugging
@@ -261,7 +282,7 @@ def render_card(
 
     return _frontmatter(dataset) + f"""\
 # {dataset}
-
+{chr(10) + status_line + chr(10) if status_line else ""}
 Write-up: how it was built and what it found: https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md
 
 ## What this is
@@ -411,9 +432,17 @@ def main(argv: list[str] | None = None) -> int:
               "Nothing was written.", file=sys.stderr)
         return 2
 
+    try:
+        processed_through = load_manifest().processed_through
+    except ManifestError as exc:
+        print(f"STOPPED: {exc} Nothing was written.", file=sys.stderr)
+        return 2
+
     chosen = companies(config, args.company)
     targets = [c for c in chosen if c.publish]  # a company with publish: false is in no release file, figure, Space or table
     unpublished = {c.name: c.unpublished_reason for c in companies(config) if not c.publish}
+    pending = sum(len(pending_rows(c, REVIEW_DIR)) for c in targets)
+    line = format_status_line(processed_through, pending)
     records, invalid = build_records(targets, REVIEW_DIR)
     print(f"06_publish: {len(records):,} approved row(s) across {len(targets)} company(ies), {invalid:,} left out as invalid")
 
@@ -430,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
     card_text = render_card(
         result, dataset=DATASET_NAME, generated_at=generated_at, hf_user=hf_user,
         filing_date_from=date.fromisoformat(config["edgar"]["date_from"]),
-        filing_date_to=date.fromisoformat(config["edgar"]["date_to"]), unpublished=unpublished,
+        filing_date_to=processed_through, unpublished=unpublished, status_line=line,
     )
     card_path.write_text(card_text, encoding="utf-8")
     print(f"  wrote {card_path}")
@@ -439,8 +468,9 @@ def main(argv: list[str] | None = None) -> int:
         records, result, figures.acknowledgement_summary(records),
         card_text=card_text, hf_user=hf_user,
         generated_at=generated_at, space_dir=SPACE_DIR,
-        filings_from=date.fromisoformat(config["edgar"]["date_from"]), filings_to=date.fromisoformat(config["edgar"]["date_to"]),
+        filings_from=date.fromisoformat(config["edgar"]["date_from"]), filings_to=processed_through, status_line=line,
     )
+    print(f"  {line}")
     print(f"  wrote {index_path}")
 
     if args.live:

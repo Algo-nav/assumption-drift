@@ -17,8 +17,9 @@ def test_edgar_block_matches_scope(config) -> None:
     assert edgar["user_agent"] == "Navneet navn07588@gmail.com"
     assert edgar["max_rps"] == 8
     assert edgar["filing_types"] == ["8-K", "10-K", "10-Q"]
-    # date_to was moved from SCOPE's 2025-12-31 to 2026-09-20 at Navneet's request, to take in 2026 filings.
-    assert (edgar["date_from"], edgar["date_to"]) == ("2019-01-01", "2026-09-20")
+    # There is no date_to: how far the filings have been read is `processed_through` in data/manifest.json (pipeline/manifest.py).
+    assert edgar["date_from"] == "2019-01-01"
+    assert "date_to" not in edgar
 
 
 def test_the_seventeen_companies_have_ten_digit_ciks(config) -> None:

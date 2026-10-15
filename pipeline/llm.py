@@ -37,6 +37,7 @@ from typing import Any, Callable
 import anthropic
 
 from pipeline.common import REPO_ROOT
+from pipeline import common
 
 BATCH_DIR = REPO_ROOT / "data" / "batches"  # read at call time, so tests can point it elsewhere
 
@@ -280,6 +281,36 @@ def check_budget(projection: Projection, llm: LlmConfig, ledger: Ledger) -> None
         )
 
 
+class RunCap:
+    """A cap on what ONE run of a script may spend, across all of its stages, on top of the lifetime budget. `check` is
+    called before anything is sent with the worst case of what is about to go (at the price it will actually be sent at);
+    `add` is called with what was actually spent. `BudgetExceeded` is raised before a request is sent, never after."""
+
+    def __init__(self, max_usd: float) -> None:
+        self.max_usd = float(max_usd)
+        self.spent = 0.0
+
+    def check(self, worst_usd: float, step: str = "") -> None:
+        if self.spent + worst_usd > self.max_usd + 1e-12:
+            raise BudgetExceeded(
+                f"{step + ': ' if step else ''}worst-case ${worst_usd:.4f} on top of ${self.spent:.4f} already spent this run is "
+                f"more than the --max-usd cap of ${self.max_usd:.2f}. Nothing was sent."
+            )
+
+    def add(self, usd: float) -> None:
+        self.spent += usd
+
+
+def append_spend(step: str, requests: int, usd: float, *, path: Path | None = None, day: str | None = None) -> None:
+    """One line in data/spend_ledger.jsonl (tracked): date, stage, requests, usd. Unlike data/batches/ledger.jsonl, which
+    stays on the machine that ran, this one travels with the repo, so a runner's spend is on record."""
+    path = path or common.SPEND_LEDGER_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    entry = {"date": day or datetime.now(timezone.utc).date().isoformat(), "stage": step, "requests": requests, "usd": round(usd, 6)}
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry) + "\n")
+
+
 # --- results ---------------------------------------------------------------
 
 
@@ -371,7 +402,8 @@ class BatchOutcome:
     notes: list[str] = field(default_factory=list)
 
 
-def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish) -> BatchOutcome:
+def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish,
+              cap: "RunCap | None" = None, spend_log: Path | None = None) -> BatchOutcome:
     """Send each request on its own, in order. The gate prices them without the batch discount; each answer is
     archived and costed the moment it comes back, so a failure part-way leaves what was already paid for in the
     archive and the ledger. An answer that fails `canary_check` is archived as invalid, not raised: the rest of the
@@ -382,6 +414,9 @@ def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive
         usd_expected=projection.usd_expected / llm.batch_discount, usd_worst=projection.usd_worst / llm.batch_discount,
     )
     check_budget(full_price, llm, ledger)
+    if cap is not None:
+        cap.check(full_price.usd_worst, step)
+    spent = 0.0
     for req in todo:
         message = client.messages.create(**req.create_kwargs(llm.model))
         res = _message_result(req.custom_id, message, "sync", fingerprints[req.custom_id])
@@ -391,10 +426,16 @@ def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive
             except Exception as exc:  # noqa: BLE001 - recorded on the result, the next request still goes
                 res = Result(res.custom_id, "invalid", res.text, res.input_tokens, res.output_tokens, str(exc)[:200], "sync", res.fingerprint)
         archive.append([res])
-        ledger.append(kind="sync", step=step, batch_id="sync", usd=llm.usd(res.input_tokens, res.output_tokens, batch=False))
+        usd = llm.usd(res.input_tokens, res.output_tokens, batch=False)
+        ledger.append(kind="sync", step=step, batch_id="sync", usd=usd)
+        spent += usd
+        if cap is not None:
+            cap.add(usd)
         if not res.ok:
             outcome.notes.append(f"{res.custom_id} came back {res.status}")
     outcome.submitted = len(todo)
+    if spend_log is not None:
+        append_spend(step, len(todo), spent, path=spend_log)
     log(f"{step}: {len(todo)} synchronous request(s) done")
     return finish()
 
@@ -414,8 +455,13 @@ def run_batch(
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
     log: Callable[[str], None] = print,
+    force_sync: bool = False,
+    cap: RunCap | None = None,
+    spend_log: Path | None = None,
 ) -> BatchOutcome:
-    """Submit what has no successful result yet, wait, archive. Safe to run again."""
+    """Submit what has no successful result yet, wait, archive. Safe to run again. `force_sync` sends one by one whatever
+    `llm.sync_below` says; `cap` is the per-run ceiling (checked before anything is sent); `spend_log` is the tracked
+    spend ledger, written once per stage that actually spent something."""
     ledger = ledger or Ledger()
     archive = archive or RawArchive(step)
     fingerprints = {r.custom_id: r.fingerprint(llm.model) for r in requests}
@@ -428,6 +474,7 @@ def run_batch(
         return outcome
 
     batch_id: str | None = None
+    canary_usd = 0.0  # stays 0 when a pending batch is resumed: its canary was paid for by the run that submitted it
     if archive.state_path.exists():
         state = json.loads(archive.state_path.read_text())
         batch_id = state["batch_id"]
@@ -438,10 +485,14 @@ def run_batch(
         if not todo:
             log(f"{step}: every request already has a successful result")
             return finish()
-        if len(todo) < llm.sync_below:
-            log(f"{step}: {len(todo)} request(s), fewer than {llm.sync_below}: sending them synchronously, not as a batch")
-            return _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish)
+        if force_sync or len(todo) < llm.sync_below:
+            why = "forced (--sync)" if force_sync else f"fewer than {llm.sync_below}"
+            log(f"{step}: {len(todo)} request(s), {why}: sending them synchronously, not as a batch")
+            return _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish,
+                             cap, spend_log)
         check_budget(projection, llm, ledger)
+        if cap is not None:
+            cap.check(projection.usd_worst, step)
 
         canary, batch_reqs = todo[0], todo[1:]
         message = client.messages.create(**canary.create_kwargs(llm.model))
@@ -455,7 +506,10 @@ def run_batch(
                 first = Result(first.custom_id, "invalid", first.text, first.input_tokens, first.output_tokens, str(exc)[:200], "canary", first.fingerprint)
         # Archive and cost it before anything can raise: it was paid for either way.
         archive.append([first])
-        ledger.append(kind="canary", step=step, batch_id="canary", usd=llm.usd(first.input_tokens, first.output_tokens, batch=False))
+        canary_usd = llm.usd(first.input_tokens, first.output_tokens, batch=False)
+        ledger.append(kind="canary", step=step, batch_id="canary", usd=canary_usd)
+        if cap is not None:
+            cap.add(canary_usd)
         if check_error is not None:
             raise check_error
         log(f"{step}: canary request ok ({first.input_tokens} in, {first.output_tokens} out)")
@@ -501,6 +555,10 @@ def run_batch(
     archive.append(collected)
     actual = llm.usd(sum(r.input_tokens for r in collected), sum(r.output_tokens for r in collected))
     ledger.append(kind="ended", step=step, batch_id=batch_id, usd=actual, succeeded=sum(r.ok for r in collected))
+    if cap is not None:
+        cap.add(actual)
+    if spend_log is not None:
+        append_spend(step, len(collected) + (1 if canary_usd else 0), actual + canary_usd, path=spend_log)
     archive.state_path.unlink(missing_ok=True)
     failed = [r for r in collected if not r.ok]
     log(f"{step}: batch ended, {len(collected) - len(failed):,} succeeded, {len(failed):,} did not; actual cost ${actual:.2f}")

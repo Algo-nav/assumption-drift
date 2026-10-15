@@ -84,3 +84,21 @@ def record_data():
         return record
 
     return _record
+
+
+@pytest.fixture(autouse=True)
+def _spend_ledger_in_tmp(tmp_path, monkeypatch):
+    """data/spend_ledger.jsonl is tracked. No test may append to the real one, however it reaches llm.run_batch."""
+    from pipeline import common
+
+    monkeypatch.setattr(common, "SPEND_LEDGER_PATH", tmp_path / "spend_ledger.jsonl")
+
+
+@pytest.fixture(autouse=True)
+def _manifest_in_tmp(tmp_path, monkeypatch):
+    """data/manifest.json is tracked. Tests read a stand-in one (processed through 2026-09-20, no companies), written to tmp."""
+    from pipeline import common
+
+    path = tmp_path / "manifest.json"
+    path.write_text('{"processed_through": "2026-09-20", "companies": {}}\n', encoding="utf-8")
+    monkeypatch.setattr(common, "MANIFEST_PATH", path)

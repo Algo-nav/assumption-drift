@@ -3,7 +3,6 @@ edgar:
   max_rps: 8
   filing_types: ["8-K", "10-K", "10-Q"]
   date_from: "2019-01-01"
-  date_to: "2026-09-20"
 # Navneet fills the full 30; three to prove the pipeline end to end.
 # fiscal_year_end_month is the month the fiscal year ends in (from each company's 10-K cover page). It
 # dates a period label such as "Q4 FY21", so a table header that only names periods already over on the

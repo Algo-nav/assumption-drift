@@ -1,6 +1,6 @@
 """Phase 2, step 3b: a second machine opinion on the review queue, with Haiku over the Message Batches API.
 
-    python -m pipeline.03b_verify [--company TICKER ...] [--submit] [--wait-minutes M]
+    python -m pipeline.03b_verify [--company TICKER ...] [--submit] [--wait-minutes M] [--only PATH] [--sync] [--max-usd USD]
 
 For every row already in data/review/{cik}.csv that is a draft (not an empty-block flag), Haiku is shown
 the metric, the numbers, the unit, the period, the excerpt, and the context around the excerpt: the
@@ -34,6 +34,10 @@ hand_verified, reviewer_note, and any hand-corrected field, is carried over exac
 aid_verify, aid_verify_reason and aid_verify_class change. The rows are then sorted so aid_verify "no"
 comes first, then section-captured rows, then the rest. Ties keep their existing order.
 
+With --only PATH the CSV is written back in the order it had (no re-sort by verdict), so a handful of new rows cannot move the
+rest of a queue under a reviewer. --sync and --max-usd are as in 03_structure, and each stage that spends appends a line
+to data/spend_ledger.jsonl.
+
 Reads   data/review/{cik}.csv
 Writes  data/review/{cik}.csv       aid_verify, aid_verify_reason, aid_verify_class filled in, rows re-sorted
         data/batches/03b_verify.*   raw model output, ledger entries, pending batch state
@@ -50,7 +54,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from pipeline import llm
+from pipeline import common, llm
 from pipeline.common import CONFIG_PATH, REVIEW_DIR, Company, companies, load_config, read_id_list
 
 review = importlib.import_module("pipeline.05_review")
@@ -267,10 +271,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--only", type=Path, metavar="PATH",
                         help="a text file of draft ids, one per line: check those rows and nothing else (every other row keeps its verdict)")
     parser.add_argument("--wait-minutes", type=float, default=60)
+    parser.add_argument("--sync", action="store_true", help="send every request one by one, whatever llm.sync_below says")
+    parser.add_argument("--max-usd", type=float, metavar="USD", help="ceiling on this run's spend: stop before sending if the worst case is more")
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
     cfg = llm.LlmConfig.from_config(config["llm"])
+    cap = llm.RunCap(args.max_usd) if args.max_usd is not None else None
     targets = companies(config, args.company)
     only_ids = read_id_list(args.only) if args.only else None
     requests, index = build_requests(targets, only_plus_minus_no=args.rerun_plus_minus_no, only_ids=only_ids)
@@ -296,7 +303,8 @@ def main(argv: list[str] | None = None) -> int:
             return 3
         try:
             outcome = llm.run_batch(client, cfg, STEP, todo, projection=projection, canary_check=canary_check,
-                                    ledger=ledger, archive=archive, wait_seconds=args.wait_minutes * 60)
+                                    ledger=ledger, archive=archive, wait_seconds=args.wait_minutes * 60,
+                                    force_sync=args.sync, cap=cap, spend_log=common.SPEND_LEDGER_PATH)
         except llm.BudgetExceeded as exc:
             print(f"STOPPED: {exc}", file=sys.stderr)
             return 4
@@ -319,7 +327,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
         checkable = [r for r in rows if is_verifiable(r)]
         if args.submit:  # a dry run never writes: with stale or missing answers it would blank out real verdicts
-            review.write_csv(REVIEW_DIR / f"{company.cik}.csv", sort_rows(apply_verdicts(rows, verdicts)))
+            updated = apply_verdicts(rows, verdicts)
+            # --only is a small addition to a queue a person is working through (the weekly refresh): the rows stay where they are.
+            review.write_csv(REVIEW_DIR / f"{company.cik}.csv", updated if only_ids is not None else sort_rows(updated))
         seen = [effective_verdict(r, verdicts) for r in checkable]
         checked = sum(1 for r in checkable if r["record_id"] in verdicts)
         nos = [v for v in seen if v[0] == "no"]

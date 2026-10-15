@@ -394,3 +394,20 @@ def test_only_checks_the_listed_ids_and_reports_an_unknown_one(world, config_pat
     assert (on_disk["R3"]["aid_verify"], on_disk["R3"]["aid_verify_reason"]) == ("yes", "earlier")  # not sent, not touched
     out = capsys.readouterr().out
     assert "--only: 2 of 3 ids found" in out and "not found, skipped: NOPE" in out
+
+
+def test_only_keeps_the_row_order_and_a_plain_run_still_sorts(world, config_path, monkeypatch, tmp_path) -> None:
+    """--only is a few rows added to a queue a person is working through: a new "no" must not jump to the top of it."""
+    rows = [row("R1", capture_method="sentence"), row("R2", capture_method="section"),
+            row("R3", capture_method="sentence", excerpt="BAD-EXCERPT here"), row("R4", capture_method="sentence")]
+    seed(world, COMPANY, rows)
+    only = tmp_path / "ids.txt"
+    only.write_text("R3\nR4\n")
+    monkeypatch.setattr(llm, "make_client", lambda: fakes.FakeAnthropic(respond=respond))
+    assert verify.main(["--config", str(config_path), "--submit", "--only", str(only)]) == 0
+    on_disk = read_csv(world, COMPANY)
+    assert [r["record_id"] for r in on_disk] == ["R1", "R2", "R3", "R4"]
+    assert on_disk[2]["aid_verify"] == "no" and on_disk[0]["aid_verify"] == ""
+    # without --only the same file is re-sorted: the "no" first, then the section row
+    assert verify.main(["--config", str(config_path), "--submit"]) == 0
+    assert [r["record_id"] for r in read_csv(world, COMPANY)] == ["R3", "R2", "R1", "R4"]
