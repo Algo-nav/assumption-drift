@@ -1,0 +1,455 @@
+── 1/24 ── 01ERDSJK00AX24YEHTRYBZFXDP ── UNHEPS GAAP  FY2021  (stated 2020-12-01)
+target: 16.9 to 17.4 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000058/a2020investorexhibit.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its initial 2021 outlook, which includes revenues of $277 billion to $280 billion, net earnings of $16.90 to $17.40 per share, and adjusted net earnings of $17.75 to $18.25 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 18.08 on 2022-01-19
+  Full Year and Fourth Quarter Net Earnings were $18.08 and $4.26 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 GAAP EPS 16.90 to 17.40, Dec 2020
+
+── 2/24 ── 01ERDSJK004Y9XWBXNY57S6RZW ── UNHEPS non-GAAP  FY2021  (stated 2020-12-01)
+target: 17.75 to 18.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000058/a2020investorexhibit.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its initial 2021 outlook, which includes revenues of $277 billion to $280 billion, net earnings of $16.90 to $17.40 per share, and adjusted net earnings of $17.75 to $18.25 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 19.02 on 2022-01-19
+  Full Year and Fourth Quarter Adjusted Net Earnings were $19.02 and $4.48 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 adjusted EPS 17.75 to 18.25, Dec 2020
+
+── 3/24 ── 01EWEHEH007AN3DP86YG3YWZXZ ── UNHEPS GAAP  FY2021  (stated 2021-01-20)
+target: 16.9 to 17.4 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000002/a2020q4exhibit991.htm
+
+excerpt:
+  The Company affirmed its recently issued full year earnings outlook for 2021, including net earnings of $16.90 to $17.40 per share and adjusted net earnings of $17.75 to $18.25 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 18.08 on 2022-01-19
+  Full Year and Fourth Quarter Net Earnings were $18.08 and $4.26 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 GAAP EPS affirmed Jan 2021
+
+── 4/24 ── 01EWEHEH00ZQ0QQZT2X3GCRQC4 ── UNHEPS non-GAAP  FY2021  (stated 2021-01-20)
+target: 17.75 to 18.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000002/a2020q4exhibit991.htm
+
+excerpt:
+  The Company affirmed its recently issued full year earnings outlook for 2021, including net earnings of $16.90 to $17.40 per share and adjusted net earnings of $17.75 to $18.25 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 19.02 on 2022-01-19
+  Full Year and Fourth Quarter Adjusted Net Earnings were $19.02 and $4.48 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 adjusted EPS affirmed Jan 2021
+
+── 5/24 ── 01FNMFVG00EAT4BR38ZYCAJFPH ── UNHEPS GAAP  FY2021  (stated 2021-11-29)
+target: 17.8 to 17.95 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group revenues for 2021 are expected to be approximately $287 billion, with net earnings of $17.80 to $17.95 per share and adjusted net earnings of $18.75 to $18.90 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 18.08 on 2022-01-19
+  Full Year and Fourth Quarter Net Earnings were $18.08 and $4.26 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 GAAP EPS 17.80 to 17.95, Nov 2021
+
+── 6/24 ── 01FNMFVG0070C4FT8N137E95X8 ── UNHEPS non-GAAP  FY2021  (stated 2021-11-29)
+target: 18.75 to 18.9 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group revenues for 2021 are expected to be approximately $287 billion, with net earnings of $17.80 to $17.95 per share and adjusted net earnings of $18.75 to $18.90 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 19.02 on 2022-01-19
+  Full Year and Fourth Quarter Adjusted Net Earnings were $19.02 and $4.48 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 adjusted EPS 18.75 to 18.90, Nov 2021
+
+── 7/24 ── 01FNMFVG00V65DTJ6DTQT2J9BH ── UNHEPS GAAP  FY2022  (stated 2021-11-29)
+target: 20.2 to 20.7 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2022 outlook, which includes revenues of $317 billion to $320 billion, net earnings of $20.20 to $20.70 per share, and adjusted net earnings of $21.10 to $21.60 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 21.18 on 2023-01-13
+  Full Year and Fourth Quarter Net Earnings were $21.18 and $5.03 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000003/a2022q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 GAAP EPS 20.20 to 20.70, Nov 2021
+
+── 8/24 ── 01FNMFVG005FFEN3XQHYS2V7FC ── UNHEPS non-GAAP  FY2022  (stated 2021-11-29)
+target: 21.1 to 21.6 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2022 outlook, which includes revenues of $317 billion to $320 billion, net earnings of $20.20 to $20.70 per share, and adjusted net earnings of $21.10 to $21.60 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 22.19 on 2023-01-13
+  Full Year and Fourth Quarter Adjusted Net Earnings were $22.19 and $5.34 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000003/a2022q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 adjusted EPS 21.10 to 21.60, Nov 2021
+
+── 9/24 ── 01GJXRH400WPR0Z7R04HJNXA0K ── UNHEPS GAAP  FY2022  (stated 2022-11-28)
+target: 20.85 to 21.05 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  Net earnings are expected to be $20.85 to $21.05 per share and adjusted net earnings of $21.85 to $22.05 per share, as announced in the third quarter earnings release.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 21.18 on 2023-01-13
+  Full Year and Fourth Quarter Net Earnings were $21.18 and $5.03 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000003/a2022q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 GAAP EPS 20.85 to 21.05, Nov 2022 restatement of Q3 guide
+
+── 10/24 ── 01GJXRH400Y2V7926B18VSK9RN ── UNHEPS non-GAAP  FY2022  (stated 2022-11-28)
+target: 21.85 to 22.05 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  Net earnings are expected to be $20.85 to $21.05 per share and adjusted net earnings of $21.85 to $22.05 per share, as announced in the third quarter earnings release.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 22.19 on 2023-01-13
+  Full Year and Fourth Quarter Adjusted Net Earnings were $22.19 and $5.34 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000003/a2022q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 adjusted EPS 21.85 to 22.05, Nov 2022
+
+── 11/24 ── 01GJXRH400V7067B1PCN5GX7RX ── UNHEPS GAAP  FY2023  (stated 2022-11-28)
+target: 23.15 to 23.65 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2023 outlook which includes revenues of $357 billion to $360 billion, net earnings of $23.15 to $23.65 per share, and adjusted net earnings of $24.40 to $24.90 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 23.86 on 2024-01-12
+  Full Year and Fourth Quarter Net Earnings were $23.86 and $5.83 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 GAAP EPS 23.15 to 23.65, Nov 2022
+
+── 12/24 ── 01GJXRH400XN5FE6YYPD7FG6HA ── UNHEPS non-GAAP  FY2023  (stated 2022-11-28)
+target: 24.4 to 24.9 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2023 outlook which includes revenues of $357 billion to $360 billion, net earnings of $23.15 to $23.65 per share, and adjusted net earnings of $24.40 to $24.90 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.12 on 2024-01-12
+  Full Year and Fourth Quarter Adjusted Net Earnings were $25.12 and $6.16 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 adjusted EPS 24.40 to 24.90, Nov 2022
+
+── 13/24 ── 01H58V5000PQ5F3GSNQD9WBGC2 ── UNHEPS GAAP  FY2023  (stated 2023-07-14)
+target: 23.45 to 23.75 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000049/a2023q2exhibit991.htm
+
+excerpt:
+  Based upon the first half performance as well as durable growth and operating expectations, the company strengthened the range of its full year net earnings outlook to $23.45 to $23.75 per share and adjusted net earnings to $24.70 to $25.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 23.86 on 2024-01-12
+  Full Year and Fourth Quarter Net Earnings were $23.86 and $5.83 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 GAAP EPS 23.45 to 23.75, Jul 2023
+
+── 14/24 ── 01H58V5000VPC3SP4CAQKN1V25 ── UNHEPS non-GAAP  FY2023  (stated 2023-07-14)
+target: 24.7 to 25.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000049/a2023q2exhibit991.htm
+
+excerpt:
+  Based upon the first half performance as well as durable growth and operating expectations, the company strengthened the range of its full year net earnings outlook to $23.45 to $23.75 per share and adjusted net earnings to $24.70 to $25.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.12 on 2024-01-12
+  Full Year and Fourth Quarter Adjusted Net Earnings were $25.12 and $6.16 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 adjusted EPS 24.70 to 25.00, Jul 2023
+
+── 15/24 ── 01HCK5AD00207PY59SHWW5GY0Q ── UNHEPS GAAP  FY2023  (stated 2023-10-13)
+target: 23.6 to 23.75 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000058/a2023q3exhibit991.htm
+
+excerpt:
+  The company strengthened the range of its full year 2023 net earnings outlook to $23.60 to $23.75 per share and adjusted net earnings to $24.85 to $25.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 23.86 on 2024-01-12
+  Full Year and Fourth Quarter Net Earnings were $23.86 and $5.83 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 GAAP EPS 23.60 to 23.75, Oct 2023
+
+── 16/24 ── 01HCK5AD007S5018G9R37BDHGK ── UNHEPS non-GAAP  FY2023  (stated 2023-10-13)
+target: 24.85 to 25.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000058/a2023q3exhibit991.htm
+
+excerpt:
+  The company strengthened the range of its full year 2023 net earnings outlook to $23.60 to $23.75 per share and adjusted net earnings to $24.85 to $25.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.12 on 2024-01-12
+  Full Year and Fourth Quarter Adjusted Net Earnings were $25.12 and $6.16 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 adjusted EPS 24.85 to 25.00, Oct 2023
+
+── 17/24 ── 01HG9KKF001FC101527R78Z6G8 ── UNHEPS non-GAAP  FY2024  (stated 2023-11-28)
+target: 27.5 to 28.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000080/a2023investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will introduce its 2024 outlook which includes revenues of $400 billion to $403 billion, net earnings of $26.20 to $26.70 per share and adjusted net earnings of $27.50 to $28.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 27.66 on 2025-01-16
+  Full Year, Fourth Quarter Adjusted Net Earnings were $27.66, $6.81 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 27.50 to 28.00, Nov 2023
+
+── 18/24 ── 01HG9KKF00RWBDFYYZW5VV572M ── UNHEPS GAAP  FY2023  (stated 2023-11-28)
+target: 23.6 to 23.75 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000080/a2023investorconferencegui.htm
+
+excerpt:
+  As announced in the third quarter earnings release, UnitedHealth Group 2023 net earnings are expected to be $23.60 to $23.75 per share and adjusted net earnings $24.85 to $25.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 23.86 on 2024-01-12
+  Full Year and Fourth Quarter Net Earnings were $23.86 and $5.83 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 GAAP EPS 23.60 to 23.75 restated at the Nov 2023 conference
+
+── 19/24 ── 01HG9KKF002PFKKXTX8WACQB1D ── UNHEPS non-GAAP  FY2023  (stated 2023-11-28)
+target: 24.85 to 25.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000080/a2023investorconferencegui.htm
+
+excerpt:
+  As announced in the third quarter earnings release, UnitedHealth Group 2023 net earnings are expected to be $23.60 to $23.75 per share and adjusted net earnings $24.85 to $25.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.12 on 2024-01-12
+  Full Year and Fourth Quarter Adjusted Net Earnings were $25.12 and $6.16 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 adjusted EPS 24.85 to 25.00 restated Nov 2023
+
+── 20/24 ── 01HVJ383009Q1GGVVDGZNB4PKM ── UNHEPS non-GAAP  FY2024  (stated 2024-04-16)
+target: 27.5 to 28.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000146/a2024q1exhibit991.htm
+
+excerpt:
+  The company maintained its adjusted net earnings outlook of $27.50 to $28.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 27.66 on 2025-01-16
+  Full Year, Fourth Quarter Adjusted Net Earnings were $27.66, $6.81 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 27.50 to 28.00 maintained Apr 2024
+
+── 21/24 ── 01J2WDDG00JRVRYE8NWA5RPNBM ── UNHEPS GAAP  FY2024  (stated 2024-07-16)
+target: 15.95 to 16.4 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000242/a2024q2exhibit991.htm
+
+excerpt:
+  The company updated its full year 2024 net earnings outlook to $15.95 to $16.40 per share to reflect the classification to held for sale of its remaining South America operations and the estimated Change Healthcare cyberattack impacts.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 15.51 on 2025-01-16
+  Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: true
+approved: true  hand_verified: false  note: FY2024 GAAP EPS 15.95 to 16.40, Jul 2024 update
+
+── 22/24 ── 01J2WDDG00EGARKX97ZZM6YSC2 ── UNHEPS non-GAAP  FY2024  (stated 2024-07-16)
+target: 27.5 to 28.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000242/a2024q2exhibit991.htm
+
+excerpt:
+  The company affirmed the adjusted net earnings outlook of $27.50 to $28.00 per share established at its November 2023 Investor Conference.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 27.66 on 2025-01-16
+  Full Year, Fourth Quarter Adjusted Net Earnings were $27.66, $6.81 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 27.50 to 28.00 affirmed Jul 2024
+
+── 23/24 ── 01JE4X24006XJMEKB468Y50Q8G ── UNHEPS GAAP  FY2024  (stated 2024-12-03)
+target: 15.5 to 15.75 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000338/investorconferenceguidance.htm
+
+excerpt:
+  As announced in the third quarter earnings release, UnitedHealth Group 2024 net earnings are expected to be $15.50 to $15.75 per share and adjusted net earnings $27.50 to $27.75 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 15.51 on 2025-01-16
+  Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 GAAP EPS 15.50 to 15.75 restated Dec 2024
+
+── 24/24 ── 01JE4X2400XR510YFKNK3MAWXH ── UNHEPS non-GAAP  FY2024  (stated 2024-12-03)
+target: 27.5 to 27.75 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000338/investorconferenceguidance.htm
+
+excerpt:
+  As announced in the third quarter earnings release, UnitedHealth Group 2024 net earnings are expected to be $15.50 to $15.75 per share and adjusted net earnings $27.50 to $27.75 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 27.66 on 2025-01-16
+  Full Year, Fourth Quarter Adjusted Net Earnings were $27.66, $6.81 Per Share
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 27.50 to 27.75 restated Dec 2024

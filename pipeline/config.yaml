@@ -10,37 +10,37 @@ edgar:
 # carries: "end" (the default) for a year that ENDS in it (NVIDIA fiscal 2024 ended January 28, 2024),
 # "start" for a year that STARTS in it (Target fiscal 2022 ended January 28, 2023).
 companies:
-  - {name: "NVIDIA Corporation", ticker: "NVDA", cik: "0001045810", fiscal_year_end_month: 1}
-  - {name: "Target Corporation", ticker: "TGT", cik: "0000027419", fiscal_year_end_month: 1, fiscal_year_named_for: start}
-  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524", fiscal_year_end_month: 1, tax_rate_parens_negative: true}
+  - {name: "NVIDIA Corporation", ticker: "NVDA", cik: "0001045810", fiscal_year_end_month: 1, sector: "technology"}
+  - {name: "Target Corporation", ticker: "TGT", cik: "0000027419", fiscal_year_end_month: 1, fiscal_year_named_for: start, sector: "consumer staples"}
+  - {name: "Salesforce, Inc.", ticker: "CRM", cik: "0001108524", fiscal_year_end_month: 1, tax_rate_parens_negative: true, sector: "technology"}
   # The ten added next. Each fiscal_year_end_month and fiscal_year_named_for was confirmed from the company's latest
   # cached 10-K ("For the fiscal year ended ..."): Apple Sep 27 2025 (last Saturday of September), Microsoft Jun 30 2026,
   # Amazon / Meta / Alphabet / JPMorgan Dec 31 2025, AMD Dec 27 2025 (last Saturday of December), Broadcom Nov 2 2025
   # (Sunday closest to October 31, so month 10), Costco Aug 31 2025 (Sunday nearest the end of August), Home Depot
   # Feb 1 2026 (Sunday nearest January 31) and that year is called "fiscal 2025", so named for the year it starts.
   - {name: "Apple Inc.", ticker: "AAPL", cik: "0000320193", fiscal_year_end_month: 9, publish: false, unpublished_reason: no_numeric_guidance}
-  - {name: "Microsoft Corporation", ticker: "MSFT", cik: "0000789019", fiscal_year_end_month: 6, publish: true}
-  - {name: "Amazon.com, Inc.", ticker: "AMZN", cik: "0001018724", fiscal_year_end_month: 12, publish: true}
-  - {name: "Meta Platforms, Inc.", ticker: "META", cik: "0001326801", fiscal_year_end_month: 12, publish: true}
+  - {name: "Microsoft Corporation", ticker: "MSFT", cik: "0000789019", fiscal_year_end_month: 6, publish: true, sector: "technology"}
+  - {name: "Amazon.com, Inc.", ticker: "AMZN", cik: "0001018724", fiscal_year_end_month: 12, publish: true, sector: "consumer discretionary"}
+  - {name: "Meta Platforms, Inc.", ticker: "META", cik: "0001326801", fiscal_year_end_month: 12, publish: true, sector: "communication services"}
   - {name: "Alphabet Inc.", ticker: "GOOGL", cik: "0001652044", fiscal_year_end_month: 12, publish: false, unpublished_reason: no_numeric_guidance}
-  - {name: "Advanced Micro Devices, Inc.", ticker: "AMD", cik: "0000002488", fiscal_year_end_month: 12, publish: true}
-  - {name: "Broadcom Inc.", ticker: "AVGO", cik: "0001730168", fiscal_year_end_month: 10, publish: true}
+  - {name: "Advanced Micro Devices, Inc.", ticker: "AMD", cik: "0000002488", fiscal_year_end_month: 12, publish: true, sector: "technology"}
+  - {name: "Broadcom Inc.", ticker: "AVGO", cik: "0001730168", fiscal_year_end_month: 10, publish: true, sector: "technology"}
   - {name: "Costco Wholesale Corporation", ticker: "COST", cik: "0000909832", fiscal_year_end_month: 8, publish: false, unpublished_reason: no_numeric_guidance}
-  - {name: "The Home Depot, Inc.", ticker: "HD", cik: "0000354950", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true}
+  - {name: "The Home Depot, Inc.", ticker: "HD", cik: "0000354950", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true, sector: "consumer discretionary"}
   - {name: "JPMorgan Chase & Co.", ticker: "JPM", cik: "0000019617", fiscal_year_end_month: 12, publish: false, unpublished_reason: metrics_outside_schema}
   # The next four, same rule: Qualcomm Sep 28 2025 (last Sunday of September), Adobe Nov 28 2025 ("fiscal 2025"), Micron
   # Aug 28 2025 (Thursday closest to August 31), Lowe's Jan 30 2026 (called "2025", so named for the year it starts).
-  - {name: "QUALCOMM Incorporated", ticker: "QCOM", cik: "0000804328", fiscal_year_end_month: 9, publish: true}
-  - {name: "Adobe Inc.", ticker: "ADBE", cik: "0000796343", fiscal_year_end_month: 11, publish: true}
+  - {name: "QUALCOMM Incorporated", ticker: "QCOM", cik: "0000804328", fiscal_year_end_month: 9, publish: true, sector: "technology"}
+  - {name: "Adobe Inc.", ticker: "ADBE", cik: "0000796343", fiscal_year_end_month: 11, publish: true, sector: "technology"}
   - {name: "Micron Technology, Inc.", ticker: "MU", cik: "0000723125", fiscal_year_end_month: 8, publish: false, unpublished_reason: review_in_progress}
-  - {name: "Lowe's Companies, Inc.", ticker: "LOW", cik: "0000060667", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true}
+  - {name: "Lowe's Companies, Inc.", ticker: "LOW", cik: "0000060667", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true, sector: "consumer discretionary"}
   # Batch 2, chosen by the three-sector screen (data/_work/screen/, 2024-01-01 to 2026-10-17). Fiscal year ends from each company's
   # latest 10-K cover: UnitedHealth Dec 31 2025, Honeywell Dec 31 2025, Walmart Jan 31 2026. Walmart names its years for the year they
   # END (FY26 ended Jan 31 2026; the Aug 2026 release sets Q3 FY27 guidance against "Q3 FY26 figures"), so FY27 ends January 2027:
-  # fiscal_year_named_for "end", unlike Target, Home Depot and Lowe's. Not published until review is finished.
-  - {name: "UnitedHealth Group Incorporated", ticker: "UNH", cik: "0000731766", fiscal_year_end_month: 12, publish: false, unpublished_reason: review_in_progress}
-  - {name: "Honeywell International Inc.", ticker: "HON", cik: "0000773840", fiscal_year_end_month: 12, publish: false, unpublished_reason: review_in_progress}
-  - {name: "Walmart Inc.", ticker: "WMT", cik: "0000104169", fiscal_year_end_month: 1, fiscal_year_named_for: end, publish: false, unpublished_reason: review_in_progress}
+  # fiscal_year_named_for "end", unlike Target, Home Depot and Lowe's. Published after review (2026-10-17).
+  - {name: "UnitedHealth Group Incorporated", ticker: "UNH", cik: "0000731766", fiscal_year_end_month: 12, publish: true, sector: "health care"}
+  - {name: "Honeywell International Inc.", ticker: "HON", cik: "0000773840", fiscal_year_end_month: 12, publish: true, sector: "industrials"}
+  - {name: "Walmart Inc.", ticker: "WMT", cik: "0000104169", fiscal_year_end_month: 1, fiscal_year_named_for: end, publish: true, sector: "consumer staples"}
   # Caterpillar, Dec 31 2025 10-K. The screen read all 12 of its 2024-2026 earnings releases (Item 2.02 EX-99.1): none carries
   # an outlook or guidance, only the safe-harbor paragraph. The one number-and-forward-term candidate in 12 releases is a tariff-recovery
   # note ("$392 million of expected IEEPA tariff recoveries"). Listed so the card names it; not fetched in batch 2 and not in the manifest.

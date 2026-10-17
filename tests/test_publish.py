@@ -201,8 +201,18 @@ def test_render_card_starts_with_hugging_face_yaml_frontmatter(sample_result) ->
     assert "- en" in frontmatter
     for tag in ("finance", "sec-filings", "guidance", "provenance"):
         assert f"- {tag}" in frontmatter
-    assert "- n<1K" in frontmatter
+    assert "- n<1K" in frontmatter  # the sample has one row
     assert "pretty_name: assumption-drift" in frontmatter
+
+
+@pytest.mark.parametrize("rows, tag", [(0, "n<1K"), (999, "n<1K"), (1000, "1K<n<10K"), (1309, "1K<n<10K"), (9999, "1K<n<10K"), (10000, "10K<n<100K")])
+def test_size_category_follows_the_row_count(rows, tag) -> None:
+    assert publish._size_category(rows) == tag
+
+
+def test_the_front_matter_of_a_1309_row_card_says_1k_to_10k(sample_result) -> None:
+    text = render({**sample_result, "rows": 1309})
+    assert "- 1K<n<10K" in text[: text.index("\n---\n", 4)] and "n<1K" not in text[: text.index("\n---\n", 4)]
 
 
 def test_render_card_names_the_companies_and_filing_range_in_the_first_paragraph(sample_result) -> None:
@@ -394,8 +404,34 @@ def test_every_unpublished_company_in_config_has_a_reason() -> None:
     cs = [c for c in common.companies(common.load_config()) if not c.publish]
     assert {c.ticker: c.unpublished_reason for c in cs} == {
         "AAPL": "no_numeric_guidance", "GOOGL": "no_numeric_guidance", "COST": "no_numeric_guidance", "CAT": "no_numeric_guidance",
-        "JPM": "metrics_outside_schema", "MU": "review_in_progress",
-        "UNH": "review_in_progress", "HON": "review_in_progress", "WMT": "review_in_progress"}
+        "JPM": "metrics_outside_schema", "MU": "review_in_progress"}
+
+
+def test_fifteen_companies_are_published_and_each_has_a_sector() -> None:
+    cs = [c for c in common.companies(common.load_config()) if c.publish]
+    assert len(cs) == 15 and all(c.sector for c in cs)
+    assert {c.ticker for c in cs} >= {"UNH", "HON", "WMT"}
+
+
+def test_the_card_leads_with_the_company_count_and_the_sectors(sample_result) -> None:
+    names = [row["company"] for row in sample_result["company_table"]]
+    text = render(sample_result, sectors={n: "health care" for n in names})
+    assert f"This release covers {_words(len(names))} company in one sector: health care (1)." in text
+    lead = text[text.index("This release covers") :].split("\n\n")[0]
+    assert names[0] not in lead
+    names15 = [f"C{i}" for i in range(15)]
+    sec = {n: s for n, s in zip(names15, ["technology"] * 7 + ["consumer discretionary"] * 3 + ["consumer staples"] * 2
+                                  + ["industrials", "health care", "communication services"])}
+    assert publish._coverage_sentence(names15, sec) == (
+        "This release covers fifteen companies in six sectors: technology (7), consumer discretionary (3), consumer staples (2), "
+        "and one each in communication services, health care and industrials.\n\n")
+    assert publish._coverage_sentence(["A", "B", "C"], {"A": "x", "B": "y", "C": "y"}).startswith(
+        "This release covers three companies in two sectors: y (2), and one in x.")
+    assert publish._coverage_sentence(["A", "B"], {"A": "x", "B": "y"}).startswith("This release covers two companies in two sectors: one each in x and y.")
+    assert publish._coverage_sentence(["A", "B"], {"A": "x", "B": "x"}).startswith("This release covers two companies in one sector: x (2).")
+    with pytest.raises(ValueError, match="without a sector"):
+        render(sample_result, sectors={"Someone Else": "retail"})
+    assert "This release covers" not in render(sample_result)
 
 
 def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
@@ -404,7 +440,7 @@ def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
     with pytest.raises(ValueError, match="publish"):
         common._company({**base, "publish": "no"})
     listed = {c.ticker: c.publish for c in common.companies(common.load_config())}
-    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM", "MU", "UNH", "HON", "WMT", "CAT"]
+    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM", "MU", "CAT"]
 
 
 def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table(world, config_path, record_data, monkeypatch) -> None:
@@ -433,3 +469,7 @@ def test_metrics_outside_schema_sentence_agrees_in_number(sample_result) -> None
     assert "JPMorgan Chase & Co. issues numeric outlook" in one
     two = render(sample_result, unpublished={"JPMorgan Chase & Co.": "metrics_outside_schema", "Other Co.": "metrics_outside_schema"})
     assert "JPMorgan Chase & Co. and Other Co. issue numeric outlook" in two
+
+
+def _words(n: int) -> str:
+    return publish._count_words(n)

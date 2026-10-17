@@ -1,0 +1,322 @@
+── 1/17 ── 01K19QN600Q3BWYKX4DHRFDTBG ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 151000.0 to 151500.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Optum Rx $151,000 - $151,500 $6,000 - $6,100 4.0%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 154700.0 on 2026-01-27
+  Optum Rx • Optum Rx’s full year 2025 revenues of $154.7 billion increased 16% year-over-year driven by growth in pharmacy services and volume growth from new and existing clients.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+proposed: unresolved  verify: no (The excerpt shows 'Optum Rx' revenue guidance of $151,000 - $151,500 million, which is a segment-level metric for Optum Rx specifically, not consolidated Optum or UnitedHealth Group total revenue as t)  conflict: true
+approved: false  hand_verified: false  note: not guidance: segment-level figure, segment figures not tracked (Optum Rx revenue)
+
+── 2/17 ── 01K19QN600SKA962PBQCPBK2DX ── UNHoperating margin GAAP  FY2025  (stated 2025-07-29)
+target: 2.6 to 2.7 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Operating Margin 2.6% - 2.7%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 2.7 on 2026-01-27
+  Operating margin of 2.7% compared to 5.2% in 2024, primarily due to the effects of the Biden-era Medicare funding reductions and Inflation Reduction Act impacts combined with elevated medical cost trends.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: not guidance: segment-level figure, segment figures not tracked (2.6 to 2.7% is the UnitedHealthcare segment margin, consolidated margin is near 5%)
+
+── 3/17 ── 01D17CXH002D1PKGFBT0DB2QNP ── UNHEPS GAAP  FY2019  (stated 2019-01-15)
+target: 13.7 to 14.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000002/a2018q4exhibit991.htm
+
+excerpt:
+  The Company affirmed its outlook for 2019, including net earnings of $13.70 to $14.00 per share, adjusted net earnings of $14.40 to $14.70 per share, and cash flows from operations of $17.3 billion to $17.8 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 14.33 on 2020-01-15
+  Full Year and Fourth Quarter Net Earnings Per Share of $14.33 and $3.68 Grew 18% and 19% Year-Over-Year
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000002/a2019q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2019 GAAP EPS 13.70 to 14.00 affirmed Jan 2019
+
+── 4/17 ── 01D17CXH00PF93QQWVT9Q4DXMJ ── UNHEPS non-GAAP  FY2019  (stated 2019-01-15)
+target: 14.4 to 14.7 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000002/a2018q4exhibit991.htm
+
+excerpt:
+  The Company affirmed its outlook for 2019, including net earnings of $13.70 to $14.00 per share, adjusted net earnings of $14.40 to $14.70 per share, and cash flows from operations of $17.3 billion to $17.8 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 15.11 on 2020-01-15
+  Full Year and Fourth Quarter Adjusted Net Earnings Per Share of $15.11 and $3.90 Grew 17% and 19% Year-Over-Year
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000002/a2019q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2019 adjusted EPS 14.40 to 14.70 affirmed Jan 2019
+
+── 5/17 ── 01DV1YG8006BDBE8E28YHT0EN6 ── UNHrevenue  FY2019  (stated 2019-12-02)
+target: 242.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000042/a201912-2exhibit991.htm
+
+excerpt:
+  Revenues for 2019 are expected to approximate $242 billion, with net earnings to approach $14.25 per share and adjusted net earnings to approach $15.00 per share, at the higher end of the Company’s most recent earnings per share outlook provided with its third quarter 2019 earnings release.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 242.2 on 2020-01-15
+  UnitedHealth Group’s full year 2019 revenues of $242.2 billion grew $15.9 billion or 7.0 percent year-over-year, reflecting balanced, broad-based revenue growth across the businesses.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000002/a2019q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2019 revenue approximately 242B, Dec 2019
+
+── 6/17 ── 01DV1YG800XGFPJTD9M57638AC ── UNHEPS GAAP  FY2019  (stated 2019-12-02)
+target: 14.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000042/a201912-2exhibit991.htm
+
+excerpt:
+  Revenues for 2019 are expected to approximate $242 billion, with net earnings to approach $14.25 per share and adjusted net earnings to approach $15.00 per share, at the higher end of the Company’s most recent earnings per share outlook provided with its third quarter 2019 earnings release.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 14.33 on 2020-01-15
+  Full Year and Fourth Quarter Net Earnings Per Share of $14.33 and $3.68 Grew 18% and 19% Year-Over-Year
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000002/a2019q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2019 GAAP EPS to approach 14.25, Dec 2019
+
+── 7/17 ── 01DV1YG80064KNGV45Q6M4MT3K ── UNHEPS non-GAAP  FY2019  (stated 2019-12-02)
+target: 15.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000042/a201912-2exhibit991.htm
+
+excerpt:
+  Revenues for 2019 are expected to approximate $242 billion, with net earnings to approach $14.25 per share and adjusted net earnings to approach $15.00 per share, at the higher end of the Company’s most recent earnings per share outlook provided with its third quarter 2019 earnings release.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 15.11 on 2020-01-15
+  Full Year and Fourth Quarter Adjusted Net Earnings Per Share of $15.11 and $3.90 Grew 17% and 19% Year-Over-Year
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000002/a2019q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2019 adjusted EPS to approach 15.00, Dec 2019
+
+── 8/17 ── 01ERDSJK00H99ZWYJXSMB5PB48 ── UNHrevenue  FY2021  (stated 2020-12-01)
+target: 277.0 to 280.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000058/a2020investorexhibit.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its initial 2021 outlook, which includes revenues of $277 billion to $280 billion, net earnings of $16.90 to $17.40 per share, and adjusted net earnings of $17.75 to $18.25 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 287.6 on 2022-01-19
+  Revenues of $287.6 Billion Grew 12% Year-Over-Year, with Double-Digit Growth at both Optum and UnitedHealthcare
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 revenue 277 to 280B, Dec 2020
+
+── 9/17 ── 01FNMFVG00JV91K40AHDFMH0KM ── UNHrevenue  FY2021  (stated 2021-11-29)
+target: 287.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group revenues for 2021 are expected to be approximately $287 billion, with net earnings of $17.80 to $17.95 per share and adjusted net earnings of $18.75 to $18.90 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 287.6 on 2022-01-19
+  Revenues of $287.6 Billion Grew 12% Year-Over-Year, with Double-Digit Growth at both Optum and UnitedHealthcare
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000004/a2021q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2021 revenue approximately 287B, Nov 2021
+
+── 10/17 ── 01FNMFVG00F82X4STKQ2KVFY8B ── UNHrevenue  FY2022  (stated 2021-11-29)
+target: 317.0 to 320.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2022 outlook, which includes revenues of $317 billion to $320 billion, net earnings of $20.20 to $20.70 per share, and adjusted net earnings of $21.10 to $21.60 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 324.2 on 2023-01-13
+  Revenues of $324.2 Billion Grew 13% Year-Over-Year, with Double-Digit Growth at both Optum and UnitedHealthcare
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000003/a2022q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 revenue 317 to 320B, Nov 2021
+
+── 11/17 ── 01GJXRH400VEVE8VRGV5TKGP8M ── UNHrevenue  FY2022  (stated 2022-11-28)
+target: 324.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group revenues for 2022 are now expected to be approximately $324 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 324.2 on 2023-01-13
+  Revenues of $324.2 Billion Grew 13% Year-Over-Year, with Double-Digit Growth at both Optum and UnitedHealthcare
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000003/a2022q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 revenue approximately 324B, Nov 2022
+
+── 12/17 ── 01GJXRH4007EENWKNE2ZB1NP3J ── UNHrevenue  FY2023  (stated 2022-11-28)
+target: 357.0 to 360.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2023 outlook which includes revenues of $357 billion to $360 billion, net earnings of $23.15 to $23.65 per share, and adjusted net earnings of $24.40 to $24.90 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 371.6 on 2024-01-12
+  Revenues of $371.6 Billion Grew 15% Year-Over-Year
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000023/a2023q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 revenue 357 to 360B, Nov 2022
+
+── 13/17 ── 01HG9KKF00NMWGYC606581XC3G ── UNHrevenue  FY2024  (stated 2023-11-28)
+target: 400.0 to 403.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000080/a2023investorconferencegui.htm
+
+excerpt:
+  UnitedHealth Group will introduce its 2024 outlook which includes revenues of $400 billion to $403 billion, net earnings of $26.20 to $26.70 per share and adjusted net earnings of $27.50 to $28.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 400.3 on 2025-01-16
+  Revenues of $400.3 Billion Grew 8% Year-Over-Year
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 revenue 400 to 403B, Nov 2023
+
+── 14/17 ── 01JE4X24008FGK9GR358NT1H6V ── UNHrevenue  FY2025  (stated 2024-12-03)
+target: 450.0 to 455.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000338/investorconferenceguidance.htm
+
+excerpt:
+  UnitedHealth Group will introduce its 2025 outlook which includes revenues of $450 billion to $455 billion, net earnings of $28.15 to $28.65 per share and adjusted net earnings of $29.50 to $30.00 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 447.6 on 2026-01-27
+  Consolidated revenues for 2025 were $447.6 billion, representing 12% growth year-over-year.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+proposed: withdrawn  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2025 revenue 450 to 455B, Dec 2024; suspended 2025-05-13, withdrawn status stands
+
+── 15/17 ── 01JHP6HR00DCGQWZRDHZTAN3T9 ── UNHrevenue  FY2025  (stated 2025-01-16)
+target: 450.0 to 455.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+excerpt:
+  UnitedHealth Group affirmed the 2025 performance outlook established in December 2024, including revenues of $450 billion to $455 billion, net earnings of $28.15 to $28.65 per share, adjusted net earnings of $29.50 to $30.00 per share and cash flow from operations of $32 billion to $33 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 447.6 on 2026-01-27
+  Consolidated revenues for 2025 were $447.6 billion, representing 12% growth year-over-year.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+proposed: withdrawn  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2025 revenue affirmed Jan 2025; withdrawn status stands
+
+── 16/17 ── 01K19QN600PK0V7X0HGSCJDVC6 ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 445.5 to 448.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Full Year 2025 Revenue Outlook of $445.5 Billion to $448.0 Billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 447.6 on 2026-01-27
+  Consolidated revenues for 2025 were $447.6 billion, representing 12% growth year-over-year.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+proposed: unresolved  verify: yes  conflict: true
+approved: true  hand_verified: false  note: FY2025 revenue 445.5 to 448.0B, Jul 2025 headline
+
+── 17/17 ── 01K19QN600YXC1K09KN3FHBSK7 ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 19.0 to 19.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Full year 2025 Optum Insight revenues are expected to range from $19.0 billion to $19.5 billion compared to $18.8 billion in 2024.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 19.4 on 2026-01-27
+  Optum Insight • Optum Insight’s full year 2025 revenues of $19.4 billion were up 4%, or $660 million, year-over-year.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: not guidance: segment-level figure, segment figures not tracked (Optum Insight revenue)

@@ -213,7 +213,17 @@ def _count_words(n: int) -> str:
     return _NUMBER_WORDS[n] if 0 <= n < len(_NUMBER_WORDS) else str(n)
 
 
-def _frontmatter(dataset: str) -> str:
+def _size_category(rows: int) -> str:
+    """The Hugging Face `size_categories` tag for a row count: n<1K, 1K<n<10K, 10K<n<100K, ..."""
+    if rows < 1_000:
+        return "n<1K"
+    for low, high, label in ((1_000, 10_000, "1K<n<10K"), (10_000, 100_000, "10K<n<100K"), (100_000, 1_000_000, "100K<n<1M")):
+        if low <= rows < high:
+            return label
+    return "n>1M"
+
+
+def _frontmatter(dataset: str, rows: int) -> str:
     return f"""\
 ---
 license: cc-by-4.0
@@ -225,7 +235,7 @@ tags:
 - guidance
 - provenance
 size_categories:
-- n<1K
+- {_size_category(rows)}
 pretty_name: {dataset}
 ---
 """
@@ -233,6 +243,30 @@ pretty_name: {dataset}
 
 UNPUBLISHED_REASONS = ("no_numeric_guidance", "metrics_outside_schema", "review_in_progress")
 _OUTSIDE_SCHEMA_DETAIL = {"JPMorgan Chase & Co.": ("JPMorgan", "net interest income and adjusted expense")}
+
+
+def _coverage_sentence(names: list[str], sectors: dict[str, str] | None) -> str:
+    """"This release covers fifteen companies in six sectors: technology (7), consumer discretionary (3), and one each in
+    health care and industrials.", the card's lead sentence: counts per sector, largest first, then the sectors with one company
+    named together. The company table carries the names. Empty when no sectors are given; a published company with no sector
+    stops the build, so the sentence cannot count a company it does not place."""
+    if not sectors:
+        return ""
+    missing = [n for n in names if not sectors.get(n)]
+    if missing:
+        raise ValueError(f"published company without a sector in config.yaml: {', '.join(missing)}")
+    counts: dict[str, int] = {}
+    for n in names:
+        counts[sectors[n]] = counts.get(sectors[n], 0) + 1
+    many = sorted(((sec, c) for sec, c in counts.items() if c > 1), key=lambda t: (-t[1], t[0]))
+    single = sorted(sec for sec, c in counts.items() if c == 1)
+    parts = [f"{sec} ({c})" for sec, c in many]
+    if single:
+        parts.append(f"one each in {_join_names(single)}" if len(single) > 1 else (f"one in {single[0]}" if many else f"{single[0]} (1)"))
+    listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + f", and {parts[-1]}"
+    n, k = len(names), len(counts)
+    return (f"This release covers {_count_words(n)} {'company' if n == 1 else 'companies'} in {_count_words(k)} "
+            f"{'sector' if k == 1 else 'sectors'}: {listed}.\n\n")
 
 
 def _left_out_sentences(unpublished: dict[str, str | None]) -> str:
@@ -261,7 +295,7 @@ def _left_out_sentences(unpublished: dict[str, str | None]) -> str:
 
 def render_card(
     result: dict[str, Any], *, dataset: str, generated_at: date, hf_user: str, filing_date_from: date, filing_date_to: date,
-    unpublished: dict[str, str | None] | None = None, status_line: str = "",
+    unpublished: dict[str, str | None] | None = None, status_line: str = "", sectors: dict[str, str] | None = None,
 ) -> str:
     """The dataset card (SCOPE.md 5.4), sections in order: what this is, how a row is built, the
     resolution rubric, provenance guarantee, known limitations, how to cite, licence, behind a Hugging
@@ -279,15 +313,16 @@ def render_card(
     company_count = f"{_count_words(n_companies)} {'company' if n_companies == 1 else 'companies'}"
     filing_range = f"{filing_date_from:%B %Y} and {filing_date_to:%B %Y}"
     left_out = _left_out_sentences(unpublished or {})
+    coverage = _coverage_sentence([row["company"] for row in result["company_table"]], sectors)
 
-    return _frontmatter(dataset) + f"""\
+    return _frontmatter(dataset, result["rows"]) + f"""\
 # {dataset}
 {chr(10) + status_line + chr(10) if status_line else ""}
 Write-up: how it was built and what it found: https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md
 
 ## What this is
 
-{companies_named} made numeric forward guidance statements in their own SEC filings, filed between
+{coverage}{companies_named} made numeric forward guidance statements in their own SEC filings, filed between
 {filing_range}. This dataset pairs each one with what the company later reported for that same metric
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
 It is a problem statement in data form, not a model and not a demonstration of one.{left_out}
@@ -460,6 +495,7 @@ def main(argv: list[str] | None = None) -> int:
         result, dataset=DATASET_NAME, generated_at=generated_at, hf_user=hf_user,
         filing_date_from=date.fromisoformat(config["edgar"]["date_from"]),
         filing_date_to=processed_through, unpublished=unpublished, status_line=line,
+        sectors={c.name: c.sector for c in targets if c.sector},
     )
     card_path.write_text(card_text, encoding="utf-8")
     print(f"  wrote {card_path}")

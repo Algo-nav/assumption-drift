@@ -9,11 +9,11 @@ license: cc-by-4.0
 
 # assumption-drift
 
-Every numeric guidance statement in the SEC filings of 12 large US companies since 2019, matched to the reported figure and to any later filing that refers back to it. 100 worse than guided. 0 acknowledged. Of the 100 worse-side misses, 72 are more than 1% beyond the guide and 50 more than 5%. None was acknowledged.
+Every numeric guidance statement in the SEC filings of 15 large US companies since 2019, matched to the reported figure and to any later filing that refers back to it. 110 worse than guided. 0 acknowledged. Of the 110 worse-side misses, 79 are more than 1% beyond the guide and 52 more than 5%. None was acknowledged.
 
 | Statements | Resolved | Met | Missed | Worse | Better | Never acknowledged | Acknowledged |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1,134 | 649 | 208 | 441 | 100 | 341 | 432 | 9 |
+| 1,309 | 734 | 223 | 511 | 110 | 401 | 502 | 9 |
 
 - Dataset: https://huggingface.co/datasets/Nav772/assumption-drift
 - GitHub: https://github.com/Algo-nav/assumption-drift

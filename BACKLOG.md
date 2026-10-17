@@ -490,3 +490,132 @@ them. Counts are Item 2.02 8-Ks in `data/raw` with at least one image that is no
 
 None is confirmed to hold guidance the text lacks: that needs the image files (a separate SEC request each; they are not cached) and a look.
 The PDF-only case is a different one, and none of the three has it.
+
+## 25. `scope_changed`: an outcome reported on a different company perimeter than the guide (proposal, not implemented)
+
+Found in Honeywell. Its FY2025 outcomes are reported without Solstice (discontinued operations) while the FY2025 guides included it:
+sales 37,442 against a July 2025 guide of 40.8 to 41.3B, adjusted EPS 9.78 against the October 2025 guide of 10.60 to 10.70. For FY2026
+the January and April 2026 guides cover the whole company, and the July 2026 guide (adjusted EPS 8.05 to 8.35, sales 19.8 to 20.0B,
+free cash flow about 2.0B) covers the remaining company after the Aerospace separation. A "missed" for the FY2025 rows says Honeywell
+fell short of a number it was never measured against, and the same will happen to the January and April FY2026 rows when they close.
+
+**Status.** A sixth value, `scope_changed`: the guide and its outcome (or the company's own later restatement of the guide) are on
+different perimeters, so the comparison is not valid and the row is neither met nor missed. Precedence in `rubric.resolve`:
+open, withdrawn, **scope_changed**, unresolved, met, missed. A scope_changed row keeps its outcome value, date and evidence (the reader
+can see 9.78 beside 10.60 to 10.70) and the rubric does not compare them. `Status` in `schema.py` gains the value, and the schema
+needs one more field, `scope_change_evidence` (an `Evidence` block: the verbatim sentence or table label that shows the recast),
+required when the status is `scope_changed` and absent otherwise, so the claim carries its own source like every other claim.
+The company-level facts stay out of the schema: the row says "different perimeter", the evidence says which one.
+
+**Detection in 04 (a proposal, never a decision).** 04 writes a `scope` object on the outcome row (`signal`, `evidence`); 05 turns it
+into `aid_proposed_status = scope_changed` plus an `aid_scope_note`, through the same paths as any 04 finding (an untouched row is
+filled, a touched or approved row gets a `change_pending_review` proposal). A person confirms with `y`; nothing flips on its own.
+
+- **Signal A, a later guide rebased the period.** For rows with the same company, metric and period, compare the earlier guide with a
+  later one. Two tests, either is enough to raise it: (1) the later guide prints a growth base (the prior-year figure in its sentence or
+  its table's prior-year column) that differs from the earlier guide's base by more than rounding (config `scope.base_tolerance`, start
+  at 3 percent); (2) the later guide's midpoint is more than `scope.level_step` (start at 25 percent) away from the earlier guide's
+  and the ranges do not overlap. Test 2 alone is weak, because a large cut is a real miss and not a perimeter change, so on its own it
+  raises a "check" note, not the proposal. Honeywell FY2026: July sales 19.8 to 20.0B against April 38.8 to 39.8B passes both tests;
+  July EPS 8.05 to 8.35 against 10.35 to 10.65 passes test 1 if the bases differ and is a "check" under test 2 only (a 20 percent step).
+  The rows flagged are the earlier guides, not the new one. This is the only signal available while the period is open.
+- **Signal B, a recast in the Q4 release.** When 04 finds an outcome, look at the release it came from for a recast to continuing
+  operations: the outcome line, its section label, its table header, or the units note naming "continuing operations", "discontinued
+  operations", "excluding <name>", "recast" or "as if the separation"; and, weaker, the release's first screen saying the same. A hit
+  within the outcome's own section proposes the status; a hit elsewhere in the release raises a "check" note. Solstice in the FY2025
+  release is this shape. No model call: both signals are code and cost nothing. A model check on the hit sentence ("does this say the
+  reported figure excludes a business the guide included?") is the next step if the false-positive rate is high.
+- **Not a signal.** A divestiture or acquisition that the guide itself already accounted for ("guidance excludes the pending sale"):
+  the guide names the perimeter, so the outcome is on it. The detector only fires when the later text says the earlier base changed.
+- **Both signals can miss.** A recast with no marker in the line or section, and a rebase whose later guide prints no base and moves
+  less than the step, are not found. They stay as "missed" or "met" for a reviewer to catch.
+
+**Card and `rr stats`.** `by status` shows `scope_changed` as its own count. `resolved` stays met plus missed, so scope_changed rows
+are in neither the miss rate, nor the never-acknowledged share, nor the direction and magnitude figures
+(`missed_by_direction`, `worse_beyond_*`, the miss-magnitude chart). The company table gets a `scope changed` column beside
+`withdrawn`. The card's totals line reads "N met, N missed, N withdrawn, N scope changed, N unresolved", the status list adds a
+definition ("the outcome was reported on a different company perimeter than the guide; shown with its outcome, not scored"), and
+the resolution-by-fiscal-year figure notes the excluded count in its caption and does not draw it as a bar. The Space lists such a
+row with a "different perimeter" badge and the outcome greyed, with the evidence sentence, and with no met or missed colour.
+`rr validate` checks the evidence-required-iff-status rule.
+
+**The Honeywell rows held with `s`.** The review CSV has **ten** such rows, not eleven (FY2025, an outcome from the 2026-01-29 release,
+`approved=false`, no reviewer note): two revenue (April and July 2025 guides), four adjusted EPS (February, April, July, October) and
+four free cash flow (same four dates). The eleventh is not in `data/review/0000773840.csv` by that description; find it before this
+item is built. Treatment: they stay held, unchanged, until the status exists. When it does, Signal B on the 2026-01-29 release proposes
+`scope_changed` for the revenue and EPS rows, which the brief gives as ex-Solstice. Free cash flow (5.1 against 5.2 to 5.8) is not
+stated to be ex-Solstice in the brief and is the case to check by hand: if the release prints it for the whole company it stays
+met or missed. The reviewer confirms each with `y`, and the status is hand-set where the detector misses. The January and April
+FY2026 rows (approved, outcome blank, period open, notes already pointing here) get Signal A when the July guide is in the data; they
+become `scope_changed` on confirmation without an outcome, and the July FY2026 rows stay `unresolved` as the current perimeter.
+Until then no Honeywell row is published (`publish: false`).
+
+**Open questions.** (1) Whether a scope_changed row with no outcome should count in "rows" at all or sit in a separate list. (2) The
+FY2025 EPS guide at July is 10.45 to 10.65 in the CSV and at October 10.60 to 10.70; the brief's "July 2025 guide, 10.60 to 10.70" is
+the October one. (3) Other companies that will meet this (any spin-off or large divestiture): none in the 17 today, so the thresholds
+are tuned on Honeywell alone and should be re-checked on the next one.
+
+## 26. Outcome line selection: a footnote that mentions the metric is offered, the table row that states it is not (proposal, not implemented)
+
+Found in Honeywell's rejected outcomes (see the list in the 2026-10-17 session): for 15 adjusted EPS rows (FY2021 to FY2024) the model was handed a
+"weighted average shares" footnote and returned a figure that line does not print, and the verifier rightly rejected it ("the value 9.89 is not
+printed in the sentence"). The same shape explains 6 operating-margin rows (a "50 bps" change row offered in place of the margin row) and
+two of the revenue rows. The verifier is not wrong in any of them.
+
+**Cause, in two parts.** Fixture: `0000773840-25-000005` (FY2024 results, filed 2025-02-06), draft `01HNGZE60078S2H710QG9D72GE`.
+1. *The real row never reaches the model.* The release prints "Adjusted earnings per share of common stock - diluted $ 2.47 $ 2.69 $ 9.89 $ 9.52
+   $10.10 - 10.50": quarter, prior quarter, year, prior year, then next year's guidance range in the same row. `outcome_line_rejection` drops
+   any line for which `has_range` is true ("the sentence prints a range, and a reported value is a single number"), so the whole row is rejected on account of
+   its trailing guidance column. The rows above it that do state the figure ("Earnings per share of common stock - basic/assuming dilution")
+   are rejected for having no adjusted label. What is left is the two footnotes "For the twelve months ended December 31, 2024, and 2023,
+   adjusted earnings per share utilizes weighted average shares of approximately 655.3 million and 668.2 million, respectively."
+2. *A footnote is as good a candidate as a row.* `select_lines` scores a line from the period words it names, a guidance penalty and a GAAP or
+   non-GAAP bonus. It has no notion of whether the line holds a figure of the metric's own kind. The footnote names the metric, names the
+   period ("twelve months ended December 31, 2024"), holds numbers (654.8, 655.3: shares, not dollars per share) and so scores exactly what a real row scores. With
+   a single candidate there is nothing to rank against, and the model, asked to pick, answers from the release it has read (9.89 is correct, and is printed 400
+   lines further down) with an index that points at the footnote.
+
+**Proposed fix, in this order.**
+1. *Rank by figure kind.* A candidate line scores +2 when it prints a figure of the row's own unit kind (a dollar figure for a per-share or
+   dollar metric, a percent figure for a percent metric: the `_DOLLAR_NUMBER` and `_PERCENT_NUMBER` already used by
+   `is_ambiguous_multi_column`), and -3 when its only numbers are of another kind (a count followed by "million" or "shares", a date, a footnote
+   number). A line naming the metric with a figure beats a footnote that merely contains the metric word, and a footnote with no figure of the
+   unit kind is dropped when any other line is available. Where none is available it stays, so a company that states the result only in prose is not lost.
+2. *Cut a trailing guidance column instead of rejecting the row.* When `has_range` is true only because of a range at the end of a table row (after at
+   least two figures), evaluate the line with the range removed; the value must still be one of the figures before it. The rejection stays for a
+   range anywhere else. This is the change that puts the row in front of the model; part 1 alone only stops the footnote from being chosen.
+3. *Check the other row types.* The basic and diluted EPS rows are correctly refused for a non-GAAP row. A margin row ("Operating Income
+   Margin 18.0% 17.5% 50 bps") needs the same figure-kind test on its percent values and a rule that a trailing "bps" or "pts" change is not a result.
+
+**Test plan.** Fixtures: the 23 Honeywell rejects (draft ids in `data/outcomes/0000773840.rejects.jsonl`); expected is that the footnote is no longer offered
+and the table row is, with no existing outcome of any company losing its evidence line. Replay model-free against the old behaviour for all
+companies first, as for the two earlier selection changes, then re-run 04 for Honeywell only. Costs one Honeywell re-run (about 25 requests).
+
+## 27. The 06_publish dry run overwrites the tracked release files (proposal, not implemented)
+
+`python -m pipeline.06_publish --dry-run`, and a run with no flag at all, only skips the upload. It still writes
+`data/release/assumption_drift.parquet` and `.jsonl`, `card/figures/*.png`, `card/README.md` and `space/index.html`, which are
+tracked. Seen on 2026-10-17: a dry run meant to show what flipping three companies to `publish: true` would do replaced the card, the four
+figures, the Space and the release with the 15-company versions, so the working tree held an unreviewed release while the live one
+was unchanged, and the only way back to the old numbers was a copy taken by hand beforehand (`data/_work/predry/`). It also makes a dry
+run unsafe to repeat on a runner that commits what it finds.
+
+**Proposal.**
+1. A dry run (no `--live`) writes everything to `data/_work/dryrun/` with the same layout (`release/`, `card/`, `card/figures/`, `space/`)
+   and leaves the tracked files alone. `--live` keeps writing the tracked paths and then uploads, as today. The paths come from one
+   function that takes the output root, so the writers (`write_release`, `figures.write_all`, `space.write`, the card write) are
+   unchanged and only the root they are given differs.
+2. The dry run then prints a diff against the tracked files: for the release, rows added, removed and changed per company (by
+   `record_id`) and the status counts before and after; for the card, a unified diff of `README.md` (the numbers and the lead sentence
+   change on every release, so it is short); for the figures and the Space, whether each file is byte-identical, differs, or is new, with
+   sizes. Images are not diffed pixel by pixel. The stats block (`rr stats`) is printed for the tracked release and the dry-run release
+   side by side, so the "before and after" table is one command and no copy is needed.
+3. Exit status 0 whatever the diff says; a `--check` flag (later) can make a non-empty diff exit 1 for CI.
+4. `--live` refuses to run when `data/_work/dryrun/` is older than the review CSVs or the config, or absent: it asks for a dry run first.
+   That makes "look, then publish" the only route, and costs nothing because the dry run is the same build.
+
+**Tests.** A dry run leaves every tracked output byte-identical (hash before and after, on the fixture world the `test_main_*` tests
+already build); `--live` still writes the tracked paths; the printed diff names an added company and a changed status count.
+`test_main_dry_run_writes_everything_but_does_not_upload` is rewritten to look in the dry-run folder.
+
+**Cost.** None at run time. About 60 lines in `06_publish.py` and the tests above. `data/_work/` is already the scratch location, so no new ignore rule.

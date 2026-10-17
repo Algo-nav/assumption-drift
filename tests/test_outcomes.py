@@ -1383,3 +1383,86 @@ def test_only_looks_at_the_listed_drafts_merges_their_rows_and_reports_an_unknow
     assert rows["D2"]["outcome_reason"] == "kept as it was"  # the other draft's row is exactly as it was
     out = capsys.readouterr().out
     assert "--only: 1 of 2 ids found" in out and "not found, skipped: NOPE" in out
+
+
+@pytest.mark.parametrize("title, quarter, year, expected", [
+    ("UnitedHealth Group Reports 2024 Results", None, 2024, True),
+    ("UnitedHealth Group Reports 2024 Results", 4, 2024, True),
+    ("UnitedHealth Group Reports 2024 Results", None, 2023, False),
+    ("UnitedHealth Group Reports 2025 Results and Issues 2026 Outlook", None, 2026, False),
+    ("UnitedHealth Group Reports 2025 Results and Issues 2026 Outlook", None, 2025, True),
+    ("UnitedHealth Group Reports 2024 Results", 3, 2024, False),
+    ("2019 Annual Stress Test Disclosure - DFAST Results", None, 2019, False),
+])
+def test_year_only_headline_is_a_full_year_release(title, quarter, year, expected):
+    assert outcomes.title_names_period(title, "", quarter, year) is expected
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("EX-99.1\n2\nearningsreleasefy22q4.htm\nPRESS RELEASE\nWalmart Inc. net sales exceed $150 billion in Q4\nWalmart U.S. net sales ...", "Walmart Inc. net sales exceed $150 billion in Q4"),
+    ("EX-99.1\nPRESS RELEASE\nWalmart Reports\nFourth Quarter Results\n•Strong revenue growth of 5.7%", "Walmart Reports Fourth Quarter Results"),
+    ("EX-99.1\nPage 1 of 21 UnitedHealth Group Reports 2025 Results and Issues 2026 Outlook • Full year ...", "UnitedHealth Group Reports 2025 Results and Issues 2026 Outlook"),
+    ("EX-99.1 Q3 2020 INVESTOR UPDATE\nAgenda", None),
+])
+def test_top_headline(text, expected):
+    assert outcomes.top_headline(text) == expected
+
+
+def test_prose_sentence_is_preferred_over_unconfirmed_multi_column_rows():
+    """UnitedHealth's FY2024 release (0000731766-25-000022): "Revenues of $400.3 Billion Grew 8%" is offered, and the
+    four- and six-column "Total revenues $298,208 $105,358 ..." rows, which have no header naming the period, are not."""
+    raw = common.RAW_DIR / "0000731766" / "0000731766-25-000022.html"
+    if not raw.exists():
+        pytest.skip("data/raw is not in this checkout")
+    unh = next(c for c in common.companies(CONFIG, ["UNH"]))
+    store = outcomes.DocStore(unh, {"0000731766-25-000022"})
+    matcher = outcomes.metric_pattern("revenue", OCFG["metric_terms"])
+    period = (None, 2024)
+    lines = outcomes.select_lines(store, store.metas, matcher, None, "revenue", period, OCFG, NUMBER)
+    kept = outcomes.prefer_prose(lines, store, period, "USD billions", int(OCFG["section_lookback_lines"]))
+    sentences = [ln.sentence for ln in kept]
+    assert any(s.startswith("Revenues of $400.3 Billion Grew 8%") for s in sentences)
+    assert len(kept) < len(lines)
+    assert not any(outcomes.is_ambiguous_multi_column("USD billions", s) for s in sentences)
+
+
+def test_a_release_with_no_prose_line_keeps_its_table_rows():
+    line = outcomes.Line("a", "2026-01-01", "Revenue $1.0 $2.0 $3.0 $4.0", 0, [], None, None, 2)
+    store = type("S", (), {"metas": []})()
+    assert outcomes.prefer_prose([line], store, (None, 2025), "USD billions", 25) == [line]
+
+
+@pytest.mark.parametrize("sentence, metric, period, expected", [
+    ("•Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share", "EPS GAAP", (None, 2024), 15.51),
+    ("•Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share", "EPS GAAP", (4, 2024), 5.98),
+    ("•Full Year, Fourth Quarter Adjusted Net Earnings were $27.66, $6.81 Per Share", "EPS non-GAAP", (None, 2024), 27.66),
+    ("Full Year and Fourth Quarter Adjusted Net Earnings Per Share of $16.88 and $2.52", "EPS non-GAAP", (4, 2020), 2.52),
+    ("Full Year and Fourth Quarter Net Earnings were $12.19 Per Share and $3.10 Per Share", "EPS GAAP", (None, 2018), 12.19),
+    # adjusted is the non-GAAP row's, never the GAAP row's, and the other way round
+    ("•Full Year, Fourth Quarter Adjusted Net Earnings were $27.66, $6.81 Per Share", "EPS GAAP", (None, 2024), None),
+    ("•Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share", "EPS non-GAAP", (None, 2024), None),
+    # a quarter the sentence does not list, a label count that differs from the figure count, other wording
+    ("•Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share", "EPS GAAP", (3, 2024), None),
+    ("•Full Year and Fourth Quarter Net Earnings were $18.08 Per Share", "EPS GAAP", (None, 2021), None),
+    ("•Full Year, Fourth Quarter Net Earnings were $15.51, $5.98, $4.00 Per Share", "EPS GAAP", (None, 2024), None),
+    ("•Third Quarter Earnings of $6.51 Per Share Include Cyberattack Impacts", "EPS GAAP", (3, 2024), None),
+    ("•Full Year, Fourth Quarter Net Earnings Reflect $0.74, $0.49 Per Share", "EPS GAAP", (None, 2024), None),
+    ("•Full Year, Fourth Quarter Net Earnings were $15.51, $5.98 Per Share", "revenue", (None, 2024), None),
+])
+def test_parallel_eps_takes_the_figure_in_the_position_of_the_periods_label(sentence, metric, period, expected):
+    assert outcomes.parallel_eps(sentence, period, metric) == expected
+
+
+def test_unitedhealth_fy2024_release_offers_the_headline_figure_for_each_eps_row():
+    raw = common.RAW_DIR / "0000731766" / "0000731766-25-000022.html"
+    if not raw.exists():
+        pytest.skip("data/raw is not in this checkout")
+    unh = next(c for c in common.companies(CONFIG, ["UNH"]))
+    store = outcomes.DocStore(unh, {"0000731766-25-000022"})
+    for metric, period, want in [("EPS GAAP", (None, 2024), 15.51), ("EPS GAAP", (4, 2024), 5.98),
+                                 ("EPS non-GAAP", (None, 2024), 27.66), ("EPS non-GAAP", (4, 2024), 6.81)]:
+        matcher = outcomes.metric_pattern(metric, OCFG["metric_terms"])
+        lines = outcomes.select_lines(store, store.metas, matcher, None, metric, period, OCFG, NUMBER)
+        lines = outcomes.prefer_prose(lines, store, period, "USD per share", int(OCFG["section_lookback_lines"]))
+        assert [ln.pick for ln in lines if ln.pick is not None] == [want], (metric, period)
+        assert not any(outcomes.is_ambiguous_multi_column("USD per share", ln.sentence) for ln in lines)

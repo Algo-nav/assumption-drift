@@ -1,0 +1,379 @@
+── 1/20 ── 01FD8PGR00K6CG9858TCFYYVHN ── WMTrevenue  FY2022  (stated 2021-08-17)
+target: 75.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Expecting FY22 Walmart U.S. comp sales of 5% to 6% and Global eCommerce sales of $75 billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 73.6 on 2022-02-17
+  Net sales $19.2 $16.5 $2.7 16.5% $73.6 $63.9 $9.6 15.1%
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: no (The excerpt states '$75 billion' for 'Global eCommerce sales', not total revenue; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: not guidance: Global eCommerce sales is a component, not revenue
+
+── 2/20 ── 01G8SAEJ008F278PTFJDQYPNM0 ── WMToperating income  Q2 FY2023  (stated 2022-07-25)
+target: -60.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000058/exhibit991-pressrelease.htm
+
+excerpt:
+  3Based on current foreign exchange translation rates, operating income includes estimated negative impacts of about $60 million and $100 million for the second quarter and fiscal 2023, respectively.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 6900.0 on 2022-08-16
+  Consolidated operating income was $6.9 billion, a decrease of 6.8%, positively affected by $173 million from an insurance settlement for Walmart Chile.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000065/earningsreleasefy23q2.htm
+
+proposed: unresolved  verify: no (The excerpt states 'negative impacts of about $60 million' for the second quarter, which represents a reduction to operating income, not operating income itself of -$60 million. The excerpt describes )  conflict: false
+approved: false  hand_verified: false  note: not guidance: FX headwind to operating income is a component, not an operating income level
+
+── 3/20 ── 01EYS6ZC00Q20G49K5ED7CFTYK ── WMTtax rate  FY2022  (stated 2021-02-18)
+target: 24.5 to 25.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000022/earningsreleasefy21q4.htm
+
+excerpt:
+  Effective tax rate 24.5% to 25.5%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.4 on 2022-02-17
+  2 The reported effective tax rate was 24.0% and 25.4% for the three months and fiscal year ended January 31, 2022, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 effective tax rate 24.5 to 25.5%, Feb 2021 table
+
+── 4/20 ── 01F5YCBB00KC155ACZN0NEA8H6 ── WMTtax rate  FY2022  (stated 2021-05-18)
+target: 24.5 to 25.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000037/earningsreleasefy22q1.htm
+
+excerpt:
+  Effective tax rate 24.5% to 25.5% No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.4 on 2022-02-17
+  2 The reported effective tax rate was 24.0% and 25.4% for the three months and fiscal year ended January 31, 2022, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 effective tax rate 24.5 to 25.5% reaffirmed May 2021
+
+── 5/20 ── 01F5YCBB00CME72Z7WJZFYG3SS ── WMTcapital expenditures  FY2022  (stated 2021-05-18)
+target: 14.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000037/earningsreleasefy22q1.htm
+
+excerpt:
+  Capital expenditures Around $14 billion with a focus on supply chain, automation, customer-facing initiatives and technology No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 13.1 on 2022-02-17
+  Capital expenditures $13.1 $2.8
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 capex around $14 billion, May 2021 table
+
+── 6/20 ── 01FD8PGR00BJVR25FEM2BXVJ5T ── WMTcapital expenditures  FY2022  (stated 2021-08-17)
+target: 14.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Capital expenditures Around $14 billion No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 13.1 on 2022-02-17
+  Capital expenditures $13.1 $2.8
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 capex around $14 billion reaffirmed Aug 2021
+
+── 7/20 ── 01FD8PGR00FS2XTFAKV2GQA8ZK ── WMTEPS GAAP  FY2022  (stated 2021-08-17)
+target: 6.2 to 6.35 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  $6.20 to $6.35
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 4.87 on 2022-02-17
+  GAAP EPS of $4.87; Adjusted EPS2 of $6.46.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: not guidance: 6.20 to 6.35 was adjusted EPS (Nov 2021 release calls it prior adjusted EPS guidance), row labelled GAAP from a bare excerpt
+
+── 8/20 ── 01FD8PGR00ZTY44HD55JV7FHD5 ── WMTtax rate  FY2022  (stated 2021-08-17)
+target: 24.5 to 25.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Effective tax rate 24.5% to 25.5% No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.4 on 2022-02-17
+  2 The reported effective tax rate was 24.0% and 25.4% for the three months and fiscal year ended January 31, 2022, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 effective tax rate 24.5 to 25.5% reaffirmed Aug 2021
+
+── 9/20 ── 01FMK0P5005PT8HAVAVPF7F302 ── WMTcapital expenditures  FY2022  (stated 2021-11-16)
+target: 13.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000063/earningsreleasefy22q3.htm
+
+excerpt:
+  •FY22 capital expenditures of around $13 billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 13.1 on 2022-02-17
+  Capital expenditures $13.1 $2.8
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 capex around $13 billion, Nov 2021 revision
+
+── 10/20 ── 01FW2FN000ZX1STV2KFT0V3WE3 ── WMTtax rate  FY2023  (stated 2022-02-17)
+target: 25.0 to 26.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+excerpt:
+  Effective tax rate 25% to 26%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 33.6 on 2023-02-21
+  2 The reported effective tax rate was 34.7% and 33.6% for the three months and fiscal year ended January 31, 2023, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000010/earningsreleasefy23q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2023 effective tax rate 25 to 26%, Feb 2022 table
+
+── 11/20 ── 01GSRMA700CT1KQSYFVXZ1C59Q ── WMTtax rate  FY2024  (stated 2023-02-21)
+target: 25.5 to 26.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000010/earningsreleasefy23q4.htm
+
+excerpt:
+  Effective tax rate Range of 25.5% to 26.5%, or an $0.10 headwind to EPS vs. last year. The rate is expected to be more normalized than FY23, which benefited from discrete items
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.5 on 2024-02-20
+  2 The reported effective tax rate was 24.5% and 25.5% for the three months and fiscal year ended January 31, 2024, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 effective tax rate 25.5 to 26.5%, Feb 2023 table
+
+── 12/20 ── 01GX4S0D005MBT1H08M05P9AWV ── WMTtax rate  FY2024  (stated 2023-04-04)
+target: 25.5 to 26.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000026/exhibit991-8xk442023.htm
+
+excerpt:
+  Effective tax rate Range of 25.5% to 26.5%, or an $0.10 headwind to EPS vs. last year. The rate is expected to be more normalized vs. FY23, which benefited from discrete items
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 25.5 on 2024-02-20
+  2 The reported effective tax rate was 24.5% and 25.5% for the three months and fiscal year ended January 31, 2024, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 effective tax rate 25.5 to 26.5% reaffirmed Apr 2023
+
+── 13/20 ── 01EYS6ZC00PE3D3BB09F73X0KW ── WMTcapital expenditures  FY2022  (stated 2021-02-18)
+target: at least 14.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000022/earningsreleasefy21q4.htm
+
+excerpt:
+  FY22 capital investments are expected to be nearly $14 billion to build supply chain capacity and automation to stay ahead of demand, improve the customer experience and increase productivity.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 13.1 on 2022-02-17
+  Capital expenditures $13.1 $2.8
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: not guidance: 'nearly $14 billion' structured as at least 14.0, qualifier wrong; around 14 kept from the May 2021 table
+
+── 14/20 ── 01FMK0P5006GGB1QEE33MFBCCZ ── WMTEPS GAAP  FY2022  (stated 2021-11-16)
+target: 5.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000063/earningsreleasefy22q3.htm
+
+excerpt:
+  FY22 GAAP EPS of around $5.00; Adjusted EPS4 of around $6.40 versus prior guidance of $6.20-$6.35
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 4.87 on 2022-02-17
+  GAAP EPS of $4.87; Adjusted EPS2 of $6.46.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 GAAP EPS around $5.00, headline, Nov 2021
+
+── 15/20 ── 01FMK0P500HCQ0CS1A48PFZB9N ── WMTEPS non-GAAP  FY2022  (stated 2021-11-16)
+target: 6.4 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000063/earningsreleasefy22q3.htm
+
+excerpt:
+  FY22 GAAP EPS of around $5.00; Adjusted EPS4 of around $6.40 versus prior guidance of $6.20-$6.35
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 6.46 on 2022-02-17
+  GAAP EPS of $4.87; Adjusted EPS2 of $6.46.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2022 adjusted EPS around $6.40, headline, Nov 2021
+
+── 16/20 ── 01GSRMA700MR30A29CBEN5A920 ── WMTEPS non-GAAP  FY2024  (stated 2023-02-21)
+target: 5.9 to 6.05 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000010/earningsreleasefy23q4.htm
+
+excerpt:
+  Adjusted earnings per share $5.90 to $6.05, including an expected $0.14 impact from LIFO
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 6.65 on 2024-02-20
+  GAAP EPS of $5.74; Adjusted EPS of $6.651
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 5.90 to 6.05, Feb 2023 guidance table
+
+── 17/20 ── 01GX4S0D00RMDKCG1G21GV3VXX ── WMTEPS non-GAAP  FY2024  (stated 2023-04-04)
+target: 5.9 to 6.05 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000026/exhibit991-8xk442023.htm
+
+excerpt:
+  Adjusted earnings per share $5.90 to $6.05, including an expected $0.14 impact from LIFO
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 6.65 on 2024-02-20
+  GAAP EPS of $5.74; Adjusted EPS of $6.651
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 5.90 to 6.05 reaffirmed Apr 2023, separate filing so kept
+
+── 18/20 ── 01H80CNE0070NFBVSCDV7RDMB3 ── WMTEPS non-GAAP  FY2024  (stated 2023-08-17)
+target: 6.36 to 6.46 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000088/earningsreleasefy24q2.htm
+
+excerpt:
+  Adjusted EPS $6.36 to $6.46, including an expected $0.05 impact from LIFO
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 6.65 on 2024-02-20
+  GAAP EPS of $5.74; Adjusted EPS of $6.651
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 6.36 to 6.46, Aug 2023
+
+── 19/20 ── 01HFAPTV00X3W8SD09HSZKT6BP ── WMTEPS non-GAAP  FY2024  (stated 2023-11-16)
+target: 6.4 to 6.48 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000124/earningsreleasefy24q3.htm
+
+excerpt:
+  The Company’s omnichannel model continues to resonate with customers helping to deliver strong comp sales, including 4.9%3 for Walmart U.S. Looking ahead, the company raises its net sales guidance for FY24 to 5.0% to 5.5% as well as for adjusted EPS of $6.40 to $6.48.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 6.65 on 2024-02-20
+  GAAP EPS of $5.74; Adjusted EPS of $6.651
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2024 adjusted EPS 6.40 to 6.48, Nov 2023
+
+── 20/20 ── 01JD0VG2008X6J5FMDZA7EZPP4 ── WMTtax rate  FY2025  (stated 2024-11-19)
+target: 24.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000170/earningsreleasefy25q3.htm
+
+excerpt:
+  Effective tax rate Approximately 24.5% Lower-end of original guidance Approximately 25.0% to 26.0%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 23.4 on 2025-02-20
+  2 The reported effective tax rate was 22.1% and 23.4% for the three months and fiscal year ended January 31, 2025, respectively.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416925000010/earningsreleasefy25q4.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: FY2025 effective tax rate approximately 24.5%, Nov 2024

@@ -229,9 +229,15 @@ def title_names_period(title: str, head: str, quarter: int | None, year: int, de
     calendar to work it out from, it is checked against the start of the release. The period is never taken from the body alone: Salesforce opens with guidance
     bullets, so a Q3 release names "fourth quarter FY26" without reporting it.
     """
-    if _NOT_RESULTS.search(title) or not _quarter_regex(4 if quarter is None else quarter).search(title):
+    if _NOT_RESULTS.search(title):
         return False
-    named = {int(y) for y in re.findall(r"\b(20\d\d)\b", title)} | {2000 + int(y) for y in re.findall(r"\bFY ?(\d\d)\b", title, re.IGNORECASE)}
+    named = {int(y) for y in re.findall(r"\b(20\d\d)\b", _OUTLOOK_YEAR.sub("", title))} | {2000 + int(y) for y in re.findall(r"\bFY ?(\d\d)\b", title, re.IGNORECASE)}
+    if quarter in (None, 4) and not _NAMES_A_QUARTER.search(title):
+        # "UnitedHealth Group Reports 2024 Results": a fiscal year's results carry the fourth quarter's, and the headline
+        # may name the year and no quarter. It must name this year and no other (a "2026 Outlook" is not a result).
+        return named == {year} and bool(_REPORTS_RESULTS.search(title))
+    if not _quarter_regex(4 if quarter is None else quarter).search(title):
+        return False
     if named:
         return year in named
     return year == derived_year if derived_year is not None else bool(_year_regex(year).search(head))
@@ -240,11 +246,45 @@ def title_names_period(title: str, head: str, quarter: int | None, year: int, de
 def release_names_period(doc: "DocText", period: tuple[int | None, int], head_chars: int, company: Company | None = None) -> bool:
     """Does this release's headline (wrapped over up to three lines) name the period? `company` supplies the fiscal
     calendar for a headline that names a quarter and no year."""
-    title = structure_step.document_title(doc.text, wrap=True)
-    if not title:
-        return False
     derived = company.fiscal_year_reported(period[0], date.fromisoformat(doc.meta["filed_at"])) if company else None
-    return title_names_period(title, doc.text[:head_chars], *period, derived_year=derived)
+    titles = [structure_step.document_title(doc.text, wrap=True), top_headline(doc.text)]
+    return any(title_names_period(t, doc.text[:head_chars], *period, derived_year=derived) for t in dict.fromkeys(titles) if t)
+
+
+_OUTLOOK_YEAR = re.compile(r"\b20\d\d\s+(?:performance\s+)?(?:outlook|guidance|expectations|targets?)\b", re.IGNORECASE)
+_REPORTS_RESULTS = re.compile(r"\breports?\b.*\b(?:results|performance|earnings)\b", re.IGNORECASE)
+# A first line that reads as a results headline, and not as a deck, a stress test or a contact block.
+_TOP_RESULTS = re.compile(r"\b(?:reports?|results|net sales|comp sales|revenue|EPS|earnings)\b", re.IGNORECASE)
+_TOP_NOT_RESULTS = re.compile(r"presentation|slides?\b|investor update|stress test|prepared remarks|supplement|contact", re.IGNORECASE)
+_NAMES_A_QUARTER = structure_step._NAMES_A_QUARTER
+_TOP_SKIP = re.compile(
+    r"^(?:EX-99(?:\.\d+)?|\d+|(?:PRESS|EARNINGS|NEWS) RELEASE|FOR IMMEDIATE RELEASE|\S+\.html?"
+    r"|(?:[A-Z][a-z]+\.? \d{1,2}, 20\d\d)|(?:\(?[A-Z][a-z]+\.? \d{1,2}, 20\d\d\)?))$", re.IGNORECASE)
+_PAGE_PREFIX = re.compile(r"^(?:Page \d+ of \d+|\d+)\s+(?=[A-Za-z])", re.IGNORECASE)
+
+
+def top_headline(text: str) -> str | None:
+    """The first real line of the release, for a release whose headline `document_title` cannot find: it has none of the
+    words that function looks for (Walmart's "Walmart Inc. net sales exceed $150 billion in Q4"), is shorter than four
+    words ("Walmart Reports", continued on the next line), or shares its line with the bullets under it (UnitedHealth's
+    2026 "Page 1 of 21 UnitedHealth Group Reports 2025 Results ... \u2022 ..."). Exhibit labels, file names and page numbers
+    are skipped, the line is cut at its first bullet, and it is continued over up to two more lines until it names a
+    quarter. Only this first line is read, never the bullets under it, so a third-quarter release that mentions the
+    fourth quarter's outlook further down is not taken for the fourth quarter's."""
+    lines = text.split("\n")
+    for i, raw in enumerate(lines[:12]):
+        line = _PAGE_PREFIX.sub("", raw.strip()).split("\u2022")[0].strip()
+        if not line or _TOP_SKIP.match(line):
+            continue
+        headline = line
+        for extra in lines[i + 1 : i + structure_step.HEADLINE_LINES]:
+            extra = extra.strip()
+            if _NAMES_A_QUARTER.search(headline) or not extra or extra.startswith("\u2022"):
+                break
+            headline = f"{headline} {extra.split(chr(0x2022))[0].strip()}"
+        headline = headline[: structure_step.HEADLINE_CHARS]
+        return headline if _TOP_RESULTS.search(headline) and not _TOP_NOT_RESULTS.search(headline) else None
+    return None
 
 
 def metric_pattern(metric: str, groups: list[dict[str, str]]) -> re.Pattern[str] | None:
@@ -334,6 +374,54 @@ class Line:
     section: str | None
     units_note: str | None
     score: int
+    pick: float | None = None  # the figure code took from a parallel list ("Full Year, Fourth Quarter ... $15.51, $5.98"); it overrides the model's value
+
+
+# "Full Year and Fourth Quarter Net Earnings were $12.19 Per Share and $3.10 Per Share", "... Per Share of $16.88 and $2.52":
+# period labels in one order, then figures in the same order. Only an EPS row reads these, and only with the same count of each.
+_PARALLEL_LABEL = re.compile(r"full[- ]year|fiscal year|(?:first|second|third|fourth) quarter|\bQ[1-4]\b", re.IGNORECASE)
+_PARALLEL_SEP = re.compile(r"^[\s,;&]*(?:and)?[\s,;&]*$", re.IGNORECASE)
+_PARALLEL_METRIC = re.compile(r"\b(adjusted\s+)?(?:net\s+)?earnings\b", re.IGNORECASE)
+_PARALLEL_LEAD = re.compile(r"(?:\s|,|:|-|\b(?:per share|were|was|of|is|are)\b)*", re.IGNORECASE)
+_QUARTER_NAME = {1: "first quarter", 2: "second quarter", 3: "third quarter", 4: "fourth quarter"}
+
+
+def parallel_eps(sentence: str, period: tuple[int | None, int] | None, metric: str) -> float | None:
+    """The EPS figure a headline in parallel order prints for this period, or None. The sentence must be nothing but
+    period labels (then `Net Earnings` or `Adjusted Net Earnings`) followed by dollar figures, with as many figures as
+    labels, and name this row's label ("full year" for a fiscal-year row, "fourth quarter" for Q4). The first label takes the
+    first figure, the second the second. `Adjusted` is the non-GAAP row's and its absence the GAAP row's; any other wording
+    between labels and figures ("Reflect", "Include") refuses the sentence, as does a label count that differs from the figure count."""
+    if period is None or not metric.startswith("EPS"):
+        return None
+    text = sentence.lstrip(" \u2022-*\t")
+    m = _PARALLEL_METRIC.search(text)
+    if not m or "per share" not in text.lower():
+        return None
+    prefix = text[: m.start()]
+    labels = [(x.group(0).lower().replace("-", " "), x.span()) for x in _PARALLEL_LABEL.finditer(prefix)]
+    if len(labels) < 2:
+        return None
+    gaps = [prefix[: labels[0][1][0]]] + [prefix[labels[i][1][1] : labels[i + 1][1][0]] for i in range(len(labels) - 1)] + [prefix[labels[-1][1][1] :]]
+    if not all(_PARALLEL_SEP.match(g) for g in gaps):
+        return None
+    first = _DOLLAR_NUMBER.search(text, m.end())
+    if first is None or not _PARALLEL_LEAD.fullmatch(text[m.end() : first.start()]):
+        return None
+    figures = _DOLLAR_NUMBER.findall(text[m.end() :])
+    if len(figures) != len(labels) or _ANY_YEAR.search(text):
+        return None
+    if bool(m.group(1)) != ("non-gaap" in metric.lower()):
+        return None
+    want = "full year" if period[0] is None else _QUARTER_NAME[period[0]]
+    names = ["full year" if n in ("fiscal year", "full year") else _QUARTER_NAME[int(n[1])] if re.fullmatch(r"q[1-4]", n) else n
+             for n, _ in labels]
+    if want not in names or names.count(want) != 1:
+        return None
+    try:
+        return float(figures[names.index(want)].replace("$", "").replace(",", "").replace("(", "-").replace(")", "").strip())
+    except ValueError:
+        return None
 
 
 def _section_label(doc: DocText, line_index: int, lookback: int) -> str | None:
@@ -391,7 +479,8 @@ def select_lines(
                 continue
             if reject is not None and reject(doc, start, sentence):
                 continue
-            if not matcher.search(sentence):
+            pick = parallel_eps(sentence, period, metric)
+            if pick is None and not matcher.search(sentence):
                 # A full-year row also takes a line that states the year and a number when the line above it is what
                 # names the metric: the label and the figure are on separate lines in a results table.
                 label = doc.lines[li - 1] if li > 0 else ""
@@ -418,7 +507,7 @@ def select_lines(
             scored.append((-score, order, Line(
                 accession=meta["accession"], filed_at=meta["filed_at"], sentence=sentence, char_start=start,
                 before=[doc.text[a:b][:300] for a, b in doc.spans[max(0, k - 2) : k]],
-                section=section, units_note=_units_note(doc, li, int(cfg["units_lookback_lines"])), score=score)))
+                section=section, units_note=_units_note(doc, li, int(cfg["units_lookback_lines"])), score=score, pick=pick)))
             order += 1
     best = sorted(scored)[: int(cfg["max_lines"])]
     return [line for _, _, line in sorted(best, key=lambda t: (t[2].filed_at, t[2].accession, t[2].char_start))]
@@ -574,6 +663,23 @@ def load_drafts(company: Company) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def prefer_prose(lines: list[Line], store: DocStore, period: tuple[int | None, int] | None, unit: str, lookback: int) -> list[Line]:
+    """Where a release offers a prose sentence for the metric, drop that release's multi-column table lines that
+    `column_confirmed` would hold back. A prose line is one that is not an ambiguous multi-column row and has a
+    reporting verb ("Revenues of $400.3 Billion Grew 8%", "Net Earnings were $15.51"): it states the figure without
+    the model having to pick a column. A table row whose header names the period is confirmed and is kept, and a
+    release with no prose line keeps every line, so this never leaves a release without a candidate."""
+    def is_prose(line: Line) -> bool:
+        return not is_ambiguous_multi_column(unit, line.sentence) and bool(_REPORTING_VERB.search(line.sentence))
+
+    with_prose = {ln.accession for ln in lines if is_prose(ln)}
+    if not with_prose:
+        return lines
+    metas = {m["accession"]: m for m in store.metas}
+    return [ln for ln in lines if ln.accession not in with_prose or is_prose(ln)
+            or column_confirmed(store, metas[ln.accession], ln, period, unit, lookback)]
+
+
 def build_outcome_requests(
     drafts_by_company: dict[str, list[dict[str, Any]]],
     stores: dict[str, DocStore],
@@ -614,6 +720,7 @@ def build_outcome_requests(
                 return outcome_line_rejection(store, doc, start, sentence, a, matcher) is not None
 
             lines = select_lines(store, named[: int(cfg["max_docs"])], matcher, None, a["metric"], period, cfg, number, reject=reject)
+            lines = prefer_prose(lines, store, period, a["unit"], int(cfg["section_lookback_lines"]))
             if not lines:
                 reasons[d["draft_id"]] = "the matching release has no line naming the metric with a number"
                 continue
@@ -745,7 +852,8 @@ def derive_outcomes(
             why = outcome_line_rejection(store, store.get(meta), line.char_start, line.sentence, a, metric_pattern(a["metric"], cfg["metric_terms"]))
             if why:
                 raise ValueError(why)
-            value = convert(float(payload["value"]), payload["unit"], a["unit"])
+            value = (convert(line.pick, "USD per share", a["unit"]) if line.pick is not None
+                     else convert(float(payload["value"]), payload["unit"], a["unit"]))
             value = comparable_sales_sign(a["metric"], value, line.sentence)
             if not value_in_evidence(value, line.sentence):
                 raise ValueError(f"the value {value:g} is not printed in the sentence")

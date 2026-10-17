@@ -8,20 +8,24 @@ tags:
 - guidance
 - provenance
 size_categories:
-- n<1K
+- 1K<n<10K
 pretty_name: assumption-drift
 ---
 # assumption-drift
+
+Filings processed through 2026-10-15. 10 rows pending review.
 
 Write-up: how it was built and what it found: https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md
 
 ## What this is
 
-Adobe Inc., Advanced Micro Devices, Inc., Amazon.com, Inc., Broadcom Inc., Lowe's Companies, Inc., Meta Platforms, Inc., Microsoft Corporation, NVIDIA Corporation, QUALCOMM Incorporated, Salesforce, Inc., Target Corporation and The Home Depot, Inc. made numeric forward guidance statements in their own SEC filings, filed between
-January 2019 and September 2026. This dataset pairs each one with what the company later reported for that same metric
+This release covers fifteen companies in six sectors: technology (7), consumer discretionary (3), consumer staples (2), and one each in communication services, health care and industrials.
+
+Adobe Inc., Advanced Micro Devices, Inc., Amazon.com, Inc., Broadcom Inc., Honeywell International Inc., Lowe's Companies, Inc., Meta Platforms, Inc., Microsoft Corporation, NVIDIA Corporation, QUALCOMM Incorporated, Salesforce, Inc., Target Corporation, The Home Depot, Inc., UnitedHealth Group Incorporated and Walmart Inc. made numeric forward guidance statements in their own SEC filings, filed between
+January 2019 and October 2026. This dataset pairs each one with what the company later reported for that same metric
 and period, and records whether the company ever acknowledged the gap when the guidance was missed.
 It is a problem statement in data form, not a model and not a demonstration of one.
-Apple Inc., Alphabet Inc. and Costco Wholesale Corporation were in the company list but issued no numeric guidance in filing text, so they have no rows here.
+Apple Inc., Alphabet Inc., Costco Wholesale Corporation and Caterpillar Inc. were in the company list but issued no numeric guidance in filing text, so they have no rows here.
 JPMorgan Chase & Co. issues numeric outlook in filings, but on metrics outside this release's schema (for JPMorgan, net interest income and adjusted expense); not published.
 Micron Technology, Inc. is fetched and structured; review is not finished, so it is not published.
 
@@ -48,9 +52,9 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-13, the release holds **1,134 rows**: 208 met, 441 missed, 482 unresolved, 3 withdrawn.
-Of the misses, 341 were better than guided and 100 worse than guided; median days from the guidance to the
-filing that made it checkable was 91, and
+As of 2026-10-17, the release holds **1,309 rows**: 223 met, 511 missed, 560 unresolved, 15 withdrawn.
+Of the misses, 401 were better than guided and 110 worse than guided; median days from the guidance to the
+filing that made it checkable was 93.0, and
 98% of misses were never acknowledged in a later filing.
 
 By company:
@@ -61,14 +65,17 @@ By company:
 | Advanced Micro Devices, Inc. | 96 | 37 | 19 | 0 | 40 | 100% |
 | Amazon.com, Inc. | 30 | 10 | 18 | 0 | 2 | 100% |
 | Broadcom Inc. | 34 | 1 | 27 | 1 | 5 | 100% |
+| Honeywell International Inc. | 69 | 2 | 10 | 1 | 56 | 100% |
 | Lowe's Companies, Inc. | 110 | 0 | 4 | 0 | 106 | 100% |
 | Meta Platforms, Inc. | 80 | 37 | 27 | 0 | 16 | 100% |
 | Microsoft Corporation | 5 | 0 | 0 | 0 | 5 | n/a |
 | NVIDIA Corporation | 212 | 43 | 94 | 0 | 75 | 100% |
 | QUALCOMM Incorporated | 85 | 33 | 28 | 0 | 24 | 100% |
 | Salesforce, Inc. | 316 | 16 | 170 | 0 | 130 | 99% |
-| Target Corporation | 82 | 27 | 39 | 2 | 14 | 79% |
+| Target Corporation | 87 | 28 | 43 | 2 | 14 | 81% |
 | The Home Depot, Inc. | 76 | 4 | 15 | 0 | 57 | 100% |
+| UnitedHealth Group Incorporated | 70 | 7 | 43 | 8 | 12 | 100% |
+| Walmart Inc. | 31 | 5 | 13 | 3 | 10 | 100% |
 
 ![Missed rows: when the gap was acknowledged](figures/falsifiable_vs_acknowledged.png)
 ![Worse and better than guided, acknowledged or not](figures/acknowledgement_by_company.png)
@@ -88,7 +95,7 @@ one the pipeline used.
 
 ## Known limitations
 
-- This covers twelve companies. It is a pilot, not a survey of the market.
+- This covers fifteen companies. It is a pilot, not a survey of the market.
 - The pipeline does not claim to capture every guidance statement a company ever made; it captures
   the ones its patterns and its model caught.
 - A row reported better than guided is recorded as missed, the same as one reported worse, because the
@@ -130,7 +137,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-13.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-17.
 
 ## Licence
 

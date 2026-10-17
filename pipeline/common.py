@@ -55,6 +55,8 @@ class Company:
     #: Why a publish: false company is not published; one of the card's reasons (06_publish.UNPUBLISHED_REASONS). The card
     #: build refuses a publish: false company that has none.
     unpublished_reason: str | None = None
+    #: The sector the card names for a published company (06_publish); optional, and only read by the card.
+    sector: str | None = None
 
     def fiscal_year_reported(self, quarter: int | None, filed_at: date) -> int | None:
         """The fiscal year a release filed on `filed_at` reports for a headline that names `quarter` (None: the fiscal
@@ -177,7 +179,7 @@ def _company(entry: dict[str, Any]) -> Company:
         raise ValueError(f"{entry.get('ticker')}: publish must be true or false, got {publish!r}")
     return Company(name=entry["name"], ticker=entry["ticker"].upper(), cik=str(entry["cik"]).zfill(10),
                    fiscal_year_end_month=month, fiscal_year_named_for=named_for, tax_rate_parens_negative=parens, publish=publish,
-                   unpublished_reason=entry.get("unpublished_reason"))
+                   unpublished_reason=entry.get("unpublished_reason"), sector=entry.get("sector"))
 
 
 def companies(config: dict[str, Any], only: list[str] | None = None) -> list[Company]:
