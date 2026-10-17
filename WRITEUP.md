@@ -109,7 +109,7 @@ The verifier pass agreed with the reviewer on 87% of rows (1,299 of 1,496 with a
 
 As a predictor of rejection it is weak: a "no" is right 61% of the time (76 of 125) and catches a third of the real rejections (76 of 224). Another 37 approved rows have no verdict, and 10 rows held in review (9 yes, 1 no) are left out. It earned its keep by pointing at 9 rows whose period or sign was wrong, not by judging.
 
-The residual error rate after review is not measured. 94 of 1,309 published rows (7.2%) were opened on EDGAR and checked by URL; whether a reviewer who read 1,543 rows in under four weeks (22 September to 17 October) missed things is the question I cannot answer from inside. Errors reported by readers will be listed in the dataset discussions and corrected in the next release.
+The residual error rate after review is not measured. 94 of 1,309 published rows (7.2%) were opened on EDGAR and checked by URL; whether a reviewer who read 1,543 rows by hand missed things is the question I cannot answer from inside. Errors reported by readers will be listed in the dataset discussions and corrected in the next release.
 
 Model spend: $14.93 in total across 15 companies. The per-stage split is no longer maintained: the weekly job records spend per run in `data/spend_ledger.jsonl`.
 
