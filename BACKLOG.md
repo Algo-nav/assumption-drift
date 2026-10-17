@@ -456,3 +456,37 @@ The 2026-10-15 refresh rewrote 14 `data/outcomes/*.jsonl` files, about 250 lines
 row order. In `--from-review` / `--only` mode, 04 wrote the untouched rows followed by the re-checked rows, so every re-checked row
 moved to the end of its file. Fix: `_merge_in_place` replaces each re-checked row where it stands, appends new rows, drops rows that
 are gone (rows and rejects). A row whose content is unchanged is now byte-identical, so it is not in the diff.
+
+## 24. A "guidance is based on the following FY26 figures" sentence restates last year; it is not guidance
+
+Found by the three-sector screen (UnitedHealth, Honeywell, Walmart picked for batch 2).
+
+- **The sentence.** Walmart's releases carry "The Company's fiscal year guidance is based on the following FY26 figures: Net sales:
+  $706.4 billion, adjusted operating income: $31.0 billion, and adjusted EPS: $2.64." and, for a quarter, "...third quarter fiscal 2027
+  guidance is based on the following Q3 FY26 figures: Net sales: $177.8 billion ...". These are the year-ago results the growth rates
+  beside them are measured from. 02 captures them (forward term "guidance" plus dollar figures), and the model would read them as FY26
+  revenue, operating income and EPS "guidance". They appeared in 11 of Walmart's 11 earnings releases from 2024 on. Fixture: accession
+  **0000104169-26-000145**, filed 2026-08-20.
+- **Fix.** `03_structure.check_not_restated_base`, called right after the bare-value guard, rejects an item whose figures are printed
+  only in a sentence shaped "guidance ... is based on ... FY<yy>" or "... base year", with the reason `restated base year`. An item whose
+  figures are also printed outside that sentence (the real guidance in the same excerpt) is kept. Tests in `tests/test_backlog_fixes.py`
+  (the two Walmart sentences, each metric; guidance beside a base sentence; ordinary "guidance is based on current expectations").
+- **Not done.** The sentence is still a 02 candidate and still costs a request (about 2 per Walmart release). Dropping it in 02 would
+  save that, but 02 does not know about metrics; left to the guard.
+- **Consequence for Walmart.** Its net sales and operating income guidance is a growth rate in constant currency with no level
+  ("net sales expected to grow 4.0% to 5.0%"), which gives no row under the metric rules, so the restated base is the only place a
+  dollar level for those two appears. Only adjusted EPS ($2.80 to $2.87) is a level.
+
+### Guidance that may sit in embedded images (UnitedHealth, Honeywell, Walmart)
+
+The text pass reads only the HTML text of the exhibit. Every one of the three embeds images in its earnings exhibits, and 02 cannot read
+them. Counts are Item 2.02 8-Ks in `data/raw` with at least one image that is not a logo, from a local pass over the cached HTML:
+
+- **Walmart:** 31 of 31 releases, 2019 to 2026 (`image9a15.jpg`, `er1.jpg`, `er2.jpg`, `er3.jpg`, `fy26q2_keyperformancemetri.jpg`). In 17 the
+  image follows a guidance headline or sentence ("Company reiterates fiscal 2020 guidance"). Most likely to hold guidance in an image.
+- **UnitedHealth:** 19 of 32; 2026 releases carry `earningsrelease1q26press001-003.jpg` and `earningsrelease2q26_*.jpg`, page-sized images
+  near the end of the release. Its guidance is in the headline and body text, so an image would repeat it at most.
+- **Honeywell:** 34 of 37, all charts (`chart-*.jpg`, `x2_*.jpg`). Its guidance table is HTML text and was captured as a section.
+
+None is confirmed to hold guidance the text lacks: that needs the image files (a separate SEC request each; they are not cached) and a look.
+The PDF-only case is a different one, and none of the three has it.

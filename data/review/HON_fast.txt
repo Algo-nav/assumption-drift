@@ -1,0 +1,660 @@
+── 1/47 ── 01D2K5NR00FBST2Q3WRKBSCPV1 ── HONEPS GAAP  FY2019  (stated 2019-02-01)
+target: 7.8 to 8.1 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319000246/c92841_ex99.htm
+
+excerpt:
+  EXPECTS 2019 EARNINGS PER SHARE OF $7.80 - $8.10
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/47 ── 01D8PVWC002P51P9SDY9CF83XE ── HONEPS GAAP  FY2019  (stated 2019-04-18)
+target: 7.9 to 8.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319001231/c93457_ex99.htm
+
+excerpt:
+  to a new range of $7.90 to $8.15, and organic sales guidance to a new range of 3% to 6%.”
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/47 ── 01DG161S0080BCMPEK0YZYCKGE ── HONEPS GAAP  FY2019  (stated 2019-07-18)
+target: 7.95 to 8.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000012/exhibit99-q22019earningsre.htm
+
+excerpt:
+  “Given our first-half performance and our confidence in our ability to continue to deliver for our shareowners even in an uncertain environment, we are raising our full-year earnings per share guidance by 5 cents to a new range of $7.95 to $8.15, and raising our organic sales guidance to a new range of 4% to 6%,” Adamczyk concluded.
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/47 ── 01DZWEBC00S9GBG4XFABGJH12R ── HONEPS GAAP  FY2020  (stated 2020-01-31)
+target: 8.6 to 9.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000005/exhibit99-q42019earnin.htm
+
+excerpt:
+  HONEYWELL EXPANDS OPERATING MARGIN 220 BASIS POINTS, SEGMENT MARGIN 130 BASIS POINTS AND GENERATES OVER $2 BILLION OF CASH DURING THE QUARTER; EXPECTS 2020 EARNINGS PER SHARE OF $8.60 - $9.00
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/47 ── 01ENVCVK0078FR0XRKQFE245AV ── HONEPS GAAP  Q4 FY2020  (stated 2020-10-30)
+target: 1.97 to 2.02 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Reinstates Financial Guidance; Expects Fourth Quarter EPS of $1.97 to $2.02 and Full-Year EPS of $6.78 to $6.83, Full-Year Adjusted EPS1 of $7.00 to $7.05
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/47 ── 01ENVCVK00DC5FSSHRKMYP0WK9 ── HONEPS GAAP  FY2020  (stated 2020-10-30)
+target: 6.78 to 6.83 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Reinstates Financial Guidance; Expects Fourth Quarter EPS of $1.97 to $2.02 and Full-Year EPS of $6.78 to $6.83, Full-Year Adjusted EPS1 of $7.00 to $7.05
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 7/47 ── 01ENVCVK002VB3480PK6Y82GT6 ── HONEPS non-GAAP  FY2020  (stated 2020-10-30)
+target: 7.0 to 7.05 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Reinstates Financial Guidance; Expects Fourth Quarter EPS of $1.97 to $2.02 and Full-Year EPS of $6.78 to $6.83, Full-Year Adjusted EPS1 of $7.00 to $7.05
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 8/47 ── 01ENVCVK00KJZBEE4V294KDJJV ── HONoperating margin non-GAAP  Q4 FY2020  (stated 2020-10-30)
+target: 21.1 to 21.3 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Honeywell expects fourth quarter sales of $8.2 billion to $8.5 billion, representing a year-over-year organic sales decline of 11% to 14%; segment margin of 21.1% to 21.3%, down 10 to 30 basis points; and earnings per share of $1.97 to $2.02, down 2% to 4% adjusted.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 9/47 ── 01ENVCVK00FTF09MQWDGYHQ7F3 ── HONEPS non-GAAP  Q4 FY2020  (stated 2020-10-30)
+target: 1.97 to 2.02 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Honeywell expects fourth quarter sales of $8.2 billion to $8.5 billion, representing a year-over-year organic sales decline of 11% to 14%; segment margin of 21.1% to 21.3%, down 10 to 30 basis points; and earnings per share of $1.97 to $2.02, down 2% to 4% adjusted.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 10/47 ── 01EX5Q100052061X33Q12FHYR6 ── HONEPS GAAP  FY2021  (stated 2021-01-29)
+target: 7.6 to 8.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+excerpt:
+  Expect 2021 Earnings Per Share of $7.60 - $8.00, Up 13% - 19%, 7% - 13% Adjusted3
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 11/47 ── 01F3Y0DC006EZ29AXY3TGEP3D9 ── HONcomparable sales  FY2021  (stated 2021-04-23)
+target: 3.0 to 5.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000030/exhibit99-q12021earningsre.htm
+
+excerpt:
+  Full-year organic sales growth is now expected to be in the range of 3% to 5%.
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 12/47 ── 01F3Y0DC00WZZDF20N4HQ7PBTB ── HONEPS non-GAAP  FY2021  (stated 2021-04-23)
+target: 7.75 to 8.0 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000030/exhibit99-q12021earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2 is expected to be $7.75 to $8.00, up 15 cents from the low end of the prior guidance range.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 13/47 ── 01F3Y0DC00WAW44QV2NVAZ4NEZ ── HONfree cash flow  FY2021  (stated 2021-04-23)
+target: 5.2 to 5.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000030/exhibit99-q12021earningsre.htm
+
+excerpt:
+  Operating cash flow is now expected to be in the range of $5.8 billion to $6.1 billion and free cash flow is now expected to be in the range of $5.2 billion to $5.5 billion.
+
+outcome: reported 5.729 on 2022-02-03
+  Free Cash Flow 5,729 5,302 8%
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 14/47 ── 01FB8AJS00FQAXA6K7AF01R4S3 ── HONEPS non-GAAP  FY2021  (stated 2021-07-23)
+target: 7.95 to 8.1 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000055/exhibit99-q22021earningsre.htm
+
+excerpt:
+  Adjusted earnings per share3 is expected to be $7.95 to $8.10, up 10 cents from the high end of the prior guidance range.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 15/47 ── 01FB8AJS00V5MZ7BQ3MB43C3VN ── HONfree cash flow  FY2021  (stated 2021-07-23)
+target: 5.3 to 5.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000055/exhibit99-q22021earningsre.htm
+
+excerpt:
+  Operating cash flow is now expected to be in the range of $5.9 billion to $6.2 billion and free cash flow is now expected to be in the range of $5.3 billion to $5.6 billion.
+
+outcome: reported 5.729 on 2022-02-03
+  Free Cash Flow 5,729 5,302 8%
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 16/47 ── 01FJJMR600DT5XGPZR13VXJ17B ── HONEPS non-GAAP  FY2021  (stated 2021-10-22)
+target: 8.0 to 8.1 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000064/exhibit99-q32021earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2 is expected to be $8.00 to $8.10.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 17/47 ── 01G1S9W1005NCYBKF7DWJ6WP1J ── HONEPS non-GAAP  FY2022  (stated 2022-04-29)
+target: 8.5 to 8.8 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000035/exhibit99-q12022earningsre.htm
+
+excerpt:
+  Adjusted earnings per share3 is now expected to be in the range of $8.50 to $8.80, up 10 cents on both ends to reflect the updated share repurchase target announced at our investor day.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 18/47 ── 01G1S9W100QZ64PSWSM9TGDMC2 ── HONfree cash flow  FY2022  (stated 2022-04-29)
+target: 4.7 to 5.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000035/exhibit99-q12022earningsre.htm
+
+excerpt:
+  Operating cash flow is expected to be in the range of $5.7 billion to $6.1 billion, and free cash flow is expected to be $4.7 billion to $5.1 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 19/47 ── 01G911MQ003JX7P6Z6M567ZQMD ── HONEPS non-GAAP  FY2022  (stated 2022-07-28)
+target: 8.55 to 8.8 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000052/exhibit99-q22022earningsre.htm
+
+excerpt:
+  Adjusted earnings per share4,5 is now expected to be in the range of $8.55 to $8.80.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 20/47 ── 01G911MQ006PYFRAYK11GDXKJ0 ── HONfree cash flow  FY2022  (stated 2022-07-28)
+target: 4.7 to 5.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000052/exhibit99-q22022earningsre.htm
+
+excerpt:
+  Operating cash flow is expected to be in the range of $5.5 billion to $5.9 billion, and free cash flow is expected to be $4.7 billion to $5.1 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 21/47 ── 01GGBBT400V61AMYCEMW8K9JG9 ── HONrevenue  FY2022  (stated 2022-10-27)
+target: 35.4 to 35.7 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000069/exhibit99-q32022earningsre.htm
+
+excerpt:
+  As a result of the company's third-quarter performance and management's outlook for the remainder of the year, full-year sales are now expected to be in the range of $35.4 billion to $35.7 billion, up 6% to 7% organically, or up 8% to 9% excluding the one-point impact of COVID-driven mask sales declines and one-point impact of lost Russian sales.
+
+outcome: reported 35.466 on 2023-02-02
+  Net sales $ 35,466 $ 35,466
+
+acknowledgement: none
+
+proposed: met  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 22/47 ── 01GGBBT400F7692EYC5MZB99NM ── HONEPS non-GAAP  FY2022  (stated 2022-10-27)
+target: 8.7 to 8.8 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000069/exhibit99-q32022earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $8.70 to $8.80.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 23/47 ── 01GGBBT400HMEHXQ0PDFFJVMPA ── HONfree cash flow  FY2022  (stated 2022-10-27)
+target: 4.7 to 5.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000069/exhibit99-q32022earningsre.htm
+
+excerpt:
+  Operating cash flow is expected to be in the range of $5.2 billion to $5.6 billion and free cash flow1 is expected to be $4.7 billion to $5.1 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 24/47 ── 01GR7PRJ00FS7YAWFQEDHVXS31 ── HONEPS non-GAAP  FY2023  (stated 2023-02-02)
+target: 8.8 to 9.2 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000004/exhibit99-q42022earningsre.htm
+
+excerpt:
+  Expect 2023 Adjusted Earnings Per Share of $8.80 - $9.20, Up 0% - 5% Adjusted2,3, or Up 7% - 11% Excluding Pension Headwind
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 25/47 ── 01GZ004Y00R7GX8K394SEYAE96 ── HONEPS non-GAAP  FY2023  (stated 2023-04-27)
+target: 9.0 to 9.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000035/exhibit99-q12023earningsre.htm
+
+excerpt:
+  Adjusted earnings per share3,4 is now expected to be in the range of $9.00 to $9.25, up 20 cents on the low end and 5 cents on the high end from the prior guidance range.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 26/47 ── 01GZ004Y00S154VA08P77V8E09 ── HONfree cash flow  FY2023  (stated 2023-04-27)
+target: 3.9 to 4.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000035/exhibit99-q12023earningsre.htm
+
+excerpt:
+  Free cash flow1 is still expected to be in the range of $3.9 billion to $4.3 billion, or $5.1 billion to $5.5 billion excluding the net impact of settlements signed in the fourth quarter of 2022.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 27/47 ── 01H6AAAB0013H06PKTBQDB0MCM ── HONEPS non-GAAP  FY2023  (stated 2023-07-27)
+target: 9.05 to 9.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000070/exhibit99-q22023earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $9.05 to $9.25, up 5 cents on the low end from the prior guidance range.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 28/47 ── 01H6AAAB0011EJ4080VJP1VKGG ── HONfree cash flow  FY2023  (stated 2023-07-27)
+target: 3.9 to 4.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000070/exhibit99-q22023earningsre.htm
+
+excerpt:
+  Free cash flow1 is still expected to be in the range of $3.9 billion to $4.3 billion, or $5.1 billion to $5.5 billion excluding the net impact of settlements signed in the fourth quarter of 2022.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 29/47 ── 01HDMMFR001FVSQZ74JKF1F46N ── HONEPS non-GAAP  FY2023  (stated 2023-10-26)
+target: 9.1 to 9.2 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000083/exhibit99-q32023earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $9.10 to $9.20, narrowing the range by 5 cents on both ends from the prior guidance range.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 30/47 ── 01HDMMFR00ZYAWAMMTWR9MNT57 ── HONfree cash flow  FY2023  (stated 2023-10-26)
+target: 3.9 to 4.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000083/exhibit99-q32023earningsre.htm
+
+excerpt:
+  Operating cash flow is still expected to be in the range of $4.9 billion to $5.3 billion, and free cash flow1 is still expected to be in the range of $3.9 billion to $4.3 billion, or $5.1 billion to $5.5 billion excluding the net impact of settlements signed in the fourth quarter of 2022.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 31/47 ── 01HNGZE60078S2H710QG9D72GE ── HONEPS non-GAAP  FY2024  (stated 2024-02-01)
+target: 9.8 to 10.1 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000007/exhibit99-q42023earningsre.htm
+
+excerpt:
+  Expect 2024 Adjusted Earnings Per Share2,3 of $9.80 - $10.10, Up 7% - 10%
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 32/47 ── 01HW98TJ00049M79XPSPJBC43J ── HONEPS non-GAAP  FY2024  (stated 2024-04-25)
+target: 9.8 to 10.1 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000045/exhibit99-q12024earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is expected to be in the range of $9.80 to $10.10, up 7% to 10%.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 33/47 ── 01HW98TJ00Q0WRM4TBFS1SKMEW ── HONfree cash flow  FY2024  (stated 2024-04-25)
+target: 5.6 to 6.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000045/exhibit99-q12024earningsre.htm
+
+excerpt:
+  Operating cash flow is expected to be in the range of $6.7 billion to $7.1 billion, with free cash flow1 of $5.6 billion to $6.0 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 34/47 ── 01HZDPAK00V7A97GHFC3G6YBV1 ── HONoperating margin non-GAAP  FY2024  (stated 2024-06-03)
+target: 23.8 to 24.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Segment margin2 is expected to be in the range of 23.8% to 24.1%, with segment margin expansion2 of 30 to 60 basis points.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 35/47 ── 01HZDPAK00WE7N2EZHS5YW4NN6 ── HONEPS non-GAAP  FY2024  (stated 2024-06-03)
+target: 10.15 to 10.45 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is expected to be in the range of $10.15 to $10.45.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 36/47 ── 01HZDPAK00CG91NH649G25YA3Q ── HONfree cash flow  FY2024  (stated 2024-06-03)
+target: 5.6 to 6.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Operating cash flow is expected to be in the range of $6.7 billion to $7.1 billion, with free cash flow1 of $5.6 billion to $6.0 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 37/47 ── 01HZDPAK00X53WP5BCYH2RS49W ── HONoperating margin non-GAAP  Q2 FY2024  (stated 2024-06-03)
+target: 22.7 to 23.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Segment margin2 is expected to be 22.7% to 23.1%, down 40 basis points to flat compared to the prior year period.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 38/47 ── 01HZDPAK00J23DWCBRW1C5QYKA ── HONEPS non-GAAP  Q2 FY2024  (stated 2024-06-03)
+target: 2.35 to 2.45 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is expected to be in the range of $2.35 to $2.45, up 2% to 7% compared to the prior year.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 39/47 ── 01J3KJZZ00M8J0NHADJSHJ4RPK ── HONEPS non-GAAP  FY2024  (stated 2024-07-25)
+target: 10.05 to 10.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000081/exhibit99-q22024earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $10.05 to $10.25, up 6% to 8% year over year.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 40/47 ── 01J3KJZZ00BP4VAFQDQDP7FTGJ ── HONfree cash flow  FY2024  (stated 2024-07-25)
+target: 5.5 to 5.9 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000081/exhibit99-q22024earningsre.htm
+
+excerpt:
+  Operating cash flow is now expected to be in the range of $6.6 billion to $7.0 billion, with free cash flow1 of $5.5 billion to $5.9 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 41/47 ── 01J9MPSW00X3T1DBVS52ZPPPX3 ── HONrevenue  FY2024  (stated 2024-10-08)
+target: 3.7 to 3.9 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000091/exhibit991-oct8pressrelease.htm
+
+excerpt:
+  Advanced Materials is expected to have FY24 estimated revenue of between $3.7 billion and $3.9 billion with an EBITDA margin greater than 25%.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 42/47 ── 01JAXX5C006812RZJT5GAHC59K ── HONEPS non-GAAP  FY2024  (stated 2024-10-24)
+target: 10.15 to 10.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000097/exhibit99-q32024earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $10.15 to $10.25, up 7% to 8% year over year.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 43/47 ── 01JAXX5C00NHB2T7F9DHPC5R4M ── HONfree cash flow  FY2024  (stated 2024-10-24)
+target: 5.1 to 5.4 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000097/exhibit99-q32024earningsre.htm
+
+excerpt:
+  Operating cash flow is now expected to be in the range of $6.2 billion to $6.5 billion, with free cash flow1 of $5.1 billion to $5.4 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 44/47 ── 01KPVT5T001AZS1WXC8N7GSYF6 ── HONEPS non-GAAP  FY2026  (stated 2026-04-23)
+target: 10.35 to 10.65 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000055/exhibit99-q12026earningsre.htm
+
+excerpt:
+  We continue to expect full-year sales of $38.8 billion to $39.8 billion with organic1 sales growth of 3% to 6%; segment margin2 in the range of 22.7% to 23.1%, with segment margin2,5 expansion of 20 to 60 basis points year over year; and adjusted earnings per share2,3 in the range of $10.35 to $10.65, up 6% to 9%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 45/47 ── 01KPVT5T003FKS434714K4TKJ0 ── HONfree cash flow  FY2026  (stated 2026-04-23)
+target: 5.3 to 5.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000055/exhibit99-q12026earningsre.htm
+
+excerpt:
+  Operating cash flow is now expected to be in the range of $4.4 billion to $4.7 billion, while free cash flow1,4 expectations are unchanged at $5.3 billion to $5.6 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 46/47 ── 01KY64B7003ABV0FHQR2AY6P6J ── HONEPS non-GAAP  FY2026  (stated 2026-07-23)
+target: 8.05 to 8.35 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000120/exhibit99-q22026earningsre.htm
+
+excerpt:
+  The company now expects segment margin1 in the range of 20.1% to 20.5% with segment margin1 expansion of 250 to 290 basis points year over year; and adjusted earnings per share1 in the range of $8.05 to $8.35, up 25% to 29%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 47/47 ── 01KY64B700PCP6GMDZ2EF7HEZS ── HONfree cash flow  FY2026  (stated 2026-07-23)
+target: 2.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000120/exhibit99-q22026earningsre.htm
+
+excerpt:
+  Operating cash flow is expected to be approximately $2.1 billion, while free cash flow1 expectations are unchanged at approximately $2.0 billion for the full year.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)

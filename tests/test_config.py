@@ -22,7 +22,7 @@ def test_edgar_block_matches_scope(config) -> None:
     assert "date_to" not in edgar
 
 
-def test_the_seventeen_companies_have_ten_digit_ciks(config) -> None:
+def test_the_twenty_one_companies_have_ten_digit_ciks(config) -> None:
     listed = common.companies(config)
     assert [(c.ticker, c.cik) for c in listed] == [
         ("NVDA", "0001045810"),
@@ -42,6 +42,10 @@ def test_the_seventeen_companies_have_ten_digit_ciks(config) -> None:
         ("ADBE", "0000796343"),
         ("MU", "0000723125"),
         ("LOW", "0000060667"),
+        ("UNH", "0000731766"),
+        ("HON", "0000773840"),
+        ("WMT", "0000104169"),
+        ("CAT", "0000018230"),
     ]
     assert all(len(c.cik) == 10 and c.cik.isdigit() for c in listed)
 
@@ -76,4 +80,6 @@ def test_every_company_has_a_fiscal_year_end_month_and_targets_years_are_named_f
         # The ten added later, each from its latest 10-K cover and fiscal-year definition.
         "AAPL": (9, "end"), "MSFT": (6, "end"), "AMZN": (12, "end"), "META": (12, "end"), "GOOGL": (12, "end"),
         "AMD": (12, "end"), "AVGO": (10, "end"), "COST": (8, "end"), "HD": (1, "start"), "JPM": (12, "end"),
-        "QCOM": (9, "end"), "ADBE": (11, "end"), "MU": (8, "end"), "LOW": (1, "start")}
+        "QCOM": (9, "end"), "ADBE": (11, "end"), "MU": (8, "end"), "LOW": (1, "start"),
+        # Batch 2 and Caterpillar, from the screen. Walmart FY27 ends January 2027, so its years are named for the year they end.
+        "UNH": (12, "end"), "HON": (12, "end"), "WMT": (1, "end"), "CAT": (12, "end")}

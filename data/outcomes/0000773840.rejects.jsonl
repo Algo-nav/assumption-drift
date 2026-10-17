@@ -1,0 +1,23 @@
+{"draft_id": "01EX5Q1000AB0H3FGAPN8H65G6", "output": {"index": 4, "value": 21.0, "unit": "percent"}, "reason": "the value 21 is not printed in the sentence"}
+{"draft_id": "01F3Y0DC00WZZDF20N4HQ7PBTB", "output": {"index": 2, "value": 8.06, "unit": "USD per share"}, "reason": "the value 8.06 is not printed in the sentence"}
+{"draft_id": "01F3Y0DC00J8118J3R4X91CPZ8", "output": {"index": 5, "value": 21.0, "unit": "percent"}, "reason": "the value 21 is not printed in the sentence"}
+{"draft_id": "01FB8AJS00FQAXA6K7AF01R4S3", "output": {"index": 2, "value": 8.06, "unit": "USD per share"}, "reason": "the value 8.06 is not printed in the sentence"}
+{"draft_id": "01FB8AJS00G67RKSG7164TZFFY", "output": {"index": 5, "value": 21.0, "unit": "percent"}, "reason": "the value 21 is not printed in the sentence"}
+{"draft_id": "01FJJMR600YZWAZHP4N4X6PJT3", "output": {"index": 5, "value": 21.0, "unit": "percent"}, "reason": "the value 21 is not printed in the sentence"}
+{"draft_id": "01FJJMR600DT5XGPZR13VXJ17B", "output": {"index": 2, "value": 8.06, "unit": "USD per share"}, "reason": "the value 8.06 is not printed in the sentence"}
+{"draft_id": "01FJJMR600YH64JPNQEMH8M040", "output": {"index": 3, "value": 34392, "unit": "USD millions"}, "reason": "reported 34.392 is 6.3x the guidance 5.45: likely a unit or row mix-up"}
+{"draft_id": "01FTYE2Y00EBNBH0ZFEP0887H0", "output": {"index": 7, "value": 22.1, "unit": "percent"}, "reason": "the value 22.1 is not printed in the sentence"}
+{"draft_id": "01G1S9W1005NCYBKF7DWJ6WP1J", "output": {"index": 2, "value": 8.76, "unit": "USD per share"}, "reason": "the value 8.76 is not printed in the sentence"}
+{"draft_id": "01G911MQ003JX7P6Z6M567ZQMD", "output": {"index": 2, "value": 8.76, "unit": "USD per share"}, "reason": "the value 8.76 is not printed in the sentence"}
+{"draft_id": "01GGBBT400F7692EYC5MZB99NM", "output": {"index": 2, "value": 8.76, "unit": "USD per share"}, "reason": "the value 8.76 is not printed in the sentence"}
+{"draft_id": "01GGBBT400N46YENDGSPR0SJXA", "output": {"index": 7, "value": 22.1, "unit": "percent"}, "reason": "the value 22.1 is not printed in the sentence"}
+{"draft_id": "01GR7PRJ00FS7YAWFQEDHVXS31", "output": {"index": 1, "value": 9.71, "unit": "USD per share"}, "reason": "the value 9.71 is not printed in the sentence"}
+{"draft_id": "01HDMMFR001FVSQZ74JKF1F46N", "output": {"index": 2, "value": 9.71, "unit": "USD per share"}, "reason": "the value 9.71 is not printed in the sentence"}
+{"draft_id": "01HNGZE60078S2H710QG9D72GE", "output": {"index": 2, "value": 9.89, "unit": "USD per share"}, "reason": "the value 9.89 is not printed in the sentence"}
+{"draft_id": "01HW98TJ00049M79XPSPJBC43J", "output": {"index": 1, "value": 9.89, "unit": "USD per share"}, "reason": "the value 9.89 is not printed in the sentence"}
+{"draft_id": "01HZDPAK00WE7N2EZHS5YW4NN6", "output": {"index": 2, "value": 10.1, "unit": "USD per share"}, "reason": "the value 10.1 is not printed in the sentence"}
+{"draft_id": "01J3KJZZ00M8J0NHADJSHJ4RPK", "output": {"index": 2, "value": 10.1, "unit": "USD per share"}, "reason": "the value 10.1 is not printed in the sentence"}
+{"draft_id": "01J9MPSW00X3T1DBVS52ZPPPX3", "output": {"index": 1, "value": 38498, "unit": "USD millions"}, "reason": "reported 38.498 is 10.1x the guidance 3.8: likely a unit or row mix-up"}
+{"draft_id": "01JAXX5C006812RZJT5GAHC59K", "output": {"index": 2, "value": 10.1, "unit": "USD per share"}, "reason": "the value 10.1 is not printed in the sentence"}
+{"draft_id": "01JE2AND00Y9C5C4EQ3T4P4AP3", "output": {"index": 1, "value": 9.89, "unit": "USD per share"}, "reason": "the value 9.89 is not printed in the sentence"}
+{"draft_id": "01JE2AND005367ZJC0NFK7CFE7", "output": {"index": 2, "value": 10.1, "unit": "USD per share"}, "reason": "the value 10.1 is not printed in the sentence"}

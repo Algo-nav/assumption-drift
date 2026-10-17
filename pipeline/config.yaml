@@ -34,6 +34,17 @@ companies:
   - {name: "Adobe Inc.", ticker: "ADBE", cik: "0000796343", fiscal_year_end_month: 11, publish: true}
   - {name: "Micron Technology, Inc.", ticker: "MU", cik: "0000723125", fiscal_year_end_month: 8, publish: false, unpublished_reason: review_in_progress}
   - {name: "Lowe's Companies, Inc.", ticker: "LOW", cik: "0000060667", fiscal_year_end_month: 1, fiscal_year_named_for: start, publish: true}
+  # Batch 2, chosen by the three-sector screen (data/_work/screen/, 2024-01-01 to 2026-10-17). Fiscal year ends from each company's
+  # latest 10-K cover: UnitedHealth Dec 31 2025, Honeywell Dec 31 2025, Walmart Jan 31 2026. Walmart names its years for the year they
+  # END (FY26 ended Jan 31 2026; the Aug 2026 release sets Q3 FY27 guidance against "Q3 FY26 figures"), so FY27 ends January 2027:
+  # fiscal_year_named_for "end", unlike Target, Home Depot and Lowe's. Not published until review is finished.
+  - {name: "UnitedHealth Group Incorporated", ticker: "UNH", cik: "0000731766", fiscal_year_end_month: 12, publish: false, unpublished_reason: review_in_progress}
+  - {name: "Honeywell International Inc.", ticker: "HON", cik: "0000773840", fiscal_year_end_month: 12, publish: false, unpublished_reason: review_in_progress}
+  - {name: "Walmart Inc.", ticker: "WMT", cik: "0000104169", fiscal_year_end_month: 1, fiscal_year_named_for: end, publish: false, unpublished_reason: review_in_progress}
+  # Caterpillar, Dec 31 2025 10-K. The screen read all 12 of its 2024-2026 earnings releases (Item 2.02 EX-99.1): none carries
+  # an outlook or guidance, only the safe-harbor paragraph. The one number-and-forward-term candidate in 12 releases is a tariff-recovery
+  # note ("$392 million of expected IEEPA tariff recoveries"). Listed so the card names it; not fetched in batch 2 and not in the manifest.
+  - {name: "Caterpillar Inc.", ticker: "CAT", cik: "0000018230", fiscal_year_end_month: 12, publish: false, unpublished_reason: no_numeric_guidance}
 # The only metrics a draft may be about. Haiku must pick from this list or return nothing, so a
 # figure for anything else (gross profit, growth rates, segment revenue) never becomes a row.
 # Capital return, buybacks and dividends are deliberately not here.

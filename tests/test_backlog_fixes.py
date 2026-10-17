@@ -858,3 +858,50 @@ def test_lowes_fiscal_2022_revenue_1_to_1_5_billion_and_97_to_99_billion_are_bot
 def test_the_same_numbers_in_the_same_unit_must_match_exactly_a_close_figure_is_a_conflict() -> None:
     kept, _ = structure.dedupe_drafts([dd("a", "sentence", 3.5, 3.5, char=500), dd("b", "section", 3.54, 3.54, char=100)])
     assert len(kept) == 2 and all(d["conflict"] for d in kept)
+
+
+# --- item 24: "guidance is based on the following FY26 figures" restates last year; it is not guidance -------------------
+
+# Walmart's 2026-08-20 release (0000104169-26-000145): two sentences, one for the third quarter and one for the year.
+WMT = common.Company("Walmart Inc.", "WMT", "0000104169", 1, "end")
+WMT_BASE_Q3 = ("The Company’s third quarter fiscal 2027 guidance is based on the following Q3 FY26 figures: "
+               "Net sales: $177.8 billion, adjusted operating income1: $7.3 billion, and adjusted EPS1: $0.62.")
+WMT_BASE_FY = ("The Company’s fiscal year guidance is based on the following FY26 figures: "
+               "Net sales: $706.4 billion, adjusted operating income1: $31.0 billion, and adjusted EPS1: $2.64.")
+
+
+def wmt_sentence(text, filed="2026-08-20"):
+    return {"cik": WMT.cik, "accession": "0000104169-26-000145", "filing_type": "8-K", "filed_at": filed, "char_start": 9407,
+            "char_end": 9407 + len(text), "sentence": text, "capture_method": "sentence", "heading": None, "lead_in": None,
+            "table_header": None, "block_lines": None}
+
+
+def _unit_item(metric, unit, period, low, high):
+    return {"metric": metric, "unit": unit, "target_period": period, "value_low": low, "value_high": high,
+            "plus_minus": None, "plus_minus_kind": "none", "line_first": None, "line_last": None}
+
+
+@pytest.mark.parametrize("sentence, metric, unit, period, value", [
+    (WMT_BASE_FY, "revenue", "USD billions", "FY2026", 706.4),
+    (WMT_BASE_FY, "EPS non-GAAP", "USD per share", "FY2026", 2.64),
+    (WMT_BASE_Q3, "revenue", "USD billions", "Q3 FY2026", 177.8),
+    (WMT_BASE_Q3, "EPS non-GAAP", "USD per share", "Q3 FY2026", 0.62),
+])
+def test_a_restated_base_year_sentence_is_rejected_with_its_own_reason(sentence, metric, unit, period, value) -> None:
+    drafts, rejects = derive(wmt_sentence(sentence), _unit_item(metric, unit, period, value, value), company=WMT)
+    assert drafts == []
+    assert [r["reason"] for r in rejects] == ["restated base year"]
+
+
+def test_a_base_year_sentence_does_not_reject_the_real_guidance_beside_it() -> None:
+    text = WMT_BASE_FY + " Adjusted EPS is expected to be $2.80 to $2.87 for FY27."
+    drafts, rejects = derive(wmt_sentence(text), _unit_item("EPS non-GAAP", "USD per share", "FY2027", 2.80, 2.87), company=WMT)
+    assert rejects == [] and [(d["assumption"]["target_low"], d["assumption"]["target_high"]) for d in drafts] == [(2.80, 2.87)]
+
+
+@pytest.mark.parametrize("sentence", [
+    "Adjusted EPS is expected to be $2.80 to $2.87 for FY27.",
+    "Our guidance is based on current expectations and reflects $2.80 of adjusted EPS.",
+])
+def test_ordinary_guidance_is_not_taken_for_a_restated_base(sentence) -> None:
+    structure.check_not_restated_base(_unit_item("EPS non-GAAP", "USD per share", "FY2027", 2.80, 2.80), sentence)

@@ -393,8 +393,9 @@ def test_the_card_build_fails_when_an_unpublished_company_has_no_reason(sample_r
 def test_every_unpublished_company_in_config_has_a_reason() -> None:
     cs = [c for c in common.companies(common.load_config()) if not c.publish]
     assert {c.ticker: c.unpublished_reason for c in cs} == {
-        "AAPL": "no_numeric_guidance", "GOOGL": "no_numeric_guidance", "COST": "no_numeric_guidance",
-        "JPM": "metrics_outside_schema", "MU": "review_in_progress"}
+        "AAPL": "no_numeric_guidance", "GOOGL": "no_numeric_guidance", "COST": "no_numeric_guidance", "CAT": "no_numeric_guidance",
+        "JPM": "metrics_outside_schema", "MU": "review_in_progress",
+        "UNH": "review_in_progress", "HON": "review_in_progress", "WMT": "review_in_progress"}
 
 
 def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
@@ -403,7 +404,7 @@ def test_config_reads_publish_per_company_and_defaults_it_on() -> None:
     with pytest.raises(ValueError, match="publish"):
         common._company({**base, "publish": "no"})
     listed = {c.ticker: c.publish for c in common.companies(common.load_config())}
-    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM", "MU"]
+    assert [t for t, p in listed.items() if not p] == ["AAPL", "GOOGL", "COST", "JPM", "MU", "UNH", "HON", "WMT", "CAT"]
 
 
 def test_an_unpublished_company_is_in_no_release_file_figure_space_or_card_table(world, config_path, record_data, monkeypatch) -> None:

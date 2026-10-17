@@ -80,10 +80,10 @@ def test_bootstrap_takes_each_companys_newest_cached_filing_of_any_form_and_ever
         mf.bootstrap(raw, ["0000009999"], date(2026, 9, 20))
 
 
-def test_the_real_manifest_covers_the_fourteen_companies_that_have_review_csvs() -> None:
+def test_the_real_manifest_covers_the_seventeen_companies_that_have_review_csvs() -> None:
     real = mf.load_manifest(common.REPO_ROOT / "data" / "manifest.json")
     with_review = {p.stem for p in (common.REPO_ROOT / "data" / "review").glob("*.csv")}
-    assert set(real.companies) == with_review and len(real.companies) == 14
+    assert set(real.companies) == with_review and len(real.companies) == 17
     assert all(s.accessions_on_last_date for s in real.companies.values())
 
 

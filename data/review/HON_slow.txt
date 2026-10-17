@@ -1,0 +1,1496 @@
+── 1/102 ── 01D2K5NR00MAD6ET9546CXWPSD ── HONoperating income  FY2019  (stated 2019-02-01)
+target: 5.9 to 6.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319000246/c92841_ex99.htm
+
+excerpt:
+  earnings per share of $7.80 to $8.10; operating cash flow of $5.9 billion to $6.5 billion and adjusted free cash flow4
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'operating cash flow of $5.9 billion to $6.5 billion', not operating income. The metric is wrong.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/102 ── 01D8PVWC00JDV68E27BYFHBCFP ── HONcomparable sales  FY2019  (stated 2019-04-18)
+target: 3.0 to 6.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319001231/c93457_ex99.htm
+
+excerpt:
+  to a new range of $7.90 to $8.15, and organic sales guidance to a new range of 3% to 6%.”
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'organic sales guidance' not 'comparable sales'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/102 ── 01D8PVWC00KKF55957XGT65V1J ── HONfree cash flow  FY2019  (stated 2019-04-18)
+target: 5.5 to 6.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319001231/c93457_ex99.htm
+
+excerpt:
+  $5.4B - $6.0B
+$5.5B - $6.0B
+
+outcome: reported 6.3 on 2020-01-31
+  Full Year Operating Cash Flow of $6.9 Billion; Adjusted Free Cash Flow2 of $6.3 Billion, Conversion 105%
+
+acknowledgement: none
+
+proposed: missed  verify: no (The excerpt shows two ranges: '$5.4B - $6.0B' and '$5.5B - $6.0B'. The claim specifies '$5.5B - $6.0B', which matches the second line exactly, but without additional context indicating which line appl)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/102 ── 01DQBG7600S61DBBSSDZYNQSW8 ── HONoperating margin non-GAAP  FY2019  (stated 2019-10-17)
+target: 20.7 to 21.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000025/exhibit99-q32019earnin.htm
+
+excerpt:
+  Segment Margin
+20.7% - 21.0%
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'Segment Margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/102 ── 01ENVCVK00SR76SRTTZW0JEJ9M ── HONtotal expenses  FY2020  (stated 2020-10-30)
+target: 1.5 to 1.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  We now expect to generate $1.5 billion to $1.6 billion of cost savings during 2020, up from our previous estimate of $1.4 billion to $1.6 billion,” Adamczyk continued.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt discusses 'cost savings' during 2020, not 'total expenses'. These are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/102 ── 01ENVCVK00DVCCEPV7SMFN1580 ── HONoperating margin GAAP  Q4 FY2020  (stated 2020-10-30)
+target: 21.1 to 21.3 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Segment Margin 21.1% - 21.3% 20.4% - 20.5%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows 'Segment Margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 7/102 ── 01EX5Q1000T9VW1JP0SQNT1DRH ── HONoperating margin GAAP  FY2021  (stated 2021-01-29)
+target: 30.0 to 70.0 basis points
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+excerpt:
+  The company also announced its outlook for 2021. Honeywell expects sales of $33.4 billion to $34.4 billion, representing year-over-year organic growth of 1% to 4%; segment margin expansion of 30 to 70 basis points;
+
+outcome: reported 60.0 on 2022-02-03
+  For the full year, sales increased by 5%, or 4% on an organic basis, and operating margin expanded 50 basis points with segment margin expanding 60 basis points.
+
+acknowledgement: none
+
+proposed: met  verify: no (The excerpt states 'segment margin expansion' of 30 to 70 basis points, not 'operating margin' GAAP.)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 8/102 ── 01EX5Q1000AB0H3FGAPN8H65G6 ── HONoperating margin GAAP  FY2021  (stated 2021-01-29)
+target: 20.7 to 21.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+excerpt:
+  Segment Margin 20.7% - 21.1%
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment Margin' not 'operating margin'; these are different metrics.)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 9/102 ── 01EX5Q1000K5WXBXA9XTKTQ0A0 ── HONoperating income  FY2021  (stated 2021-01-29)
+target: 5.7 to 6.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+excerpt:
+  Operating Cash Flow $5.7B - $6.1B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Operating Cash Flow $5.7B - $6.1B', not operating income. These are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 10/102 ── 01F3Y0DC00JHEDVKM86V53C2FM ── HONrevenue  FY2021  (stated 2021-04-23)
+target: 34.0 to 34.8 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000030/exhibit99-q12021earningsre.htm
+
+excerpt:
+  Sales $33.4B - $34.4B $34.0B - $34.8B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows current guidance of $34.0B - $34.8B, but the claim states $34.0B - $34.8B matches the lower bound of $34 billion, which is correct for the lower end; however, the claim's range of $3)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 11/102 ── 01F3Y0DC00J8118J3R4X91CPZ8 ── HONoperating margin non-GAAP  FY2021  (stated 2021-04-23)
+target: 20.7 to 21.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000030/exhibit99-q12021earningsre.htm
+
+excerpt:
+  Segment Margin 20.7% - 21.1% 20.7% - 21.1%
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment Margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 12/102 ── 01FB8AJS002CVPW01RWCXF9Z3P ── HONoperating income  FY2021  (stated 2021-07-23)
+target: 5.9 to 6.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000055/exhibit99-q22021earningsre.htm
+
+excerpt:
+  Operating Cash Flow $5.8B - $6.1B $5.9B - $6.2B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states guidance for Operating Cash Flow ($5.9B - $6.2B), not Operating Income as claimed.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 13/102 ── 01FJJMR600YZWAZHP4N4X6PJT3 ── HONoperating margin non-GAAP  FY2021  (stated 2021-10-22)
+target: 20.9 to 21.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000064/exhibit99-q32021earningsre.htm
+
+excerpt:
+  Segment margin is expected to be in the range of 20.9% to 21.1%.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 14/102 ── 01FJJMR600DEA3TMCPGENJ8FZB ── HONfree cash flow  FY2021  (stated 2021-10-22)
+target: 5.9 to 6.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000064/exhibit99-q32021earningsre.htm
+
+excerpt:
+  Operating cash flow is still expected to be in the range of $5.9 billion to $6.2 billion and free cash flow is still
+
+outcome: reported 5.729 on 2022-02-03
+  Free Cash Flow 5,729 5,302 8%
+
+acknowledgement: none
+
+proposed: missed  verify: no (The excerpt states the range $5.9 billion to $6.2 billion is for operating cash flow, not free cash flow; the sentence is incomplete and does not provide the free cash flow figure.)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 15/102 ── 01FTYE2Y00EBNBH0ZFEP0887H0 ── HONoperating margin non-GAAP  FY2022  (stated 2022-02-03)
+target: 21.1 to 21.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000009/exhibit99-q42021earningsre.htm
+
+excerpt:
+  Expect 2022 Sales Growth of 4% - 7% Organically and Segment Margin of 21.1% - 21.5%, 21.4% - 21.8% Excluding the Impact of Quantinuum
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment Margin of 21.1% - 21.5%' but does not specify this as operating margin non-GAAP; it refers to 'Segment Margin' which is a different metric than operating margin.)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 16/102 ── 01GZ004Y00RXQXVECDXD4BXRJC ── HONoperating margin non-GAAP  FY2023  (stated 2023-04-27)
+target: 22.3 to 22.6 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000035/exhibit99-q12023earningsre.htm
+
+excerpt:
+  Segment margin3 is now expected to be in the range of 22.3% to 22.6%, with segment margin expansion3 of 60 to 90 basis points.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 17/102 ── 01H6AAAB008NVZ5WRG8RZ3DSD6 ── HONoperating margin non-GAAP  FY2023  (stated 2023-07-27)
+target: 22.4 to 22.6 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000070/exhibit99-q22023earningsre.htm
+
+excerpt:
+  Segment margin2 is now expected to be in the range of 22.4% to 22.6%, with segment margin expansion2 of 70 to 90 basis points.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 18/102 ── 01HDMMFR00Z8Z1DEXCS9KTBMX0 ── HONoperating margin non-GAAP  FY2023  (stated 2023-10-26)
+target: 22.5 to 22.6 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000083/exhibit99-q32023earningsre.htm
+
+excerpt:
+  Segment margin2 is now expected to be in the range of 22.5% to 22.6%, with segment margin expansion2 of 80 to 90 basis points, up 10 basis points on the low end from the prior guidance range.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 19/102 ── 01HW98TJ00F5GG04C6JQDN4JC3 ── HONoperating margin non-GAAP  FY2024  (stated 2024-04-25)
+target: 23.0 to 23.3 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000045/exhibit99-q12024earningsre.htm
+
+excerpt:
+  Segment margin2 is expected to be in the range of 23.0% to 23.3%, with segment margin expansion2 of 30 to 60 basis points.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states segment margin of 23.0% to 23.3%, but the claim specifies operating margin of 23% to 23.3%. These are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 20/102 ── 01HW98TJ00KK8VAKHK98EZFHVB ── HONcapital expenditures  FY2024  (stated 2024-04-25)
+target: 5.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000054/hon-20240425.htm
+
+excerpt:
+  Mergers and acquisitions—we expect to spend $5.0 billion to complete the acquisition of Carrier Global Corporation's Global Access Solutions business, as announced on December 8, 2023, subject to customary closing conditions, including receipt of certain regulatory approvals.
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt describes acquisition spending for a specific business purchase, not capital expenditures for normal operations or the company's overall capex guidance.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 21/102 ── 01HZDPAK008R3TCPMG33SH7XM1 ── HONrevenue  FY2024  (stated 2024-06-03)
+target: 38.5 to 39.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Sales $38.1B - $38.9B ~$0.4B $38.5B - $39.3B — $38.5B - $39.3B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows GAAP sales guidance of $38.1B - $38.9B, not the $38.5B - $39.3B claimed; the $38.5B - $39.3B figure appears to be non-GAAP adjusted guidance in the excerpt.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 22/102 ── 01HZDPAK00QQRV1DEGY55H9HXC ── HONoperating income  FY2024  (stated 2024-06-03)
+target: 6.7 to 7.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  Operating Cash Flow $6.7B - $7.1B — $6.7B - $7.1B — $6.7B - $7.1B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states a range for Operating Cash Flow ($6.7B - $7.1B), not Operating Income as claimed.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 23/102 ── 01J3KJZZ00ZZ0JXQFQJHP79TDR ── HONoperating margin GAAP  FY2024  (stated 2024-07-25)
+target: 23.3 to 23.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000081/exhibit99-q22024earningsre.htm
+
+excerpt:
+  Segment margin2 is now expected to be in the range of 23.3% to 23.5% with segment margin contraction2 of 20 basis points to flat year over year.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 24/102 ── 01JAXX5C007TAJV3HE7EY8S81R ── HONoperating margin non-GAAP  FY2024  (stated 2024-10-24)
+target: 23.4 to 23.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000097/exhibit99-q32024earningsre.htm
+
+excerpt:
+  Segment margin2 is now expected to be in the range of 23.4% to 23.5% with segment margin2 flat to down 10 basis points year over year.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 25/102 ── 01JSZDFS0088VQ6T3KXWM780E5 ── HONoperating margin non-GAAP  FY2025  (stated 2025-04-29)
+target: 23.2 to 23.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000035/exhibit99-q12025earningsre.htm
+
+excerpt:
+  Segment margin2 is expected to be in the range of 23.2% to 23.5%, with segment margin2 expansion of 60 to 90 basis points year over year.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' guidance, not 'operating margin' guidance; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 26/102 ── 01JSZDFS00JDX3HT07RYR9JZK8 ── HONoperating income  FY2025  (stated 2025-04-29)
+target: 6.7 to 7.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000035/exhibit99-q12025earningsre.htm
+
+excerpt:
+  Operating cash flow is still expected to be in the range of $6.7 billion to $7.1 billion.
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'Operating cash flow' not 'operating income'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 27/102 ── 01JSZDFS00MJJJDBXNT8FYFT4H ── HONrevenue  FY2025  (stated 2025-04-29)
+target: 39.6 to 40.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000035/exhibit99-q12025earningsre.htm
+
+excerpt:
+  Sales $39.6B - $40.6B $39.6B - $40.5B
+
+outcome: reported 37.442 on 2026-01-29
+  Net sales $ 9,758 $ 37,442
+
+acknowledgement: none
+
+proposed: missed  verify: no (The excerpt states the current guidance range as $39.6B - $40.5B, but the upper bound should be $40.6B according to the claim; the excerpt shows $40.5B as the upper limit in the current guidance colum)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 28/102 ── 01K0WVNK00ZKKMR9TJ7J24XF9K ── HONoperating margin non-GAAP  FY2025  (stated 2025-07-24)
+target: 23.0 to 23.2 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000062/exhibit99-q22025earningsre.htm
+
+excerpt:
+  Segment margin2 is expected to be in the range of 23.0% to 23.2%, with segment margin2 expansion of 40 to 60 basis points year over year.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' (23.0% to 23.2%), not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 29/102 ── 01K875V000RX7SGKFF5CBSJMG1 ── HONoperating margin non-GAAP  FY2025  (stated 2025-10-23)
+target: 22.9 to 23.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000104/exhibit99-q32025earningsre.htm
+
+excerpt:
+  Segment margin2 is expected to be in the range of 22.9% to 23.0%, with segment margin2 expansion of 30 to 40 basis points year over year.
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 30/102 ── 01KG3GSE00NPRAK5W68W9PHKTP ── HONoperating margin non-GAAP  FY2026  (stated 2026-01-29)
+target: 22.7 to 23.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000006/exhibit991-q42025earningsr.htm
+
+excerpt:
+  Segment margin2 is expected to be 22.7% to 23.1%, with segment margin2,6 expansion of 20 to 60 basis points.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 31/102 ── 01KG3GSE00BR5KS6HR77RQF024 ── HONEPS non-GAAP  FY2026  (stated 2026-01-29)
+target: at least 10.35 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000006/exhibit991-q42025earningsr.htm
+
+excerpt:
+  Adjusted earnings per share3 is expected to be $10.35 to
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states a range beginning at $10.35 ('$10.35 to') but does not complete the upper bound, making it impossible to verify the full range matches 'at least $10.35 per share'.)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 32/102 ── 01KPVT5T00FGT0DRS82Z8Y7FA5 ── HONoperating margin non-GAAP  FY2026  (stated 2026-04-23)
+target: 22.7 to 23.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000055/exhibit99-q12026earningsre.htm
+
+excerpt:
+  We continue to expect full-year sales of $38.8 billion to $39.8 billion with organic1 sales growth of 3% to 6%; segment margin2 in the range of 22.7% to 23.1%, with segment margin2,5 expansion of 20 to 60 basis points year over year; and adjusted earnings per share2,3 in the range of $10.35 to $10.65, up 6% to 9%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'segment margin' not 'operating margin'; these are different metrics for Honeywell.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 33/102 ── 01KY64B700T40YFEE5V1Q0VSZX ── HONoperating income  FY2026  (stated 2026-07-23)
+target: 2.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000120/exhibit99-q22026earningsre.htm
+
+excerpt:
+  Operating Cash Flow ~$2.1B ~$2.1B
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'Operating Cash Flow ~$2.1B', not operating income; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 34/102 ── 01KY64B70083GJWA4JZDE60CE4 ── HONoperating margin non-GAAP  FY2026  (stated 2026-07-23)
+target: 20.1 to 20.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000120/exhibit99-q22026earningsre.htm
+
+excerpt:
+  The company now expects segment margin1 in the range of 20.1% to 20.5% with segment margin1 expansion of 250 to 290 basis points year over year; and adjusted earnings per share1 in the range of $8.05 to $8.35, up 25% to 29%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'segment margin' not 'operating margin'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 35/102 ── 01D2K5NR00RFBEMESYFGS30WVF ── HONfree cash flow  FY2019  (stated 2019-02-01)
+target: 5.4 to 6.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319000246/c92841_ex99.htm
+
+excerpt:
+  earnings per share of $7.80 to $8.10; operating cash flow of $5.9 billion to $6.5 billion and adjusted free cash flow4
+of $5.4 billion to $6.0 billion, representing conversion of approximately 100 percent. A summary of the company’s 2019 guidance
+
+outcome: reported 6.3 on 2020-01-31
+  Full Year Operating Cash Flow of $6.9 Billion; Adjusted Free Cash Flow2 of $6.3 Billion, Conversion 105%
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 36/102 ── 01D8PVWC00XTP5R7MBJV9DH7VS ── HONrevenue  FY2019  (stated 2019-04-18)
+target: 36.5 to 37.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319001231/c93457_ex99.htm
+
+excerpt:
+  $36.5B - $37.2B
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 37/102 ── 01DG161S00SJGGMTC9TZ1FE0EC ── HONrevenue  FY2019  (stated 2019-07-18)
+target: 36.7 to 37.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000012/exhibit99-q22019earningsre.htm
+
+excerpt:
+  $36.7B - $37.2B
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 38/102 ── 01DG161S00Y1BTNXZAT42CKNEG ── HONfree cash flow  FY2019  (stated 2019-07-18)
+target: 5.7 to 6.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000012/exhibit99-q22019earningsre.htm
+
+excerpt:
+  $5.7B - $6.0B
+
+outcome: reported 6.3 on 2020-01-31
+  Full Year Operating Cash Flow of $6.9 Billion; Adjusted Free Cash Flow2 of $6.3 Billion, Conversion 105%
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 39/102 ── 01DQBG7600GQT53S8JSVS9H3ZE ── HONrevenue  FY2019  (stated 2019-10-17)
+target: 36.7 to 37.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000025/exhibit99-q32019earnin.htm
+
+excerpt:
+  Sales
+$36.7B - $37.2B
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 40/102 ── 01DQBG760064E7YVKY5H2A468Y ── HONEPS non-GAAP  FY2019  (stated 2019-10-17)
+target: 7.95 to 8.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000025/exhibit99-q32019earnin.htm
+
+excerpt:
+  Adjusted Earnings Per Share4
+$7.95 - $8.15
+
+outcome: reported 8.16 on 2020-01-31
+  This resulted in adjusted earnings per share of $2.06 for the quarter, up 11%1, and $8.16 for the year, up 10%4, excluding the impact of the spin-offs,” said Darius Adamczyk, chairman and chief executive officer of Honeywell.
+
+acknowledgement: 2021-01-29
+  For the full year, operating margin contracted 120 basis points and segment margin contracted 70 basis points, with earnings per share of $6.72 and adjusted earnings per share4 of $7.10, above the high end of our guidance.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+proposed: missed  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 41/102 ── 01DQBG7600H0CPJ6JZ0WQS3AM3 ── HONfree cash flow  FY2019  (stated 2019-10-17)
+target: 5.7 to 6.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000025/exhibit99-q32019earnin.htm
+
+excerpt:
+  Adjusted Free Cash Flow5
+$5.7B - $6.0B
+
+outcome: reported 6.3 on 2020-01-31
+  Full Year Operating Cash Flow of $6.9 Billion; Adjusted Free Cash Flow2 of $6.3 Billion, Conversion 105%
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 42/102 ── 01ENVCVK00JZ4AN7TA1MGFH234 ── HONrevenue  Q4 FY2020  (stated 2020-10-30)
+target: 8.2 to 8.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Sales $8.2B - $8.5B $31.9B - $32.2B
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 43/102 ── 01ENVCVK00VJ54BWC146CEW8AE ── HONrevenue  FY2020  (stated 2020-10-30)
+target: 31.9 to 32.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Sales $8.2B - $8.5B $31.9B - $32.2B
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 44/102 ── 01ENVCVK004677TD6PEBXWVHVA ── HONoperating margin GAAP  FY2020  (stated 2020-10-30)
+target: 20.4 to 20.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384020000047/exhibit99-q32020earnin.htm
+
+excerpt:
+  Segment Margin 21.1% - 21.3% 20.4% - 20.5%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 45/102 ── 01EX5Q1000C51CK0560AYH1W1M ── HONrevenue  FY2021  (stated 2021-01-29)
+target: 33.4 to 34.4 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+excerpt:
+  Sales $33.4B - $34.4B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 46/102 ── 01EX5Q10009SQZJAZS57Y46NE8 ── HONfree cash flow  FY2021  (stated 2021-01-29)
+target: 5.1 to 5.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+excerpt:
+  Free Cash Flow6
+$5.1B - $5.5B
+
+outcome: reported 5.7 on 2022-02-03
+  We also were strong cash generators in 2021, delivering $6.0 billion in operating cash flow with 109% conversion and $5.7 billion of free cash flow6 with 102% adjusted conversion and free cash flow margin of 17%.”
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 47/102 ── 01FB8AJS00X34WXZR6ZST9NRW0 ── HONrevenue  FY2021  (stated 2021-07-23)
+target: 34.6 to 35.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000055/exhibit99-q22021earningsre.htm
+
+excerpt:
+  Sales $34.0B - $34.8B $34.6B - $35.2B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 48/102 ── 01FB8AJS00G67RKSG7164TZFFY ── HONoperating margin non-GAAP  FY2021  (stated 2021-07-23)
+target: 20.8 to 21.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000055/exhibit99-q22021earningsre.htm
+
+excerpt:
+  Segment Margin 20.7% - 21.1% 20.8% - 21.1%
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 49/102 ── 01FJJMR600NNTF18V92QVSS7GH ── HONrevenue  FY2021  (stated 2021-10-22)
+target: 34.2 to 34.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000064/exhibit99-q32021earningsre.htm
+
+excerpt:
+  Sales $34.6B - $35.2B $34.2B - $34.6B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 50/102 ── 01FJJMR600C9DDS9WHF3293FJJ ── HONfree cash flow  FY2021  (stated 2021-10-22)
+target: 5.3 to 5.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000064/exhibit99-q32021earningsre.htm
+
+excerpt:
+  Free Cash Flow $5.3B - $5.6B $5.3B - $5.6B
+
+outcome: reported 5.729 on 2022-02-03
+  Free Cash Flow 5,729 5,302 8%
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 51/102 ── 01FTYE2Y00GSE3K7QJR24VBRJC ── HONrevenue  FY2022  (stated 2022-02-03)
+target: 35.4 to 36.4 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000009/exhibit99-q42021earningsre.htm
+
+excerpt:
+  Sales $35.4B - $36.4B
+
+outcome: reported 35.466 on 2023-02-02
+  Net sales $ 35,466 $ 35,466
+
+acknowledgement: none
+
+proposed: met  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 52/102 ── 01FTYE2Y00ATY42CSTHR8DHRYN ── HONEPS GAAP  FY2022  (stated 2022-02-03)
+target: 8.4 to 8.7 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000009/exhibit99-q42021earningsre.htm
+
+excerpt:
+  Earnings Per Share3
+$8.40 - $8.70
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 53/102 ── 01FTYE2Y0054BD4GQMBQSWV0V4 ── HONfree cash flow  FY2022  (stated 2022-02-03)
+target: 4.7 to 5.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000009/exhibit99-q42021earningsre.htm
+
+excerpt:
+  Free Cash Flow $4.7B - $5.1B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 54/102 ── 01GGBBT400N46YENDGSPR0SJXA ── HONoperating margin non-GAAP  FY2022  (stated 2022-10-27)
+target: 21.6 to 21.8 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000069/exhibit99-q32022earningsre.htm
+
+excerpt:
+  Segment Margin 21.3% - 21.7% 21.6% - 21.8%
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 55/102 ── 01GZ004Y00KZAZ7PQJSVGFQ7FX ── HONrevenue  FY2023  (stated 2023-04-27)
+target: 36.5 to 37.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000035/exhibit99-q12023earningsre.htm
+
+excerpt:
+  Sales $36.0B - $37.0B $36.5B - $37.3B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 56/102 ── 01H6AAAB00P02VE2AQ01ENYJED ── HONrevenue  FY2023  (stated 2023-07-27)
+target: 36.7 to 37.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000070/exhibit99-q22023earningsre.htm
+
+excerpt:
+  Sales $36.5B - $37.3B $36.7B - $37.3B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 57/102 ── 01HDMMFR00FEKCG13TFBPR5E0M ── HONrevenue  FY2023  (stated 2023-10-26)
+target: 36.8 to 37.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000083/exhibit99-q32023earningsre.htm
+
+excerpt:
+  Sales $36.7B - $37.3B $36.8B - $37.1B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 58/102 ── 01HW98TJ008F08Q5D4H0DT7M21 ── HONrevenue  FY2024  (stated 2024-04-25)
+target: 38.1 to 38.9 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000045/exhibit99-q12024earningsre.htm
+
+excerpt:
+  Sales $38.1B - $38.9B $38.1B - $38.9B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 59/102 ── 01J3KJZZ00DTPVDQCEAY23NXKA ── HONrevenue  FY2024  (stated 2024-07-25)
+target: 39.1 to 39.7 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000081/exhibit99-q22024earningsre.htm
+
+excerpt:
+  Sales $38.5B - $39.3B $39.1B - $39.7B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 60/102 ── 01JAXX5C0031T8RG86M39BPZMA ── HONrevenue  FY2024  (stated 2024-10-24)
+target: 38.6 to 38.8 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000097/exhibit99-q32024earningsre.htm
+
+excerpt:
+  Sales $39.1B - $39.7B $38.6B - $38.8B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 61/102 ── 01JE2AND00GEH1PXD6VSBQ9W45 ── HONrevenue  FY2024  (stated 2024-12-02)
+target: 38.2 to 38.4 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Sales $38.6B - $38.8B ($0.4B) $38.2B - $38.4B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 62/102 ── 01JE2AND00QE64RT46F7RP03Z2 ── HONoperating margin non-GAAP  FY2024  (stated 2024-12-02)
+target: 22.6 to 22.7 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Segment Margin2
+23.4% - 23.5% (0.8%) 22.6% - 22.7%
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 63/102 ── 01JE2AND00Y9C5C4EQ3T4P4AP3 ── HONEPS non-GAAP  FY2024  (stated 2024-12-02)
+target: 9.68 to 9.78 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Adjusted Earnings Per Share2,3
+$10.15 - $10.25 ($0.47) $9.68 - $9.78
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 64/102 ── 01JE2AND00X9TAYWJPZYX3C1CW ── HONfree cash flow  FY2024  (stated 2024-12-02)
+target: 4.6 to 4.9 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Free Cash Flow1
+$5.1B - $5.4B ($0.5B) $4.6B - $4.9B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 65/102 ── 01JE2AND00PTXTCSQ22QSD0PSG ── HONrevenue  FY2024  (stated 2024-12-02)
+target: 9.8 to 10.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Sales $10.2B - $10.4B ($0.4B) $9.8B - $10.0B
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 66/102 ── 01JE2AND00FJEPJRJP0YTFT4NE ── HONoperating margin non-GAAP  FY2024  (stated 2024-12-02)
+target: 20.9 to 21.3 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Segment Margin2
+23.8% - 24.2% (2.9%) 20.9% - 21.3%
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 67/102 ── 01JE2AND005367ZJC0NFK7CFE7 ── HONEPS non-GAAP  FY2024  (stated 2024-12-02)
+target: 2.26 to 2.36 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  Adjusted Earnings Per Share2,3
+$2.73 - $2.83 ($0.47) $2.26 - $2.36
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 68/102 ── 01K0WVNK00KHVHE48HW2DPP69D ── HONrevenue  FY2025  (stated 2025-07-24)
+target: 40.8 to 41.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000062/exhibit99-q22025earningsre.htm
+
+excerpt:
+  Sales $39.6B - $40.5B $40.8B - $41.3B
+
+outcome: reported 37.442 on 2026-01-29
+  Net sales $ 9,758 $ 37,442
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 69/102 ── 01K875V000626JVNT5177QXCJT ── HONcapital expenditures  FY2025  (stated 2025-10-23)
+target: 1.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000104/exhibit99-q32025earningsre.htm
+
+excerpt:
+  Capital expenditures ~(1.3) — ~(1.3)
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 70/102 ── 01KPVT5T00QJKCE4Q7PW4CTC88 ── HONrevenue  FY2026  (stated 2026-04-23)
+target: 38.8 to 39.8 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000055/exhibit99-q12026earningsre.htm
+
+excerpt:
+  Sales
+$38.8B - $39.8B
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 71/102 ── 01KY64B700ZKJB58WX45VZ9C1G ── HONrevenue  FY2026  (stated 2026-07-23)
+target: 19.8 to 20.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000120/exhibit99-q22026earningsre.htm
+
+excerpt:
+  Sales $19.9B - $20.2B $19.8B - $20.0B
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 72/102 ── 01D2K5NR00YDE0QC5GBRV7ZPR3 ── HON    (stated 2019-02-01)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319000246/c92841_ex99.htm
+
+excerpt:
+  conversion excludes estimated payments of ~$0.3B for separation costs incurred in 2018 related to the spin-offs of Resideo
+and Garrett.
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 73/102 ── 01D2K5NR00RX2CT31T3BMNZDWZ ── HON    (stated 2019-02-01)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319000246/c92841_ex99.htm
+
+excerpt:
+  mark-to-market in 2018, after-tax separation costs related to the spin-offs of Resideo and Garrett. Also excludes the
+after-tax segment profit contribution from the spin-offs in 2018, net of spin indemnification impacts assuming both
+indemnification agreements were effective for all of 2018, of $0.62.
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 74/102 ── 01D2K5NR00GDRSHW2EY6Q1VJ68 ── HON    (stated 2019-02-01)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319000246/c92841_ex99.htm
+
+excerpt:
+  conversion excludes estimated payments of ~$0.3B for separation costs incurred in 2018 related to the spin-offs of Resideo and
+Garrett.
+8 Adjusted EPS and adjusted EPS V% exclude pension
+mark-to-market, the 4Q17 U.S. tax legislation charge, the favorable adjustment to such charge of $1.5B in FY18 and $435M in 4Q18,
+and after-tax separation costs related to the spin-offs of Resideo and Garrett of $
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 75/102 ── 01D8PVWC00T6PGNZN0GJN80QF2 ── HON    (stated 2019-04-18)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319001231/c93457_ex99.htm
+
+excerpt:
+  sales and segment profit contribution from Resideo and Garrett in 2018.
+4 EPS V% ex-spins guidance excludes 2018 pension mark-to-market,
+2018 after-tax separation costs related to the spin-offs of Resideo and Garrett, and 2018 adjustments to the 4Q17 U.S. tax legislation
+charge. Also excludes the 2018 after-tax segment profit contribution from the spin-offs, net of spin indemnification impacts ass
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 76/102 ── 01D8PVWC00FAW05ZH033H12BJP ── HON    (stated 2019-04-18)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000093041319001231/c93457_ex99.htm
+
+excerpt:
+  conversion excludes estimated payments of ~$0.3B for separation costs incurred in 2018 related to the spin-offs of Resideo and
+Garrett.
+6 Adjusted EPS ex-spins and adjusted EPS V% ex-spins
+exclude 1Q18 after-tax separation costs related to the spin-offs of Resideo and Garrett of $49M. Also excludes the 1Q18 after-tax
+segment profit contribution from the spin-offs, net of spin indemnification impac
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 77/102 ── 01FB8AJS005JPG680721ZEEZHE ── HON    (stated 2021-07-23)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000055/exhibit99-q22021earningsre.htm
+
+excerpt:
+  SECOND-QUARTER RESULTS DRIVEN BY SALES AND PROFIT GROWTH;
+RAISES MIDPOINT OF ADJUSTED EPS GUIDANCE BY 15 CENTS
+•Sales Growth and Margin Expansion in All Four Segments; Orders up Over 20%
+•Reported Sales up 18%, Organic Sales up 15%
+•Operating Margin up 450 Basis Points to 18.1%; Segment Margin up 190 Basis Points to 20.4%
+•Earnings Per Share of $2.04, Adjusted Earnings Per Share1 of $2.02, up 60%
+
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 78/102 ── 01GZ004Y00Z7J884P7CSCBMMGR ── HON    (stated 2023-04-27)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000035/exhibit99-q12023earningsre.htm
+
+excerpt:
+  •Sales of $8.9 Billion, Reported Sales Up 6%, Organic1 Sales Up 8%
+•Operating Margin up 390 Basis Points to 19.1%; Segment Margin1 up 90 Basis Points to 22.0%
+•Earnings Per Share and Adjusted Earnings Per Share1 of $2.07, Exceeding High End of Guidance by 11 Cents
+•Backlog2 Increased to a Record $30.3 Billion, Up 6% Year over Year
+•Announced $670 Million Acquisition of Compressor Controls Corporat
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 79/102 ── 01HDMMFR00VPW3GRR3BJ6YQ0FZ ── HON    (stated 2023-10-26)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384023000083/exhibit99-q32023earningsre.htm
+
+excerpt:
+  •Sales of $9.2 Billion, Reported Sales Up 3%, Organic1 Sales Up 2%
+•Orders Up 10%, Backlog Up 8% Year Over Year to a Record Level of $31.4 Billion
+•Aerospace Sales Up 18%, Double-Digit Growth in Both Commercial Aviation and Defense and Space
+•Operating Margin Up 140 Basis Points to 20.9%; Segment Margin1 Up 80 Basis Points to 22.6%
+•Earnings Per Share of $2.27, Exceeding High End of Guidance Range
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 80/102 ── 01HW98TJ00PV5G86NJW5NGD89Q ── HON    (stated 2024-04-25)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000045/exhibit99-q12024earningsre.htm
+
+excerpt:
+  •Sales of $9.1 Billion, Reported and Organic1 Sales Up 3%
+•Operating Margin Up 130 Basis Points to 20.4%; Segment Margin1 Up 20 Basis Points to 22.2%
+•Earnings Per Share of $2.23 and Adjusted Earnings Per Share1 of $2.25, Above High End of Previous Guidance
+•Backlog Up 6% Year Over Year to $32.0 Billion on $10.2 Billion in Orders
+•Deployed $1.6 Billion of Capital to Dividends, Share Repurchases, a
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 81/102 ── 01HZDPAK00MZS2WS248F1RP678 ── HON    (stated 2024-06-03)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000066/exhibit99-carrieracquisiti.htm
+
+excerpt:
+  •$4.95 Billion Acquisition Bolsters Honeywell's Strategic Alignment to the Automation Megatrend, Underpinned by Digitalization
+•Positions Honeywell as a Leading Provider of Security Solutions in a Digital Age
+•Enhances Honeywell's Building Automation Segment, Adding an Accretive Growth and Margin Business
+CHARLOTTE, N.C., June 3, 2024 -- Honeywell (NASDAQ: HON) today announced the completion of it
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 82/102 ── 01J3KJZZ002KYBM7TA40ZQS6DQ ── HON    (stated 2024-07-25)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000081/exhibit99-q22024earningsre.htm
+
+excerpt:
+  •Sales of $9.6 Billion, Reported Sales Up 5%, Organic1 Sales Up 4%, Achieving the High End of Previous Guidance
+•Earnings Per Share of $2.36 and Adjusted Earnings Per Share1 of $2.49, Above High End of Previous Guidance
+•Orders Up 4%, Led by Strength in Our Building Automation and Energy and Sustainability Solutions Businesses
+•Deployed $6.4 Billion of Capital to M&A, Dividends, Share Repurchases,
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 83/102 ── 01JAXX5C000TC5C5C6VGSZ8ZBY ── HON    (stated 2024-10-24)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000097/exhibit99-q32024earningsre.htm
+
+excerpt:
+  •Sales of $9.7 Billion, Reported Sales Up 6%, Organic1 Sales Up 3%
+•Operating Margin of 19.1% and Segment Margin1 of 23.6%, Above High End of Previous Guidance
+•Earnings Per Share of $2.16 and Adjusted Earnings Per Share1 of $2.58, Above High End of Previous Guidance
+•Closed $1.9 Billion Acquisition of CAES Systems and $1.8 Billion Acquisition of Air Products' LNG Business
+•Announced Intention to 
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 84/102 ── 01JE2AND00K79B7PVHC2JK8WBP ── HON    (stated 2024-12-02)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384024000102/exhibit99-renaissance.htm
+
+excerpt:
+  •Agreement includes collaborative research and development centered on Honeywell Anthem avionics, selection of more powerful engines, and next-generation satellite communications technologies for Bombardier aircraft
+•Aftermarket offerings and new technologies provide Honeywell revenue potential of up to $17 billion over life of agreement
+•All legacy pending litigation between the companies has bee
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 85/102 ── 01JSZDFS0012S2J3KGHDDA7WFA ── HON    (stated 2025-04-29)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000035/exhibit99-q12025earningsre.htm
+
+excerpt:
+  •Sales of $9.8 Billion, Reported Sales Up 8%, Organic1 Sales Up 4%, Exceeding High End of Previous Guidance
+•Earnings Per Share of $2.22 and Adjusted Earnings Per Share1 of $2.51, Exceeding High End of Previous Guidance by 26 Cents
+•Backlog Up 8% Excluding Acquisitions, Led by Strength in Building Automation and Energy and Sustainability Solutions Businesses
+•Deployed $2.9 Billion of Capital to Sh
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 86/102 ── 01K0WVNK00RY9D3FZ5C1KQ0RBN ── HON    (stated 2025-07-24)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000062/exhibit99-q22025earningsre.htm
+
+excerpt:
+  •Sales of $10.4 Billion, Reported Sales Up 8%, Organic1 Sales Up 5%, Exceeding High End of Previous Guidance
+•Earnings Per Share of $2.45 and Adjusted Earnings Per Share1 of $2.75, Exceeding High End of Previous Guidance
+•Company Raises Full-Year Organic Growth and Adjusted Earnings Per Share Guidance
+•Closed $2.2 Billion Acquisition of Sundyne, Announced £1.8 Billion Acquisition of Johnson Matthe
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 87/102 ── 01K875V0008T0QFG0YKYN54CH2 ── HON    (stated 2025-10-23)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000104/exhibit99-q32025earningsre.htm
+
+excerpt:
+  •Sales of $10.4 Billion, Reported Sales Up 7%, Organic1 Sales Up 6%, Exceeding High End of Previous Guidance
+•Earnings Per Share of $2.86 and Adjusted Earnings Per Share1 of $2.82, Exceeding High End of Previous Guidance
+•Orders Up 22%, Led by Strength in Aerospace Technologies and Energy and Sustainability Solutions
+•Company Raises Full-Year Organic Growth and Adjusted Earnings Per Share Guidance
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 88/102 ── 01K875V000QXGM49CS2A9NYSTP ── HON    (stated 2025-10-23)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: 1 item(s) returned, all rejected: the excerpt is a bare value: a number and a unit, with nothing saying what it is, and the 
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000104/exhibit99-q32025earningsre.htm
+
+excerpt:
+  Earnings per share of common stock - diluted1
+$ 2.86 $ 2.16 $ 8.71 $10.81 - $10.91 $ 0.21 $10.60 - $10.70
+Pension mark-to-market expense2
+— — 0.14 No Forecast — No Forecast
+Amortization of acquisition-related intangibles3
+0.17 0.14 0.49 0.72 — 0.72
+Acquisition-related costs4
+0.03 0.03 0.09 0.05 — 0.05
+Divestiture-related costs5
+0.60 — 0.04 No Forecast — No Forecast
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 89/102 ── 01DQBG76009C5TN65403PNZASG ── HONEPS non-GAAP  FY2019  (stated 2019-10-17)
+target: 8.1 to 8.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384019000025/exhibit99-q32019earnin.htm
+
+excerpt:
+  Organic sales growth is now expected to be in the range of 4% to 5%; segment margin1 is now expected to be 20.9% to 21.0%, up 20 basis points from the low end of the prior guidance range; and adjusted earnings per share1 is now expected to be $8.10 to $8.15, up fifteen cents from the low end of the prior guidance range.
+
+outcome: reported 8.16 on 2020-01-31
+  This resulted in adjusted earnings per share of $2.06 for the quarter, up 11%1, and $8.16 for the year, up 10%4, excluding the impact of the spin-offs,” said Darius Adamczyk, chairman and chief executive officer of Honeywell.
+
+acknowledgement: 2021-01-29
+  For the full year, operating margin contracted 120 basis points and segment margin contracted 70 basis points, with earnings per share of $6.72 and adjusted earnings per share4 of $7.10, above the high end of our guidance.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000005/exhibit99-q42020earningsre.htm
+
+proposed: missed  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 90/102 ── 01FJJMR600YH64JPNQEMH8M040 ── HONrevenue  FY2021  (stated 2021-10-22)
+target: 5.3 to 5.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384021000064/exhibit99-q32021earningsre.htm
+
+excerpt:
+  expected to be in the range of $5.3 billion to $5.6 billion.
+
+outcome: none (model output rejected)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 91/102 ── 01FTYE2Y00BDE4H3HHG9ZTQBD5 ── HONoperating margin non-GAAP  FY2022  (stated 2022-02-03)
+target: 21.4 to 21.8 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000009/exhibit99-q42021earningsre.htm
+
+excerpt:
+  Expect 2022 Sales Growth of 4% - 7% Organically and Segment Margin of 21.1% - 21.5%, 21.4% - 21.8% Excluding the Impact of Quantinuum
+
+outcome: none (multi-column, unconfirmed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 92/102 ── 01G1S9W1007BY4WTMF8Y2WPNQF ── HONrevenue  FY2022  (stated 2022-04-29)
+target: 35.5 to 36.4 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000035/exhibit99-q12022earningsre.htm
+
+excerpt:
+  As a result of the company's first-quarter performance and management's outlook for the remainder of the year, full-year sales are now expected to be in the range of $35.5 billion to $36.4 billion, up 4% to 7% organically, or up 6% to 9% excluding the one-point impact of COVID-driven mask sales declines and one-point impact of lost Russian sales.
+
+outcome: reported 35.466 on 2023-02-02
+  Net sales $ 35,466 $ 35,466
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 93/102 ── 01G911MQ002RNJNT7FQNQ3845K ── HONrevenue  FY2022  (stated 2022-07-28)
+target: 35.5 to 36.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384022000052/exhibit99-q22022earningsre.htm
+
+excerpt:
+  As a result of the company’s second-quarter performance and management’s outlook for the remainder of the year, full-year sales are now expected to be in the range of $35.5 billion to $36.1 billion, up 5% to 7% organically, or up 7% to 9% excluding the one-point impact of COVID-driven mask sales declines and one-point impact of lost Russian sales.
+
+outcome: reported 35.466 on 2023-02-02
+  Net sales $ 35,466 $ 35,466
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 94/102 ── 01JKC8WV00Y4JT2AWHPBXCHY91 ── HONEPS non-GAAP  FY2025  (stated 2025-02-06)
+target: 10.1 to 10.5 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000005/exhibit991-q42024earningsr.htm
+
+excerpt:
+  Expect 2025 Adjusted Earnings Per Share2,3 of $10.10 - $10.50, Up 2% - 6%
+
+outcome: reported 9.78 on 2026-01-29
+  Full-year EPS was $7.57, flat year over year, and full-year adjusted EPS1 was $9.78, up 12% year over year (or 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 95/102 ── 01JKC8WV00JZFC9YC8S31J78ZH ── HONfree cash flow  FY2025  (stated 2025-02-06)
+target: 5.4 to 5.8 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000005/exhibit991-q42024earningsr.htm
+
+excerpt:
+  The company expects operating cash flow of $6.7 billion to $7.1 billion, and free cash flow1 of $5.4 billion to $5.8 billion.
+
+outcome: reported 5.1 on 2026-01-29
+  Operating cash flow was $6.1 billion, up 19%, and free cash flow1,5 was $5.1 billion, up 20% (or up 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 96/102 ── 01JSZDFS00GE8TNHY4TA7QKGS6 ── HONEPS non-GAAP  FY2025  (stated 2025-04-29)
+target: 10.2 to 10.5 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000035/exhibit99-q12025earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $10.20 to $10.50, up 5 cents at the midpoint from the prior guidance range.
+
+outcome: reported 9.78 on 2026-01-29
+  Full-year EPS was $7.57, flat year over year, and full-year adjusted EPS1 was $9.78, up 12% year over year (or 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 97/102 ── 01JSZDFS00RDTJHB1MB2S5J5W9 ── HONfree cash flow  FY2025  (stated 2025-04-29)
+target: 5.4 to 5.8 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000035/exhibit99-q12025earningsre.htm
+
+excerpt:
+  Free cash flow1 is still expected to be in the range of $5.4 billion to $5.8 billion.
+
+outcome: reported 5.1 on 2026-01-29
+  Operating cash flow was $6.1 billion, up 19%, and free cash flow1,5 was $5.1 billion, up 20% (or up 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 98/102 ── 01K0WVNK007AXGDG06G8NMW9Y5 ── HONEPS non-GAAP  FY2025  (stated 2025-07-24)
+target: 10.45 to 10.65 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000062/exhibit99-q22025earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $10.45 to $10.65, up 20 cents at the midpoint from the prior guidance range.
+
+outcome: reported 9.78 on 2026-01-29
+  Full-year EPS was $7.57, flat year over year, and full-year adjusted EPS1 was $9.78, up 12% year over year (or 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 99/102 ── 01K0WVNK00NB2AEVEPAGXFQ80X ── HONfree cash flow  FY2025  (stated 2025-07-24)
+target: 5.4 to 5.8 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000062/exhibit99-q22025earningsre.htm
+
+excerpt:
+  Operating cash flow is still expected to be in the range of $6.7 billion to $7.1 billion, with free cash flow1 in the range of $5.4 billion to $5.8 billion.
+
+outcome: reported 5.1 on 2026-01-29
+  Operating cash flow was $6.1 billion, up 19%, and free cash flow1,5 was $5.1 billion, up 20% (or up 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 100/102 ── 01K875V0003P7B7S6MJBZA38X6 ── HONEPS non-GAAP  FY2025  (stated 2025-10-23)
+target: 10.6 to 10.7 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000104/exhibit99-q32025earningsre.htm
+
+excerpt:
+  Adjusted earnings per share2,3 is now expected to be in the range of $10.60 to $10.70, up 10 cents at the midpoint from the prior guidance range.
+
+outcome: reported 9.78 on 2026-01-29
+  Full-year EPS was $7.57, flat year over year, and full-year adjusted EPS1 was $9.78, up 12% year over year (or 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 101/102 ── 01K875V000633RK9JQ9SAMHYCJ ── HONfree cash flow  FY2025  (stated 2025-10-23)
+target: 5.2 to 5.6 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384025000104/exhibit99-q32025earningsre.htm
+
+excerpt:
+  Operating cash flow is now expected to be in the range of $6.4 billion to $6.8 billion, with free cash flow1 in the range of $5.2 billion to $5.6 billion.
+
+outcome: reported 5.1 on 2026-01-29
+  Operating cash flow was $6.1 billion, up 19%, and free cash flow1,5 was $5.1 billion, up 20% (or up 7% ex.
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 102/102 ── 01KG3GSE00AXR3F96RKTDX55QG ── HONEPS non-GAAP  FY2026  (stated 2026-01-29)
+target: 10.35 to 10.65 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000006/exhibit991-q42025earningsr.htm
+
+excerpt:
+  Expect 2026 Adjusted EPS2,3 of $10.35 - $10.65, Up 6% - 9%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)

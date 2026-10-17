@@ -1,0 +1,568 @@
+── 1/41 ── 01FD8PGR00K6CG9858TCFYYVHN ── WMTrevenue  FY2022  (stated 2021-08-17)
+target: 75.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Expecting FY22 Walmart U.S. comp sales of 5% to 6% and Global eCommerce sales of $75 billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states '$75 billion' for 'Global eCommerce sales', not total revenue; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/41 ── 01G8SAEJ008F278PTFJDQYPNM0 ── WMToperating income  Q2 FY2023  (stated 2022-07-25)
+target: -60.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000058/exhibit991-pressrelease.htm
+
+excerpt:
+  3Based on current foreign exchange translation rates, operating income includes estimated negative impacts of about $60 million and $100 million for the second quarter and fiscal 2023, respectively.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'negative impacts of about $60 million' for the second quarter, which represents a reduction to operating income, not operating income itself of -$60 million. The excerpt describes )  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/41 ── 01G8SAEJ00J4N7KM1M491HV28Q ── WMToperating income  FY2023  (stated 2022-07-25)
+target: -100.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000058/exhibit991-pressrelease.htm
+
+excerpt:
+  3Based on current foreign exchange translation rates, operating income includes estimated negative impacts of about $60 million and $100 million for the second quarter and fiscal 2023, respectively.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states operating income includes a negative impact of $100 million for fiscal 2023, which matches the magnitude, but this describes a negative impact or headwind to operating income rather)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/41 ── 01M0E7FB00MVPFWRQMQ3N0Y0RC ── WMTcomparable sales  Q3 FY2026  (stated 2026-08-20)
+target: 3.0 to 3.75 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416926000145/earningsreleasefy27q2.htm
+
+excerpt:
+  For Q3, net sales are expected to grow 3.0% to 3.75% and adjusted operating income to grow 2.0% to 4.0%.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'net sales are expected to grow 3.0% to 3.75%' but the claim is for 'comparable sales', which is a different metric.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/41 ── 01M0E7FB00DC2BRZH2VM2802X0 ── WMTEPS non-GAAP  FY2027  (stated 2026-08-20)
+target: 2.8 to 2.87 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416926000145/earningsreleasefy27q2.htm
+
+excerpt:
+  Adjusted EPS1 is expected to be $0.62 to $0.64 for Q3 and $2.80 to $2.87 for FY27.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states adjusted EPS guidance for FY27 as '$2.80 to $2.87', but the claim specifies '$2.8 per share to $2.87 per share'. While $2.80 and $2.8 are numerically equivalent, the lower bound in )  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/41 ── 01D41GTP00NEHZD5BXX5F2BB5X ── WMTcapital expenditures  FY2020  (stated 2019-02-19)
+target: 11.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416919000011/earningsrelease-1312019.htm
+
+excerpt:
+  Capital expenditures
+Approximately $11 billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 7/41 ── 01DJ995X00WKXMS1X6TFJFYQCR ── WMTtax rate  FY2020  (stated 2019-08-15)
+target: 26.0 to 27.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416919000058/earningsrelease-7312019.htm
+
+excerpt:
+  Effective tax rate
+Approximately 26% to 27%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 8/41 ── 01E1ASGA00ENFE7PC5F9E1P12H ── WMTcomparable sales  FY2021  (stated 2020-02-18)
+target: at least 2.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416920000007/earningsrelease-1312020.htm
+
+excerpt:
+  Walmart U.S.: at least +2.5%, excluding fuel
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 9/41 ── 01E1ASGA0020VC6H1D56EX93WF ── WMTcomparable sales  FY2021  (stated 2020-02-18)
+target: -50.0 basis points
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416920000007/earningsrelease-1312020.htm
+
+excerpt:
+  Sam’s Club: minus 50 basis points, excluding fuel, and at least +3.0%, excluding fuel and tobacco
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 10/41 ── 01E1ASGA00CJBB6GNRND35M7BC ── WMTcomparable sales  FY2021  (stated 2020-02-18)
+target: at least 3.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416920000007/earningsrelease-1312020.htm
+
+excerpt:
+  Sam’s Club: minus 50 basis points, excluding fuel, and at least +3.0%, excluding fuel and tobacco
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 11/41 ── 01E1ASGA00HZAQMJN4QQ0MFZ8J ── WMTtax rate  FY2021  (stated 2020-02-18)
+target: 25.0 to 26.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416920000007/earningsrelease-1312020.htm
+
+excerpt:
+  Effective tax rate
+25% to 26%
+
+outcome: reported 33.3 on 2021-02-18
+  2 The reported effective tax rate was (238.6%) and 33.3% for the three months and fiscal year ended January 31, 2021, respectively.
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 12/41 ── 01E1ASGA004TSR7G8K2936JTF0 ── WMTcapital expenditures  FY2021  (stated 2020-02-18)
+target: 11.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416920000007/earningsrelease-1312020.htm
+
+excerpt:
+  Capital expenditures
+Around $11 billion with a focus on store remodels, customer initiatives, eCommerce, technology and supply chain
+
+outcome: none (the model found no line reporting that metric for that period)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 13/41 ── 01EYS6ZC00Q20G49K5ED7CFTYK ── WMTtax rate  FY2022  (stated 2021-02-18)
+target: 24.5 to 25.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000022/earningsreleasefy21q4.htm
+
+excerpt:
+  Effective tax rate 24.5% to 25.5%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 14/41 ── 01F5YCBB00KC155ACZN0NEA8H6 ── WMTtax rate  FY2022  (stated 2021-05-18)
+target: 24.5 to 25.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000037/earningsreleasefy22q1.htm
+
+excerpt:
+  Effective tax rate 24.5% to 25.5% No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 15/41 ── 01F5YCBB00CME72Z7WJZFYG3SS ── WMTcapital expenditures  FY2022  (stated 2021-05-18)
+target: 14.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000037/earningsreleasefy22q1.htm
+
+excerpt:
+  Capital expenditures Around $14 billion with a focus on supply chain, automation, customer-facing initiatives and technology No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 16/41 ── 01FD8PGR00BJVR25FEM2BXVJ5T ── WMTcapital expenditures  FY2022  (stated 2021-08-17)
+target: 14.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Capital expenditures Around $14 billion No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 17/41 ── 01FD8PGR00FS2XTFAKV2GQA8ZK ── WMTEPS GAAP  FY2022  (stated 2021-08-17)
+target: 6.2 to 6.35 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  $6.20 to $6.35
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 18/41 ── 01FD8PGR00ZTY44HD55JV7FHD5 ── WMTtax rate  FY2022  (stated 2021-08-17)
+target: 24.5 to 25.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Effective tax rate 24.5% to 25.5% No change
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 19/41 ── 01FD8PGR00C1FGABMNT0BNCN14 ── WMTcomparable sales  Q3 FY2022  (stated 2021-08-17)
+target: 6.0 to 7.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  Walmart U.S., up 6% to 7%, excluding fuel
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 20/41 ── 01FD8PGR00MQCH97JKR1JT5YTY ── WMTEPS GAAP  Q3 FY2022  (stated 2021-08-17)
+target: 1.3 to 1.4 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000054/earningsreleasefy22q2.htm
+
+excerpt:
+  EPS $1.30 to $1.40
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 21/41 ── 01FMK0P5005PT8HAVAVPF7F302 ── WMTcapital expenditures  FY2022  (stated 2021-11-16)
+target: 13.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416921000063/earningsreleasefy22q3.htm
+
+excerpt:
+  •FY22 capital expenditures of around $13 billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 22/41 ── 01FW2FN000ZX1STV2KFT0V3WE3 ── WMTtax rate  FY2023  (stated 2022-02-17)
+target: 25.0 to 26.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000009/earningsreleasefy22q4.htm
+
+excerpt:
+  Effective tax rate 25% to 26%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 23/41 ── 01G37N0Z00RKG9XHKZ95SYJP5D ── WMTcomparable sales  Q2 FY2022  (stated 2022-05-17)
+target: 4.0 to 5.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000024/earningsreleasefy23q1.htm
+
+excerpt:
+  Comp sales growth Not provided Walmart U.S., increase 4% to 5%, ex. fuel
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 24/41 ── 01GSRMA7003TTFKMFE2M0WTW41 ── WMTcomparable sales  FY2024  (stated 2023-02-21)
+target: 2.0 to 2.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000010/earningsreleasefy23q4.htm
+
+excerpt:
+  Walmart U.S. comp sales
+Increase 2.0% to 2.5%, ex. fuel
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 25/41 ── 01GSRMA700CT1KQSYFVXZ1C59Q ── WMTtax rate  FY2024  (stated 2023-02-21)
+target: 25.5 to 26.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000010/earningsreleasefy23q4.htm
+
+excerpt:
+  Effective tax rate Range of 25.5% to 26.5%, or an $0.10 headwind to EPS vs. last year. The rate is expected to be more normalized than FY23, which benefited from discrete items
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 26/41 ── 01GX4S0D005MBT1H08M05P9AWV ── WMTtax rate  FY2024  (stated 2023-04-04)
+target: 25.5 to 26.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000026/exhibit991-8xk442023.htm
+
+excerpt:
+  Effective tax rate Range of 25.5% to 26.5%, or an $0.10 headwind to EPS vs. last year. The rate is expected to be more normalized vs. FY23, which benefited from discrete items
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 27/41 ── 01J59NB200G6Z5WF6KB1T7EWAS ── WMTEPS non-GAAP  Q3 FY2024  (stated 2024-08-15)
+target: 2.35 to 2.43 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000131/earningsreleasefy25q2.htm
+
+excerpt:
+  Adjusted EPS $2.35 to $2.43 $2.23 to $2.37
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 28/41 ── 01J59NB200TQGBWQXD6A2R7VWD ── WMTEPS non-GAAP  Q4 FY2024  (stated 2024-08-15)
+target: 2.23 to 2.37 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000131/earningsreleasefy25q2.htm
+
+excerpt:
+  Adjusted EPS $2.35 to $2.43 $2.23 to $2.37
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 29/41 ── 01G37N0Z003WZ5PDSK2ZPJGM3R ── WMT    (stated 2022-05-17)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: 5 item(s) returned, all rejected: 'comparable sales' is measured in percent, but the unit is 'other' (other); 'operating income' is measured in dollars, but the unit is 'other' (other); 'revenue' is measured in dollars, but the unit is 'other' (other)
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000024/earningsreleasefy23q1.htm
+
+excerpt:
+  The following guidance reflects the Company’s updated expectations for Q2 and fiscal year 2023 and is provided on a non-GAAP basis as the Company cannot predict certain elements which are included in reported GAAP results, including the effects of foreign exchange translation and the changes in fair value of the Company’s equity investments. Growth rates reflect an adjusted basis for prior year re
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 30/41 ── 01G8SAEJ00ZQ3TJAYDYP7GBCBN ── WMT    (stated 2022-07-25)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000058/exhibit991-pressrelease.htm
+
+excerpt:
+  Based on the current environment and the company’s outlook for the remainder of the year, it is providing the following updates to its guidance.
+•Consolidated net sales growth for the second quarter and full year is expected to be about 7.5% and 4.5%, respectively. Excluding divestitures1, consolidated net sales growth for the full year is expected to be about 5.5%.
+•Net sales include a headwind f
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 31/41 ── 01GAHZ6C00MZT2WRPD45FHNN42 ── WMT    (stated 2022-08-16)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416922000065/earningsreleasefy23q2.htm
+
+excerpt:
+  The following guidance reflects the company’s expectations for Q3 and fiscal year 2023 and is provided on a non-GAAP basis as the company cannot predict certain elements which are included in reported GAAP results, including the changes in fair value of the company’s equity and other investments. Growth rates reflect an adjusted basis for prior year results. The company’s guidance assumes a genera
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 32/41 ── 01GSRMA700X64DDBT0WGZ2Y1KX ── WMT    (stated 2023-02-21)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000010/earningsreleasefy23q4.htm
+
+excerpt:
+  The following guidance reflects the company’s expectations for the first quarter and fiscal year 2024 and is provided on a non-GAAP basis as the Company cannot predict certain elements which are included in reported GAAP results, including the impact of foreign exchange translation and the changes in fair value of the Company’s equity investments. Growth rates reflect an adjusted basis for prior y
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 33/41 ── 01H0P2G1002KP9FSJ31B2EHXJR ── WMT    (stated 2023-05-18)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000043/earningsreleasefy24q1.htm
+
+excerpt:
+  BENTONVILLE, Ark., May 18, 2023 – Walmart Inc. (NYSE: WMT) announces first quarter results, including strong revenue and operating income growth of 7.6% and 17.3%, respectively. Operating expense leverage, along with progress from the Company’s connected value streams, including advertising, helps deliver operating margin expansion. The Company sees strong comp sales globally, including 7.4%3 for 
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 34/41 ── 01HQ1WZV001Q0RYETRQPM8BPZG ── WMT    (stated 2024-02-20)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000019/earningsreleasefy24q4.htm
+
+excerpt:
+  •Company raises annual dividend 9%
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 35/41 ── 01JD0VG200X98SZXHDTENCPVDN ── WMT    (stated 2024-11-19)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: 2 item(s) returned, all rejected: 'operating income' is measured in dollars, but the unit is 'percent' (percent); 'revenue' is measured in dollars, but the unit is 'percent' (percent)
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000170/earningsreleasefy25q3.htm
+
+excerpt:
+  BENTONVILLE, Ark., November 19, 2024 – Walmart Inc. (NYSE: WMT) announces third-quarter results with strong growth in revenue and operating income. Globally, eCommerce grew 27% with penetration up across all segments. Walmart U.S. comp sales up 5.3%2 with positive growth in general merchandise. Looking ahead, the Company raises its guidance for FY25 with net sales expected to grow 4.8% to 5.1% and
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 36/41 ── 01E1ASGA00NG9PCC3ZK3FJFQ31 ── WMTEPS GAAP  FY2021  (stated 2020-02-18)
+target: 5.0 to 5.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416920000007/earningsrelease-1312020.htm
+
+excerpt:
+  FY21 guidance includes net sales growth of about 3%; U.S. comp sales growth of at least 2.5%; U.S. eCommerce net sales growth of about 30%; EPS of $5.00 to $5.15
+
+outcome: reported 4.75 on 2021-02-18
+  GAAP EPS of $4.75; Adjusted EPS2 of $5.48.
+
+acknowledgement: none
+
+proposed: withdrawn  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 37/41 ── 01H0P2G100YNB2NDKAFAN78518 ── WMTEPS non-GAAP  FY2023  (stated 2023-05-18)
+target: 6.1 to 6.2 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416923000043/earningsreleasefy24q1.htm
+
+excerpt:
+  Adjusted EPS $6.10 to $6.20, including an expected $0.14 impact from LIFO
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 38/41 ── 01HXZB5N001M7PQZ2M7CPNWVTN ── WMTtax rate  FY2024  (stated 2024-05-16)
+target: 25.0 to 26.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000088/earningsreleasefy25q1.htm
+
+excerpt:
+  Effective tax rate Unchanged from original guidance Approximately 25.0% to 26.0%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 39/41 ── 01HXZB5N00WFNZJYX1BN0XCAHD ── WMTEPS non-GAAP  FY2024  (stated 2024-05-16)
+target: 2.23 to 2.37 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000088/earningsreleasefy25q1.htm
+
+excerpt:
+  Adjusted EPS High-end or slightly above original guidance $2.23 to $2.37
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 40/41 ── 01J59NB200BG7QAHQAPM3JTJHJ ── WMTtax rate  FY2024  (stated 2024-08-15)
+target: 25.0 to 26.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416924000131/earningsreleasefy25q2.htm
+
+excerpt:
+  Effective tax rate Lower-end of original guidance Approximately 25.0% to 26.0%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 41/41 ── 01KS3X9Y00DA2VC2F53XDTATSA ── WMTEPS non-GAAP  Q2 FY2026  (stated 2026-05-21)
+target: 0.72 to 0.74 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416926000095/earningsreleasefy27q1.htm
+
+excerpt:
+  Adjusted EPS1 is expected to be $0.72 to $0.74.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)

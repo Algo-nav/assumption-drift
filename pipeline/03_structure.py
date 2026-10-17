@@ -979,6 +979,28 @@ _PAST = re.compile(
 _FORWARD = re.compile(r"\b(?:expect(?:s|ed|ing)?|anticipat(?:e|es|ed|ing)|forecast(?:s|ed|ing)?|will|intends?|targets?)\b", re.IGNORECASE)
 
 
+RESTATED_BASE = "restated base year"
+# "The Company's fiscal year guidance is based on the following FY26 figures: Net sales: $706.4 billion, ..." (Walmart): the figures
+# are last year's results, restated so the growth rates beside them have a base. They are not guided.
+_BASE_SENTENCE = re.compile(
+    r"\bguidance\b[^.\n]{0,60}?\bis\s+based\s+on\b[^.\n]{0,60}?(?:\bFY\s?\d{2,4}\b|\bbase[- ]year\b)", re.IGNORECASE)
+
+
+def check_not_restated_base(item: dict[str, Any], evidence: str) -> None:
+    """Reject an item whose figures are printed only in a "guidance is based on the following FY<yy> figures" sentence (or
+    "... based on ... base year"). A section holding that sentence and, further down, the real guidance is not refused:
+    the item passes when its figures are also printed outside the base sentence(s)."""
+    sentences = [evidence[start:end] for start, end in sentence_spans(evidence)]
+    base = [s for s in sentences if _BASE_SENTENCE.search(s)]
+    if not base:
+        return
+    figures = {round(abs(v), 6) for key in ("value_low", "value_high") if isinstance(v := item.get(key), (int, float))}
+    in_base = numbers_in(" ".join(base))
+    rest = numbers_in(" ".join(s for s in sentences if s not in base))
+    if figures and figures <= in_base and not figures <= rest:
+        raise ValueError(RESTATED_BASE)
+
+
 def check_not_past_tense(evidence: str) -> None:
     """Evidence that reports what happened, with nothing that looks ahead, is a result and not a guidance. A
     forward verb anywhere in the evidence lets it through: "Target expects ... in line with the 3.4 percent the
@@ -1382,6 +1404,7 @@ def derive_drafts(
                     raise ValueError(f"metric {metric!r} is not in the metrics list")
                 excerpt = evidence_text(cand, item)
                 check_not_bare_value(excerpt, cand.get("heading"))
+                check_not_restated_base(item, excerpt)
                 period, period_note = fix_na_column_period(period, cand, excerpt)
                 period, end_date_note = fix_end_date_period(company, period, excerpt, date.fromisoformat(cand["filed_at"]),
                                                           " ".join(t for t in (cand.get("lead_in"), cand.get("heading")) if t))

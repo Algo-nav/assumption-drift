@@ -1,0 +1,490 @@
+── 1/35 ── 01DV1YG80088QE1RKHVK272WEC ── UNHfree cash flow  FY2020  (stated 2019-12-02)
+target: 19.0 to 19.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000042/a201912-2exhibit991.htm
+
+excerpt:
+  Cash flows from operations are expected to range from $19.0 billion to $19.5 billion in 2020.
+
+outcome: none (the matching release has no line naming the metric with a number)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'Cash flows from operations' not 'free cash flow'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/35 ── 01ERDSJK00WV6422BEHW02WZP8 ── UNHfree cash flow  FY2021  (stated 2020-12-01)
+target: 20.0 to 21.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176620000058/a2020investorexhibit.htm
+
+excerpt:
+  Cash flows from operations are expected to range from $20 billion to $21 billion in 2021.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'Cash flows from operations' not 'free cash flow'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/35 ── 01FNMFVG001DFV0BCMRMWN9PW1 ── UNHfree cash flow  FY2022  (stated 2021-11-29)
+target: 23.0 to 24.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176621000057/a2021investorconferencegui.htm
+
+excerpt:
+  Cash flows from operations are expected to range from $23 billion to $24 billion in 2022.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'Cash flows from operations' not 'free cash flow'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/35 ── 01GJXRH400TH95RJ6ZHHBA4DRT ── UNHfree cash flow  FY2023  (stated 2022-11-28)
+target: 27.0 to 28.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176622000048/a2022investorconferencegui.htm
+
+excerpt:
+  Cash flows from operations are expected to range from $27 billion to $28 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'cash flows from operations' not 'free cash flow'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/35 ── 01HG9KKF0039BCNN6BZ3YV5RDK ── UNHfree cash flow  FY2024  (stated 2023-11-28)
+target: 30.0 to 31.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176623000080/a2023investorconferencegui.htm
+
+excerpt:
+  Cash flows from operations are expected to range from $30 billion to $31 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (Excerpt states 'cash flows from operations' not 'free cash flow'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/35 ── 01JE4X2400KQSWMHP78JQVYTPJ ── UNHfree cash flow  FY2025  (stated 2024-12-03)
+target: 32.0 to 33.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000338/investorconferenceguidance.htm
+
+excerpt:
+  Cash flows from operations are expected to range from $32 billion to $33 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: no (Excerpt states 'Cash flows from operations' not 'free cash flow'; these are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 7/35 ── 01JHP6HR00JBZR6DTWSGCY7KC4 ── UNHfree cash flow  FY2025  (stated 2025-01-16)
+target: 32.0 to 33.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000022/a2024q4exhibit991.htm
+
+excerpt:
+  UnitedHealth Group affirmed the 2025 performance outlook established in December 2024, including revenues of $450 billion to $455 billion, net earnings of $28.15 to $28.65 per share, adjusted net earnings of $29.50 to $30.00 per share and cash flow from operations of $32 billion to $33 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: no (The excerpt states 'cash flow from operations of $32 billion to $33 billion', not free cash flow. These are different metrics.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 8/35 ── 01JS0GQ500YMSSVHSC86P9AADN ── UNHEPS GAAP  FY2025  (stated 2025-04-17)
+target: 24.65 to 25.15 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000123/a2025q1exhibit991.htm
+
+excerpt:
+  Revised 2025 Earnings Outlook to $24.65 to $25.15 Per Share, Adjusted Earnings $26 to $26.50 Per Share
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: withdrawn  verify: no (The excerpt states 'Adjusted Earnings $26 to $26.50 Per Share' for the adjusted (non-GAAP) metric, but the claim requests GAAP EPS. The excerpt does not provide a GAAP EPS figure for FY2025, only adju)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 9/35 ── 01K19QN60004AB6M86WQCQCSC0 ── UNHEPS GAAP  FY2025  (stated 2025-07-29)
+target: at least 14.65 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Full Year 2025 Earnings Outlook of at least $14.65 Per Share, Adjusted Earnings of at least $16.00 Per Share
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'at least $14.65 Per Share' for 'Full Year 2025 Earnings' but this is Adjusted (non-GAAP) earnings context given the pairing with 'Adjusted Earnings of at least $16.00 Per Share'; t)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 10/35 ── 01K19QN600Q3BWYKX4DHRFDTBG ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 151000.0 to 151500.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Optum Rx $151,000 - $151,500 $6,000 - $6,100 4.0%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows 'Optum Rx' revenue guidance of $151,000 - $151,500 million, which is a segment-level metric for Optum Rx specifically, not consolidated Optum or UnitedHealth Group total revenue as t)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 11/35 ── 01K19QN600QE5D2NFZ1H4XDMK3 ── UNHoperating margin GAAP  FY2025  (stated 2025-07-29)
+target: 4.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Optum Rx $151,000 - $151,500 $6,000 - $6,100 4.0%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt shows 4.0% as a margin figure for Optum Rx specifically, not operating margin for the entire Optum segment or company-wide GAAP operating margin for FY2025.)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 12/35 ── 01K19QN6002SHXFMWQ0QCTCTSY ── UNHoperating margin non-GAAP  FY2025  (stated 2025-07-29)
+target: 3.0 to 3.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  The full year operating earnings margin is estimated at 3.0% to 3.1%.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 3.0% to 3.1%, but the claim specifies 3% to 3.1%; the lower bound does not match (3.0% vs 3%).)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 13/35 ── 01KFYC0000FA2THX7JCVWP7G90 ── UNHoperating income  FY2026  (stated 2026-01-27)
+target: at least 13.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+excerpt:
+  Optum earnings from operations are expected to be greater than $13.2 billion, or a margin of ~5.1% compared to 2025 margin of 3.5%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states guidance for 'Optum earnings from operations,' which is a segment metric, not consolidated operating income for UnitedHealth Group as a whole.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 14/35 ── 01KFYC0000WJ560C85THH7PTT8 ── UNHoperating margin non-GAAP  FY2026  (stated 2026-01-27)
+target: at least 5.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176626000025/a991unherq42025.htm
+
+excerpt:
+  Optum earnings from operations are expected to be greater than $13.2 billion, or a margin of ~5.1% compared to 2025 margin of 3.5%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states a margin of '~5.1%' for Optum (a segment), not operating margin for the consolidated company; the claim requires 'at least 5.1%' but the excerpt uses '~5.1%' (approximately), which )  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 15/35 ── 01K19QN600B6YP2YPXX3GKGWY6 ── UNHoperating income  FY2025  (stated 2025-07-29)
+target: 21550.0 to 22150.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Total UnitedHealth Group $445,500 - $448,000 $21,550 - $22,150
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 16/35 ── 01K19QN600SKA962PBQCPBK2DX ── UNHoperating margin GAAP  FY2025  (stated 2025-07-29)
+target: 2.6 to 2.7 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Operating Margin 2.6% - 2.7%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 17/35 ── 01K19QN600EBW9KRM1W43D228Y ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 101100.0 to 101600.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Optum Health $101,100 - $101,600 $3,000 - $3,100 3.0% - 3.1%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 18/35 ── 01K19QN600Y3PQPG76CFC5GPGS ── UNHoperating margin GAAP  FY2025  (stated 2025-07-29)
+target: 3.0 to 3.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Optum Health $101,100 - $101,600 $3,000 - $3,100 3.0% - 3.1%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 19/35 ── 01K19QN600300BDSV8VYNVWYG7 ── UNHoperating margin GAAP  FY2025  (stated 2025-07-29)
+target: 18.2 to 19.2 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Optum Insight $19,000 - $19,500 $3,550 - $3,650 18.2% - 19.2%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 20/35 ── 01K19QN600W8Y5YX95DQB590CA ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 266000.0 to 267500.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Total Optum $266,000 - $267,500 $12,550 - $12,850 4.7% - 4.8%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 21/35 ── 01K19QN600QFNA5DREJJNGA4EJ ── UNHoperating income  FY2025  (stated 2025-07-29)
+target: 12550.0 to 12850.0 USD millions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Total Optum $266,000 - $267,500 $12,550 - $12,850 4.7% - 4.8%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 22/35 ── 01K19QN6008KV5QSN1HWCHBZ0A ── UNHoperating margin GAAP  FY2025  (stated 2025-07-29)
+target: 4.7 to 4.8 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Total Optum $266,000 - $267,500 $12,550 - $12,850 4.7% - 4.8%
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 23/35 ── 01DV1YG8005GY7QZN6Y8XN4EXD ── UNHrevenue  FY2020  (stated 2019-12-02)
+target: 260.0 to 262.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176619000042/a201912-2exhibit991.htm
+
+excerpt:
+  UnitedHealth Group will also introduce its 2020 outlook, including revenues of $260 billion to $262 billion, net earnings of $15.45 to $15.75 per share, and adjusted net earnings of $16.25 to $16.55 per share.
+
+outcome: reported 257.1 on 2021-01-20
+  Full Year Revenues of $257.1 Billion Grew $15.0 Billion or 6%, led by 21% at Optum
+
+acknowledgement: none
+
+proposed: missed  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 24/35 ── 01HVJ383002G7VGX7T7XHZJGTV ── UNHEPS GAAP  FY2024  (stated 2024-04-16)
+target: 1.15 to 1.35 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000146/a2024q1exhibit991.htm
+
+excerpt:
+  Total cyberattack impacts in the first quarter amounted to $0.74 per share and the company estimates full year 2024 impacts of $1.15 to $1.35 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 25/35 ── 01HVJ38300APE7YXN27RN5ZP21 ── UNHEPS GAAP  FY2024  (stated 2024-04-16)
+target: 17.6 to 18.2 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000146/a2024q1exhibit991.htm
+
+excerpt:
+  The company updated its full year 2024 net earnings outlook to $17.60 to $18.20 per share to reflect the Brazil sale and the estimated direct response costs of the cyberattack.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 26/35 ── 01J2WDDG00JRVRYE8NWA5RPNBM ── UNHEPS GAAP  FY2024  (stated 2024-07-16)
+target: 15.95 to 16.4 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000242/a2024q2exhibit991.htm
+
+excerpt:
+  The company updated its full year 2024 net earnings outlook to $15.95 to $16.40 per share to reflect the classification to held for sale of its remaining South America operations and the estimated Change Healthcare cyberattack impacts.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 27/35 ── 01J2WDDG00RK6MBT58GD25T4YP ── UNHEPS GAAP  FY2024  (stated 2024-07-16)
+target: 1.9 to 2.05 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176624000242/a2024q2exhibit991.htm
+
+excerpt:
+  The company currently estimates the total full year 2024 impact at $1.90 to $2.05 per share.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 28/35 ── 01K19QN600PK0V7X0HGSCJDVC6 ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 445.5 to 448.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Full Year 2025 Revenue Outlook of $445.5 Billion to $448.0 Billion
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 29/35 ── 01K19QN60082RVQVBCB69B7Y52 ── UNHoperating income  FY2025  (stated 2025-07-29)
+target: 9.0 to 9.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Earnings from operations are expected to be in the range of $9.0 billion to $9.3 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 30/35 ── 01K19QN600EG97D62GD4Y9ERSB ── UNHoperating income  FY2025  (stated 2025-07-29)
+target: 3.0 to 3.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Earnings from operations are expected to be $3.0 billion to $3.1 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 31/35 ── 01K19QN600YXC1K09KN3FHBSK7 ── UNHrevenue  FY2025  (stated 2025-07-29)
+target: 19.0 to 19.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Full year 2025 Optum Insight revenues are expected to range from $19.0 billion to $19.5 billion compared to $18.8 billion in 2024.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 32/35 ── 01K19QN600NRMZJNG0HV1H7V3T ── UNHoperating income  FY2025  (stated 2025-07-29)
+target: 3.55 to 3.65 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Earnings from operations are expected to be $3.55 billion to $3.65 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 33/35 ── 01K19QN600RSEHCHG1V8PF463M ── UNHoperating margin non-GAAP  FY2025  (stated 2025-07-29)
+target: 18.2 to 19.2 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  The full year operating earnings margin is estimated at 18.2% to 19.2% and the contract revenue backlog is expected to be $32.0 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 34/35 ── 01K19QN60044K48V1V9NKEJD8V ── UNHoperating income  FY2025  (stated 2025-07-29)
+target: 6.0 to 6.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  Earnings from operations are expected to be $6.0 billion to $6.1 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 35/35 ── 01K19QN600WBSF16CFGX3D098Z ── UNHoperating margin non-GAAP  FY2025  (stated 2025-07-29)
+target: 4.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/731766/000073176625000228/a2025q2exhibit991.htm
+
+excerpt:
+  The full year operating margin is estimated at 4.0% and adjusted scripts are expected to be 1.67 billion.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
