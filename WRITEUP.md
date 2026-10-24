@@ -22,10 +22,10 @@ I wanted the answer as a table, not an anecdote. So for 15 large US companies (N
 | Missed | 511 |
 | Missed, worse than guided | 110 |
 | Missed, better than guided | 401 |
-| Missed and never acknowledged in a later filing | 502 (98%) |
-| Acknowledgements, all on beats | 9 |
+| Missed and never acknowledged in a later filing | 506 (99%) |
+| Acknowledgements, all on beats | 5 |
 
-Of the 110 worse-side misses, 79 are more than 1% beyond the guide and 52 more than 5%. None was acknowledged. The nine acknowledgements are all beats, and eight of the nine are one company (Target), which writes sentences like "above the high end of the Company's guidance range" when it beats.
+Of the 110 worse-side misses, 79 are more than 1% beyond the guide and 52 more than 5%. None was acknowledged. The five acknowledgements are all beats, and all five are Target, all EPS beats in fiscal 2023, each written as "above the high end of the Company's guidance range".
 
 One example of the shape the data has. Meta's 2025 capex guidance, as printed:
 
@@ -70,6 +70,7 @@ The pipeline is six scripts and a thin schema. The interesting part is where the
 - A sentence in the Business Outlook section of the next release, "Operating margin of approximately 13.0%", is next year's guide, not this year's result, however neatly it matches the metric. The outcome matcher took it anyway for a while.
 - Release matching accepts year-only headlines (UnitedHealth Group Reports 2024 Results) and a top-line fallback for releases whose first line carries no results word.
 - When a release states a figure in prose and in a multi-column table, the prose sentence is preferred; the table guard is unchanged.
+- An acknowledgement sentence must name the row's period (or no period and the guided range) and a figure; sentences that name another period never attach.
 
 **Verify.** A second model pass answers yes or no on whether the structured row matches the sentence, with a one-line reason and a class. I overruled it in both directions; the numbers are in the next section. Its value is as a flag, not a judge.
 
@@ -99,6 +100,8 @@ The guards' most common reasons: a dollar level whose sentence describes a chang
 Of the 224 rejected in review, 174 were not guidance (component figures the model took for the guide, changes in basis points, the fixed non-GAAP tax rate convention), 23 were the wrong fiscal year, 14 lost a conflict with another draft for the same metric and period, 11 were duplicates, 2 other. Of the 1,309 approved rows, 8 had a field corrected by hand, 7 of them the period. That figure is a floor: the drafts file is rewritten on each run, so an edit the pipeline later absorbed does not show as an edit.
 
 The outcome matcher's proposals stand behind 673 published rows. 9 proposals were cleared in review as the wrong line (the next year's guide, the prior year's figure in an "X and Y, respectively" sentence). 7 published values differ from the matcher's current proposal. 76 outcomes were attached by hand or by a later rule with no proposal behind them. These are counted against the matcher's current output: its first proposals were overwritten by later runs, so the earlier count of changed proposals cannot be recomputed and is not repeated.
+
+Acknowledgements had a false-match problem the review did not catch until 24 October. Four of the nine published acknowledgements were wrong: three Target full-year rows carried the sentence that acknowledged the fourth-quarter range, and one Salesforce row carried 'we exceeded all our financial targets', which names no figure. The acknowledgement match now requires the sentence to name the row's own period, or no period and the guided range, and to name a figure. Five acknowledgements remain, all Target, all fiscal 2023 EPS.
 
 The verifier pass agreed with the reviewer on 87% of rows (1,299 of 1,496 with a verdict and a decision):
 
