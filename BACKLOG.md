@@ -619,3 +619,34 @@ already build); `--live` still writes the tracked paths; the printed diff names 
 `test_main_dry_run_writes_everything_but_does_not_upload` is rewritten to look in the dry-run folder.
 
 **Cost.** None at run time. About 60 lines in `06_publish.py` and the tests above. `data/_work/` is already the scratch location, so no new ignore rule.
+
+## 28. Period mismatch and generic sentences passed the acknowledgement match (fixed 2026-10-24)
+
+Found by the reviewer reading the nine published acknowledgements (`data/_work/ack_rows.md`). Four of the nine were false.
+
+- **The rows.** Three Target FY2023 full-year EPS rows (`01GTAN3800YY9212M3NM9A2TEP`, `01H0KG3A00YGF3VA13QSV7GPK9`,
+  `01H7XT8Q007QZ4NYXCMMX2RJH6`; guided 7.75 to 8.75 or 7 to 8, reported 8.94) carried the fourth-quarter sentence "GAAP and Adjusted
+  EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60." That range
+  is the Q4 guide, not the year's. Salesforce FY2025 non-GAAP operating margin (`01J6B4GD00CA57Z8K8ECNKF4TE`) carried "We exceeded all our
+  financial targets while achieving our tenth consecutive quarter of operating margin expansion...", which names no figure and no metric guide.
+- **Cause.** The acknowledgement match let a sentence through on its direction word and a guidance reference alone: it did not tie the
+  sentence's period to the row's period (a quarter's sentence on a full-year row), and it did not require the sentence to name any figure
+  (generic praise). The period test added under backlog 4 (`names_period`) already rejects all four sentences today, so these four
+  were attached before it (or by a path that bypassed it; the cause of the attach itself was not traced). That test was also too
+  strict the other way: a headline sentence that leans on the release title for its quarter ("EPS1 of $2.98 ... expected range of $1.90 to
+  $2.60") names no period and so was rejected for the two Target Q4 FY2023 rows that are correct. A replay showed 3 of the 5 surviving rows offered, not 5.
+- **Fix.** `04_outcomes.ack_sentence_ok`, used by `select_lines` through the new `guided` argument that `build_ack_requests` passes:
+  a candidate sentence is offered only if (1) it names a figure (the reported value or the guided range; a footnote digit glued to a
+  word, as in "EPS1", is not one), and (2) it names the row's own period, or names no period at all and prints the row's guided range
+  (`names_guided_range`: both ends, or the one figure of a point or one-sided guide). A sentence that names another quarter or year
+  never passes. So the Q4 sentence attaches to the Q4 rows (it prints 1.90 and 2.60) and not to a full-year row guided 7.75 to 8.75.
+- **Side effect.** A number-less narration ("well below the low end of our guidance range for the period") is no longer offered; the
+  old test that asked for it (`test_an_acknowledgement_line_no_longer_needs_a_number_of_its_own`) is rewritten. The rule is stricter than
+  the one it replaces, so expect fewer candidates on the next full 04 ack run.
+- **Cleanup.** The four acknowledgements were cleared from the review CSVs (outcomes and statuses left intact, a note appended to each
+  row). Their lines in `data/outcomes/0000027419.jsonl` and `0001108524.jsonl` already held `acknowledgement: null`, so nothing was
+  there to remove. An unpublished Target row, `01H0KG3A00PBRP8MPDHY4J2NZ9` (approved false, note "false alarm, the excerpt matches"), still
+  carries an acknowledgement in its review CSV and was not part of this change.
+- **Tests.** `test_outcomes.py`: the three Target full-year cases and the Salesforce case do not attach; the Q4, Q2 and Q3 sentences do;
+  `names_guided_range` and `ack_sentence_ok` table tests. Replay of the stored sentences against the cached filings: the five survivors
+  are all offered, the four cleared are not (`data/_work/replay_ack.py`, candidate selection only; the model's confirmation was not re-run).

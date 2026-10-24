@@ -514,15 +514,20 @@ def test_words_for_the_other_side_do_not_leak_into_a_search(world) -> None:
     assert not any("exceeded expectations" in s for s in sentences)
 
 
-def test_an_acknowledgement_line_no_longer_needs_a_number_of_its_own(world) -> None:
-    """The number requirement (needed for an outcome line, which must state a value) cut real acknowledgement
-    candidates from 101 to 13 across the pilot data: most acknowledgement sentences narrate the gap without
-    repeating the figure, which is already given in the request's own guidance line."""
-    add_filing(world, "0021", "2024-05-01", "8-K", ["Fourth quarter revenue was well below the low end of our guidance range for the period."])
+def test_an_acknowledgement_line_needs_a_figure_but_not_the_reported_one(world) -> None:
+    """Backlog 28. The search still does not need the reported value (most acknowledgement sentences narrate the gap and the
+    value is in the request's own guidance line), but the sentence must print some figure: the reported value or the guided
+    range. "well below the low end of our guidance range" with no number at all is generic and is not offered."""
+    add_filing(world, "0021", "2024-05-01", "8-K", [
+        "Fourth quarter revenue was well below the low end of our guidance range for the period.",
+        "Fourth quarter revenue was well below the low end of our $5.0 billion to $6.0 billion guidance range.",
+    ])
     d = draft()
     out = {"reported_value": 4.8, "reported_at": "2024-05-01"}
     _, index = outcomes.build_ack_requests({COMPANY.cik: [d]}, {"D1": out}, {COMPANY.cik: store()}, OCFG, NUMBER, today=TODAY)
-    assert any("well below the low end" in l.sentence for l in index["k-D1"][1])
+    sentences = [l.sentence for l in index["k-D1"][1]]
+    assert "Fourth quarter revenue was well below the low end of our $5.0 billion to $6.0 billion guidance range." in sentences
+    assert not any("for the period" in s for s in sentences)
 
 
 # --- main, end to end ------------------------------------------------------
@@ -1036,9 +1041,9 @@ def test_a_sentence_about_another_period_is_not_an_acknowledgement(ack_world, se
 @pytest.mark.parametrize("sentence", [
     "Fourth quarter revenue of $4.8 billion was below our guidance.",
     "Fourth quarter fiscal 2024 revenue of $4.8 billion was below our guidance.",
-    "Q4 FY24 revenue was below our guidance.",
+    "Q4 FY24 revenue of $4.8 billion was below our guidance.",
     # names the row's year as well as another: the row's own period is in it
-    "Fourth quarter fiscal 2024 revenue was below our guidance, against fiscal 2023.",
+    "Fourth quarter fiscal 2024 revenue of $4.8 billion was below our guidance, against fiscal 2023.",
 ])
 def test_a_sentence_naming_the_rows_own_period_is_kept(ack_world, sentence) -> None:
     assert ack_sentences(ack_world, sentence) == [sentence]
@@ -1048,6 +1053,69 @@ def test_a_fiscal_year_row_needs_a_full_year_sentence_for_its_year(ack_world) ->
     d = draft(period="FY2024")
     kept = "Full year fiscal 2024 revenue of $4.8 billion was below our guidance."
     assert ack_sentences(ack_world, kept, "Full year fiscal 2023 revenue was below our guidance.", "Fourth quarter revenue was below our guidance.", d=d) == [kept]
+
+
+# --- backlog 28: a quarter's sentence is not a year's acknowledgement, and generic praise names no guide ------
+#
+# Four published acknowledgements were false: three Target full-year FY2023 rows carried the fourth-quarter sentence "EPS of $2.98 ...
+# well-above the high end of the expected range of $1.90 to $2.60", and Salesforce's FY2025 operating margin carried "We exceeded all
+# our financial targets". The five Target rows that stayed (Q2, Q3 and Q4 FY2023, GAAP and non-GAAP) must still be offered.
+
+Q4_SENTENCE = "GAAP and Adjusted EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60."
+Q2_SENTENCE = "Second quarter GAAP and Adjusted EPS1 of $1.80 was more than 4 times higher than a year ago and above the high end of the Company's guidance range."
+CRM_SENTENCE = "We exceeded all our financial targets while achieving our tenth consecutive quarter of operating margin expansion."
+TGT_OUT = {"reported_value": 8.94, "reported_at": "2024-05-01"}
+
+
+def eps_draft(period, low, high):
+    return draft(metric="EPS GAAP", unit="USD per share", period=period, low=low, high=high)
+
+
+def test_a_fourth_quarter_sentence_printing_the_quarters_range_is_not_a_full_year_rows_acknowledgement(ack_world) -> None:
+    d = eps_draft("FY2024", 7.75, 8.75)
+    assert ack_sentences(ack_world, Q4_SENTENCE, d=d, out=TGT_OUT) == []
+    d = eps_draft("FY2024", 7.0, 8.0)
+    assert ack_sentences(ack_world, Q4_SENTENCE, d=d, out=TGT_OUT) == []
+
+
+def test_the_same_sentence_attaches_to_the_quarter_whose_range_it_prints(ack_world) -> None:
+    d = eps_draft("Q4 FY2024", 1.9, 2.6)
+    assert ack_sentences(ack_world, Q4_SENTENCE, d=d, out={"reported_value": 2.98, "reported_at": "2024-05-01"}) == [Q4_SENTENCE]
+
+
+def test_a_quarter_sentence_naming_its_quarter_and_a_figure_attaches(ack_world) -> None:
+    d = eps_draft("Q2 FY2024", 1.3, 1.7)
+    assert ack_sentences(ack_world, Q2_SENTENCE, d=d, out={"reported_value": 1.8, "reported_at": "2024-05-01"}) == [Q2_SENTENCE]
+    assert ack_sentences(ack_world, Q2_SENTENCE, d=eps_draft("Q3 FY2024", 1.2, 1.6), out={"reported_value": 1.8, "reported_at": "2024-05-01"}) == []
+
+
+def test_a_generic_sentence_naming_no_figure_is_not_an_acknowledgement(ack_world) -> None:
+    d = draft(metric="operating margin non-GAAP", unit="percent", period="FY2024", low=32.8, high=32.8)
+    assert ack_sentences(ack_world, CRM_SENTENCE, d=d, out={"reported_value": 33.0, "reported_at": "2024-05-01"}) == []
+
+
+@pytest.mark.parametrize("sentence, low, high, expected", [
+    ("EPS beat the expected range of $1.90 to $2.60.", 1.9, 2.6, True),
+    ("EPS beat the expected range of $1.90 to $2.60.", 7.75, 8.75, False),
+    ("EPS beat the expected range of $1.90 to $2.60.", 1.9, 2.7, False),      # one end only
+    ("Margin beat the 33% target.", 33.0, 33.0, True),                     # a point guide is one figure
+    ("EPS1 beat the guidance.", 1.0, 1.0, False),                          # a footnote digit is not a figure
+    ("Revenue was above guidance.", 1.9, 2.6, False),
+])
+def test_names_guided_range(sentence, low, high, expected) -> None:
+    assert outcomes.names_guided_range(sentence, low, high) is expected
+
+
+@pytest.mark.parametrize("sentence, period, guide, expected", [
+    (Q4_SENTENCE, (4, 2023), (1.9, 2.6), True),         # no period named: only the printed range ties it, and it is this row's
+    (Q4_SENTENCE, (None, 2023), (7.75, 8.75), False),   # the same sentence under a full-year row of other guidance
+    (Q2_SENTENCE, (2, 2023), (1.3, 1.7), True),
+    (Q2_SENTENCE, (4, 2023), (1.9, 2.6), False),
+    (CRM_SENTENCE, (None, 2025), (32.8, 32.8), False),
+    ("Fourth quarter EPS of $2.98 beat the expected range of $1.90 to $2.60.", (None, 2023), (1.9, 2.6), False),   # names another period
+])
+def test_ack_sentence_ok(sentence, period, guide, expected) -> None:
+    assert outcomes.ack_sentence_ok(sentence, period, *guide) is expected
 
 
 def test_names_period_by_the_outcome_matchers_quarter_and_year_tests() -> None:

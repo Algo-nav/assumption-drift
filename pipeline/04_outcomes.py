@@ -439,6 +439,43 @@ def _units_note(doc: DocText, line_index: int, lookback: int) -> str | None:
     return None
 
 
+_FIGURE = re.compile(r"(?<![A-Za-z\d.,])\d[\d,]*(?:\.\d+)?")
+_NAMES_A_PERIOD = re.compile(
+    "|".join(_quarter_regex(q).pattern for q in (1, 2, 3, 4))
+    + r"|\bfull[- ]year\b|\bfor the year\b|\bfiscal (?:year )?\d{2,4}\b|\bFY ?\d{2,4}\b", re.IGNORECASE)
+
+
+def _figures(sentence: str) -> list[float]:
+    out = []
+    for m in _FIGURE.finditer(sentence):
+        try:
+            out.append(float(m.group(0).replace(",", "")))
+        except ValueError:
+            pass
+    return out
+
+
+def names_guided_range(sentence: str, low: float | None, high: float | None) -> bool:
+    """Does the sentence print the guided range itself: both ends of it, or the one figure a point guide or a
+    one-sided guide gave? "the expected range of $1.90 to $2.60" names a guide of 1.90 to 2.60 and no other."""
+    wanted = [v for v in dict.fromkeys((low, high)) if v is not None]
+    seen = _figures(sentence)
+    return bool(wanted) and all(any(abs(f - v) < 1e-9 for f in seen) for v in wanted)
+
+
+def ack_sentence_ok(sentence: str, period: tuple[int | None, int], low: float | None, high: float | None) -> bool:
+    """May this sentence be an acknowledgement for the row? It must name a figure (the reported value, or the guided
+    range): "we exceeded all our financial targets" names none and is generic praise. And it must be about the row's
+    period: one that names this quarter or year is; one that names another is not; one that names no period at all
+    (a headline sentence that leans on the release's title for it) is only if it prints the row's own guided range,
+    so a fourth-quarter sentence that prints a fourth-quarter range cannot attach to a full-year row."""
+    if not _figures(sentence):
+        return False
+    if names_period(sentence, period):
+        return True
+    return not _NAMES_A_PERIOD.search(sentence) and names_guided_range(sentence, low, high)
+
+
 # What a full-year result line says about its period: "fiscal 2022", "full year", "for the year", "for fiscal ...".
 _FULL_YEAR_LINE = re.compile(r"\bfiscal (?:year )?20\d\d\b|\bfull[- ]year\b|\bfor the year\b|\bfor fiscal\b", re.IGNORECASE)
 
@@ -456,6 +493,7 @@ def select_lines(
     require_number: bool = True,
     reference: re.Pattern[str] | None = None,
     require_period: bool = False,
+    guided: tuple[float | None, float | None] | None = None,
     reject: Callable[[DocText, int, str], bool] | None = None,
 ) -> list[Line]:
     """Lines in these releases that name the metric next to a number (and `extra`, if given). Best first, then in
@@ -463,8 +501,9 @@ def select_lines(
     just narrates the gap ("below our guidance") with the value itself in a sentence nearby, so the
     acknowledgement search turns it off. The acknowledgement search also asks, of the sentence that holds the
     direction word, that it hold a `reference` to what was guided and (`require_period`) that it name this
-    row's period: without the first it describes results and does not admit a gap, and without the second it
-    is about some other quarter or year. `reject(doc, char_start, sentence)` drops a sentence before it is scored."""
+    row's period (`ack_sentence_ok`, when `guided` is given: it also needs a figure, and a sentence that names no period
+    must print the guided range): without the first it describes results and does not admit a gap, and without the
+    second it is about some other quarter or year. `reject(doc, char_start, sentence)` drops a sentence before it is scored."""
     lowered = metric.lower()  # canonical names are mixed case: "gross margin non-GAAP"
     wants_non_gaap = "non-gaap" in lowered
     wants_gaap = "gaap" in lowered and not wants_non_gaap
@@ -491,7 +530,8 @@ def select_lines(
                 continue
             if reference is not None and not reference.search(sentence):
                 continue
-            if require_period and (period is None or not names_period(sentence, period)):
+            if require_period and (period is None or not (
+                    ack_sentence_ok(sentence, period, *guided) if guided is not None else names_period(sentence, period))):
                 continue
             section = _section_label(doc, li, int(cfg["section_lookback_lines"]))
             tag = f"{section or ''} {sentence}".lower()
@@ -922,7 +962,8 @@ def build_ack_requests(
             # No number is required here: the line that admits the gap often just narrates it ("below our
             # guidance") with the value itself already given in the user message, or in a sentence just before.
             lines = select_lines(store, metas, matcher, phrase_patterns[(side, direction)], a["metric"], parse_period(a["target_period"]),
-                                  cfg, number, require_number=False, reference=reference, require_period=True)
+                                  cfg, number, require_number=False, reference=reference, require_period=True,
+                                  guided=(a["target_low"], a["target_high"]))
             if not lines:
                 continue
             side_words = "above the high end of" if side == "above" else "below the low end of"

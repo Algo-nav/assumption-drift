@@ -1,0 +1,55 @@
+rows: 1309
+status: Counter({'unresolved': 560, 'missed': 511, 'met': 223, 'withdrawn': 15})
+outcome keys (sample): ['evidence', 'reported_at', 'reported_value']
+(expect worse n=110, >1%=79, >5%=52 and better n=401, >1%=297, >5%=149 if this matches the card)
+
+== META tax rows ==
+FY2023 2023-04-26 20.0 20.0 unresolved None
+   https://www.sec.gov/Archives/edgar/data/1326801/000132680123000063/meta03312023-exhibit991.htm
+FY2025 2025-01-29 12.0 15.0 missed 30.0
+   https://www.sec.gov/Archives/edgar/data/1326801/000132680125000014/meta-12312024xexhibit991.htm
+FY2025 2025-04-30 12.0 15.0 missed 30.0
+   https://www.sec.gov/Archives/edgar/data/1326801/000132680125000050/meta-03312025xexhibit991.htm
+Q4 FY2025 2025-10-29 12.0 15.0 unresolved None
+   https://www.sec.gov/Archives/edgar/data/1326801/000162828025047114/meta-09302025xexhibit991.htm
+FY2026 2026-01-28 13.0 16.0 unresolved None
+   https://www.sec.gov/Archives/edgar/data/1326801/000162828026003832/meta-12312025xexhibit991.htm
+FY2026 2026-04-29 13.0 16.0 unresolved None
+   https://www.sec.gov/Archives/edgar/data/1326801/000162828026028364/meta-03312026xexhibit991.htm
+FY2026 2026-07-29 15.0 17.0 unresolved None
+   https://www.sec.gov/Archives/edgar/data/1326801/000162828026050596/meta-06302026xexhibit991.htm
+
+== QCOM tax rows FY2019 ==
+FY2019 2019-01-30 7.0 7.0 unresolved None
+   guide:  https://www.sec.gov/Archives/edgar/data/804328/000172894919000011/qcom123018erex991.htm
+FY2019 2019-05-01 8.0 8.0 unresolved None
+   guide:  https://www.sec.gov/Archives/edgar/data/804328/000172894919000034/qcom033119erex991.htm
+Q3 FY2019 2019-05-01 16.0 17.0 missed 61.0
+   guide:  https://www.sec.gov/Archives/edgar/data/804328/000172894919000034/qcom033119erex991.htm
+   result: {"reported_value": 61.0, "reported_at": "2019-07-31", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/804328/000172894919000053/qcom063019erex991.htm", "accession_number": "0001728949-19-000053", "filing_type": "8-K", "filed_at": "2019-07-31", "fetched_at": "2026-10-01T13:51:10Z", "content_sha256": "9d7b45e4ab2bf367141f790c763e78cf1a7d2d990b9f6d6dd0c9d8b94d31baee", "excerpt": "
+FY2019 2019-07-31 41.0 41.0 met 41.0
+   guide:  https://www.sec.gov/Archives/edgar/data/804328/000172894919000053/qcom063019erex991.htm
+   result: {"reported_value": 41.0, "reported_at": "2019-11-06", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/804328/000172894919000071/qcom092919erex991.htm", "accession_number": "0001728949-19-000071", "filing_type": "8-K", "filed_at": "2019-11-06", "fetched_at": "2026-10-01T13:51:13Z", "content_sha256": "a7dde6b1ea4585b4d0bd4037994507bc7154453a23b6190a0bb4a5a9e92fabba", "excerpt": "
+Q4 FY2019 2019-07-31 16.0 16.0 missed 18.0
+   guide:  https://www.sec.gov/Archives/edgar/data/804328/000172894919000053/qcom063019erex991.htm
+   result: {"reported_value": 18.0, "reported_at": "2019-11-06", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/804328/000172894919000071/qcom092919erex991.htm", "accession_number": "0001728949-19-000071", "filing_type": "8-K", "filed_at": "2019-11-06", "fetched_at": "2026-10-01T13:51:13Z", "content_sha256": "a7dde6b1ea4585b4d0bd4037994507bc7154453a23b6190a0bb4a5a9e92fabba", "excerpt": "
+
+== Acknowledged rows ==
+CRM operating margin non-GAAP FY2025 ack: 2025-09-03
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000083/crm-q2fy26xexhibit991.htm", "accession_number": "0001108524-25-000083", "filing_type": "8-K", "filed_at": "2025-09-03", "fetched_at": "2026-09-20T06:45:00Z", "content_sha256": "b7543fe36f0a6ed36df7f4c95c6aa743c3cbda704ef7a81c130fbfe46de86f3f", "excerpt": "\u201cWe exceeded all our financial targets while achieving our tenth consecutive quarter of operating margin expansion, delivering strong returns and maximizing
+TGT EPS GAAP FY2023 ack: 2024-03-05
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000008/a2023q4ex-99.htm", "accession_number": "0000027419-24-000008", "filing_type": "8-K", "filed_at": "2024-03-05", "fetched_at": "2026-09-20T06:43:50Z", "content_sha256": "579220ba1059d91f7a1a0f962342c8d13b665f1164667bc70d73a855497c6880", "excerpt": "GAAP and Adjusted EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60."}
+TGT EPS GAAP Q2 FY2023 ack: 2023-08-16
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741923000032/a2023q2ex-99.htm", "accession_number": "0000027419-23-000032", "filing_type": "8-K", "filed_at": "2023-08-16", "fetched_at": "2026-09-20T06:43:45Z", "content_sha256": "43d2596480bee3139bd845b7e1f7350fea0d1f8b3243fb5f2cf3f8a71b27b63b", "excerpt": "Second quarter GAAP and Adjusted EPS1 of $1.80 was more than 4 times higher than a year ago and above the high end of the Company's guidance range, reflecting a meaningful 
+TGT EPS GAAP FY2023 ack: 2024-03-05
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000008/a2023q4ex-99.htm", "accession_number": "0000027419-24-000008", "filing_type": "8-K", "filed_at": "2024-03-05", "fetched_at": "2026-09-20T06:43:50Z", "content_sha256": "579220ba1059d91f7a1a0f962342c8d13b665f1164667bc70d73a855497c6880", "excerpt": "GAAP and Adjusted EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60."}
+TGT EPS GAAP Q3 FY2023 ack: 2023-11-15
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741923000048/a2023q3ex-99.htm", "accession_number": "0000027419-23-000048", "filing_type": "8-K", "filed_at": "2023-11-15", "fetched_at": "2026-09-20T06:43:48Z", "content_sha256": "858c4053aaaaed2e65285ac6eb3996844da371a2ca2cb42437208b1dc16372df", "excerpt": "Third quarter GAAP and Adjusted EPS1 of $2.10 was 36 percent higher than a year ago and above the high end of the Company's guidance range, reflecting disciplined inventory
+TGT EPS GAAP FY2023 ack: 2024-03-05
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000008/a2023q4ex-99.htm", "accession_number": "0000027419-24-000008", "filing_type": "8-K", "filed_at": "2024-03-05", "fetched_at": "2026-09-20T06:43:50Z", "content_sha256": "579220ba1059d91f7a1a0f962342c8d13b665f1164667bc70d73a855497c6880", "excerpt": "GAAP and Adjusted EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60."}
+TGT EPS non-GAAP Q3 FY2023 ack: 2023-11-15
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741923000048/a2023q3ex-99.htm", "accession_number": "0000027419-23-000048", "filing_type": "8-K", "filed_at": "2023-11-15", "fetched_at": "2026-09-20T06:43:48Z", "content_sha256": "858c4053aaaaed2e65285ac6eb3996844da371a2ca2cb42437208b1dc16372df", "excerpt": "Third quarter GAAP and Adjusted EPS1 of $2.10 was 36 percent higher than a year ago and above the high end of the Company's guidance range, reflecting disciplined inventory
+TGT EPS GAAP Q4 FY2023 ack: 2024-03-05
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000008/a2023q4ex-99.htm", "accession_number": "0000027419-24-000008", "filing_type": "8-K", "filed_at": "2024-03-05", "fetched_at": "2026-09-20T06:43:50Z", "content_sha256": "579220ba1059d91f7a1a0f962342c8d13b665f1164667bc70d73a855497c6880", "excerpt": "GAAP and Adjusted EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60."}
+TGT EPS non-GAAP Q4 FY2023 ack: 2024-03-05
+    {"source_url": "https://www.sec.gov/Archives/edgar/data/27419/000002741924000008/a2023q4ex-99.htm", "accession_number": "0000027419-24-000008", "filing_type": "8-K", "filed_at": "2024-03-05", "fetched_at": "2026-09-20T06:43:50Z", "content_sha256": "579220ba1059d91f7a1a0f962342c8d13b665f1164667bc70d73a855497c6880", "excerpt": "GAAP and Adjusted EPS1 of $2.98 was 57.6 percent higher than last year, and well-above the high end of the expected range of $1.90 to $2.60."}

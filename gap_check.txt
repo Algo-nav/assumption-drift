@@ -1,0 +1,20 @@
+better: n=401 median=2.8%  >1%=297  >5%=149  >10%=98
+worse: n=110 median=3.7%  >1%=79  >5%=52  >10%=41
+skipped (no value or no range): 0   one-sided guides: 1
+card says: better 401 (>1% 297, >5% 149), worse 110 (>1% 79, >5% 52)
+
+EPS GAAP                                      better= 71 worse= 19
+EPS non-GAAP                                  better= 87 worse=  5
+capital expenditures                          better=  9 worse=  6
+comparable sales                              better=  7 worse=  8
+free cash flow                                better=  7 worse=  0
+gross margin GAAP                             better=  5 worse=  3
+gross margin non-GAAP                         better= 14 worse=  7
+operating expenses GAAP                       better= 14 worse= 13
+operating expenses non-GAAP                   better= 14 worse= 14
+operating income                              better= 18 worse=  0
+operating margin GAAP                         better=  9 worse= 14
+operating margin non-GAAP                     better= 17 worse=  0
+revenue                                       better=119 worse= 13
+tax rate                                      better=  4 worse=  6
+total expenses                                better=  6 worse=  2

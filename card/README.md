@@ -52,10 +52,10 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-17, the release holds **1,309 rows**: 223 met, 511 missed, 560 unresolved, 15 withdrawn.
+As of 2026-10-24, the release holds **1,309 rows**: 223 met, 511 missed, 560 unresolved, 15 withdrawn.
 Of the misses, 401 were better than guided and 110 worse than guided; median days from the guidance to the
 filing that made it checkable was 93.0, and
-98% of misses were never acknowledged in a later filing.
+99% of misses were never acknowledged in a later filing.
 
 By company:
 
@@ -71,8 +71,8 @@ By company:
 | Microsoft Corporation | 5 | 0 | 0 | 0 | 5 | n/a |
 | NVIDIA Corporation | 212 | 43 | 94 | 0 | 75 | 100% |
 | QUALCOMM Incorporated | 85 | 33 | 28 | 0 | 24 | 100% |
-| Salesforce, Inc. | 316 | 16 | 170 | 0 | 130 | 99% |
-| Target Corporation | 87 | 28 | 43 | 2 | 14 | 81% |
+| Salesforce, Inc. | 316 | 16 | 170 | 0 | 130 | 100% |
+| Target Corporation | 87 | 28 | 43 | 2 | 14 | 88% |
 | The Home Depot, Inc. | 76 | 4 | 15 | 0 | 57 | 100% |
 | UnitedHealth Group Incorporated | 70 | 7 | 43 | 8 | 12 | 100% |
 | Walmart Inc. | 31 | 5 | 13 | 3 | 10 | 100% |
@@ -137,7 +137,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-17.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-24.
 
 ## Licence
 
