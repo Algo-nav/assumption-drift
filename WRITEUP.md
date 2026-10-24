@@ -25,7 +25,7 @@ I wanted the answer as a table, not an anecdote. So for 15 large US companies (N
 | Missed and never acknowledged in a later filing | 506 (99%) |
 | Acknowledgements, all on beats | 5 |
 
-Of the 110 worse-side misses, 79 are more than 1% beyond the guide and 52 more than 5%. None was acknowledged. The five acknowledgements are all beats, and all five are Target, all EPS beats in fiscal 2023, each written as "above the high end of the Company's guidance range".
+Of the 110 worse-side misses, 79 are more than 1% beyond the guide and 52 more than 5%. None was acknowledged. The five acknowledgements are all beats, and all five are Target, all EPS beats in fiscal 2023, each saying the result was above the high end of the guidance range.
 
 One example of the shape the data has. Meta's 2025 capex guidance, as printed:
 
@@ -39,7 +39,7 @@ One example of the shape the data has. Meta's 2025 capex guidance, as printed:
 
 Each revision cites the one before it. No filing after the year closed refers back to any of them.
 
-Outside technology the pattern changed shape rather than repeating. UnitedHealth beat its own guide in every year that resolved from 2019 to 2024, on both GAAP and adjusted earnings; its one worse-side miss is the July 2024 GAAP guide of $15.95 to $16.40, which it cut to $15.50 to $15.75 in October and then met at $15.51. Walmart's one clear worse-side miss is its FY2023 tax rate, 33.6% against a guide of 25% to 26%. Honeywell's FY2025 rows are held back: the company reported 2025 without Solstice after the October 2025 spin, so a $37.4 billion result against a $40.8 to $41.3 billion guide is a change of perimeter, not a miss, and those ten rows stay pending until a scope-change status exists. Segment figures are not tracked, which means Walmart publishes with no comparable-sales rows, since Walmart guides comp sales for Walmart U.S. rather than the company.
+Outside technology the pattern changed shape rather than repeating. UnitedHealth beat its own guide in every year that resolved from 2019 to 2024, on both GAAP and adjusted earnings; its two worse-side misses are FY2020 revenue, guided at $260 to $262 billion in December 2019 and reported at $257.1 billion, and the July 2024 GAAP guide of $15.95 to $16.40, which it cut to $15.50 to $15.75 in October and then met at $15.51. Walmart's one clear worse-side miss is its FY2023 tax rate, 33.6% against a guide of 25% to 26%. Honeywell's FY2025 rows are held back: the company reported 2025 without Solstice after the October 2025 spin, so a $37.4 billion result against a $40.8 to $41.3 billion guide is a change of perimeter, not a miss, and those ten rows stay pending until a scope-change status exists. Segment figures are not tracked, which means Walmart publishes with no comparable-sales rows, since Walmart guides comp sales for Walmart U.S. rather than the company.
 
 ## Why "acknowledged" means something narrow
 
