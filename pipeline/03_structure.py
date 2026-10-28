@@ -9,7 +9,7 @@ prints the projected cost and submits nothing, and it writes nothing to data/dra
 --submit runs the cost gate, one canary request, then the batch, and writes the drafts once
 the batch has ended (a batch still processing when --wait-minutes runs out writes nothing and
 exits 5; run it again to resume). With every request already answered it sends nothing and
-re-derives the drafts from the archive. Every request is sent at temperature 0. By default only 8-K candidates are sent.
+re-derives the drafts from the archive. By default only 8-K candidates are sent.
 
 Two kinds of request:
 

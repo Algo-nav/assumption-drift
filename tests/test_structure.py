@@ -748,12 +748,12 @@ def test_submit_with_everything_answered_still_rewrites_the_drafts_from_the_arch
     assert len(path.read_text().splitlines()) == 1  # re-derived, for free
 
 
-def test_every_request_the_pipeline_sends_is_at_temperature_zero(world, config_path, monkeypatch) -> None:
+def test_no_request_the_pipeline_sends_carries_a_temperature(world, config_path, monkeypatch) -> None:
     seed(world)
     client = use_client(monkeypatch, fakes.FakeAnthropic(respond=respond))
     structure.main(["--config", str(config_path), "--submit"])
-    assert [c["extra_body"] for c in client.messages.create_calls] == [{"temperature": 0}]  # the canary, a direct call
-    assert [item["params"]["temperature"] for item in client.messages.batches.created[0]] == [0, 0]
+    assert all("temperature" not in c and "extra_body" not in c for c in client.messages.create_calls)  # the canary, a direct call
+    assert all("temperature" not in item["params"] for item in client.messages.batches.created[0])
 
 
 def test_a_section_that_produced_nothing_is_listed_only_when_the_run_is_a_submit(world, config_path, monkeypatch) -> None:

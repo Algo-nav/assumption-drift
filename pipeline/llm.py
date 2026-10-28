@@ -44,12 +44,6 @@ BATCH_DIR = REPO_ROOT / "data" / "batches"  # read at call time, so tests can po
 _CUSTOM_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 #: Deliberately low, so the offline estimate errs on the high side.
 CHARS_PER_TOKEN_ESTIMATE = 3.0
-#: Every request, canary and batch alike, is sent at temperature 0: extraction should not vary between runs, and a
-#: change in the drafts should come from a change in the prompt or the code, not from sampling.
-#: anthropic 1.x no longer has `temperature` as a keyword of `messages.create()` (passing it is a TypeError), though
-#: the API and claude-haiku-4-5 still accept it. So a direct call carries it in `extra_body`, and a batch request
-#: keeps it in its `params` dict, which the SDK forwards as it is. See `LlmRequest.create_kwargs`.
-TEMPERATURE = 0
 
 
 class BudgetExceeded(RuntimeError):
@@ -138,21 +132,22 @@ class LlmRequest:
         return {
             "model": model,
             "max_tokens": self.max_tokens,
-            "temperature": TEMPERATURE,
             "system": self.system,
             "messages": [{"role": "user", "content": self.user}],
             "output_config": {"format": {"type": "json_schema", "schema": self.schema}},
         }
 
     def create_kwargs(self, model: str) -> dict[str, Any]:
-        """The keyword arguments for a direct `client.messages.create(...)` call, which is how the canary is sent.
-        Everything in `params` is a keyword of that method except `temperature`, which goes in `extra_body`."""
-        params = self.params(model)
-        temperature = params.pop("temperature")
-        return {**params, "extra_body": {"temperature": temperature}}
+        """The keyword arguments for a direct `client.messages.create(...)` call, which is how the canary is sent."""
+        return self.params(model)
 
     def fingerprint(self, model: str) -> str:
         return hashlib.sha256(json.dumps(self.params(model), sort_keys=True).encode()).hexdigest()
+
+    def legacy_fingerprint(self, model: str) -> str:
+        """The fingerprint before `temperature` was dropped from the request, when every request carried `temperature: 0`.
+        Answers archived then carry this one; `current_results` still accepts it."""
+        return hashlib.sha256(json.dumps({**self.params(model), "temperature": 0}, sort_keys=True).encode()).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -386,9 +381,10 @@ def parse_json_text(text: str | None) -> Any:
 def current_results(results: dict[str, Result], requests: list[LlmRequest], model: str) -> dict[str, Result]:
     """The archived results that answer THESE requests. Editing a prompt or a schema changes a request's
     fingerprint, so an answer given to the old wording is never mistaken for an answer to the new one.
-    Results archived before fingerprints existed carry none, and are treated as stale."""
-    wanted = {r.custom_id: r.fingerprint(model) for r in requests}
-    return {cid: res for cid, res in results.items() if cid in wanted and res.fingerprint == wanted[cid]}
+    Results archived before fingerprints existed carry none, and are treated as stale. An answer archived while requests
+    still carried `temperature: 0` is current if it matches the request's legacy fingerprint."""
+    wanted = {r.custom_id: {r.fingerprint(model), r.legacy_fingerprint(model)} for r in requests}
+    return {cid: res for cid, res in results.items() if cid in wanted and res.fingerprint in wanted[cid]}
 
 
 # --- the batch runner ------------------------------------------------------

@@ -14,8 +14,8 @@ authors = [{ name = "navneet", email = "navn07588@gmail.com" }]
 dependencies = ["pydantic>=2.7"]
 
 [project.optional-dependencies]
-pipeline = ["requests>=2.31", "pyyaml>=6", "anthropic>=1", "pyarrow>=17", "matplotlib>=3.8", "huggingface_hub>=0.24"]
-dev = ["pytest>=8", "requests>=2.31", "pyyaml>=6", "anthropic>=1", "pyarrow>=17", "matplotlib>=3.8", "huggingface_hub>=0.24"]
+pipeline = ["requests>=2.31", "pyyaml>=6", "anthropic==1.7.0", "pyarrow>=17", "matplotlib>=3.8", "huggingface_hub>=0.24"]
+dev = ["pytest>=8", "requests>=2.31", "pyyaml>=6", "anthropic==1.7.0", "pyarrow>=17", "matplotlib>=3.8", "huggingface_hub>=0.24"]
 
 [project.scripts]
 rr = "research_record.cli:main"

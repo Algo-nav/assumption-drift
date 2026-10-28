@@ -650,3 +650,42 @@ Found by the reviewer reading the nine published acknowledgements (`data/_work/a
 - **Tests.** `test_outcomes.py`: the three Target full-year cases and the Salesforce case do not attach; the Q4, Q2 and Q3 sentences do;
   `names_guided_range` and `ack_sentence_ok` table tests. Replay of the stored sentences against the cached filings: the five survivors
   are all offered, the four cleared are not (`data/_work/replay_ack.py`, candidate selection only; the model's confirmation was not re-run).
+
+## 29. The runner installed an unpinned anthropic SDK; `temperature` stopped being accepted (fixed 2026-10-28)
+
+The weekly refresh of 2026-10-24 failed in `03_structure` with `anthropic.BadRequestError` 400, "temperature: Extra inputs are not permitted".
+
+- **Cause.** `pyproject.toml` asked for `anthropic>=1`, so the runner installs whatever is newest on the day, while the local `.venv` runs 1.7.0. The
+  pipeline sent `temperature: 0` on every request (`pipeline/llm.py`, `TEMPERATURE`; `config.yaml` never held it), and the API now rejects it
+  for `claude-haiku-4-5`. The model id in `config.yaml` is unchanged since 2026-09-20.
+- **Fix.** `temperature` is no longer sent: `TEMPERATURE` and the `extra_body` detour in `create_kwargs` are gone, and the tests that asserted
+  temperature 0 now assert its absence. `anthropic` is pinned to `==1.7.0` in the `pipeline` and `dev` extras, the same version as the local `.venv`.
+- **Fingerprints.** `temperature` was part of `params`, so dropping it changes every request fingerprint. `LlmRequest.legacy_fingerprint` still
+  computes the old one (params plus `temperature: 0`), and `current_results` accepts an archived answer that matches either, so existing
+  archives still count as answers. New answers are stored under the new fingerprint. Test: `test_an_answer_archived_with_the_old_temperature_fingerprint_is_still_found`.
+  The legacy match can be deleted once no archived answer carries the old fingerprint.
+- **The failure path worked as designed.** The job stopped at the failing stage, advanced nothing, pushed nothing, and opened the failure issue
+  with the stage and the last 40 log lines.
+
+## 30. Archived 03 answers from before 2026-10-02 no longer match the current request fingerprint (not planned)
+
+`03_structure` replayed in dry-run mode (2026-10-28, 8-K, nothing sent) found 3,735 requests: 1,130 already answered, 2,605 to send.
+The 2,605 are not all new. 2,575 of them have an archived answer whose fingerprint matches neither the current fingerprint nor the legacy one
+with `temperature: 0` (backlog 29); the other 30 are 27 with no archived entry and 3 canaries. So the mismatch is not the temperature.
+
+- **Which answers.** Every answer from the batches of 2026-09-20 (`msgbatch_01UFj…` 839 requests, `msgbatch_0192T…` 29) and 2026-10-01
+  (`msgbatch_01HCf…` 1,707). The batches of 2026-10-02 (`msgbatch_01JNn…`, 282) and 2026-10-17 (`msgbatch_01NB7…`, 846) match.
+  The comparison is `data/_work/diag_fp.py`.
+- **The commit.** Rebuilding the requests with the code of four commits (`git archive` into scratch, read-only) and comparing each to the archived
+  fingerprints: at `2305d17` (2026-10-01 21:05 +0700) and at `973e232` (21:13) the 09-20 and 10-01 batches still match and the 10-02 batch does not; at
+  `288027e` ("Six pipeline fixes, Meta and Micron re-derived, verifier sees columns", 2026-10-03 09:55 +0700) it is the other way round. No commit dated
+  2 October touches the request (`2ec54a7`, 2026-10-02, is review data only), so `288027e` is the commit that changed it. Its work was in the tree
+  by the 2026-10-02 01:11 UTC batch, which matches it, and was committed the next day. The part of its diff that reaches the request is
+  `config.yaml`: `total expenses` and `capital expenditures` were added to `metrics`, the list the prompt and the schema's metric enum are built from.
+  The rest of that diff is code after the model, which is not in a fingerprint. I did not test the metrics list alone.
+- **What stands.** The published rows were reviewed against those answers and stand.
+- **Cost of a full re-run.** About $5 to $10: the dry run projected $5.12 expected and $9.69 worst case at batch prices for the 2,605 requests, more than
+  the $6.96 left of the $20 budget. It is not planned.
+- **The weekly refresh is unaffected.** It sends only the candidates of new filings, so the old answers are not looked up.
+- **If it is ever wanted.** `current_results` could accept the earlier fingerprint, as it does for `temperature`, but that would call answers to a
+  shorter metric list current for a longer one, so it would be a decision rather than a fix.
