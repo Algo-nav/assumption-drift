@@ -1,0 +1,18 @@
+── 1/1 ── 01KYNJQH005JEECE8B9RR65KYW ── METArevenue  Q3 FY2026  (stated 2026-07-29)
+target: 61.0 to 64.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026050596/meta-06302026xexhibit991.htm
+
+excerpt:
+  We expect third quarter 2026 total revenue to be in the range of $61-64 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 64.601 on 2026-10-21
+  Revenue $ 64,601 $ 51,242 26 %
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: (none)

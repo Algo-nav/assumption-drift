@@ -1,0 +1,71 @@
+── 1/5 ── 01M5GEGM00W128ZAHRSRM13KNH ── HONrevenue  FY2026  (stated 2026-10-22)
+target: 20.0 to 20.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000141/exhibit99-q32026earningsre.htm
+
+excerpt:
+  Sales $19.8B - $20.0B $20.0B - $20.1B
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states guidance of $20.0B - $20.1B for the current guidance column, but the claim specifies $20.0B - $20.1B which matches only part of the range; the previous guidance was $19.8B - $20.0B.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/5 ── 01M5GEGM00DW96EYVA4VWHTPG2 ── HONoperating margin non-GAAP  FY2026  (stated 2026-10-22)
+target: 20.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000141/exhibit99-q32026earningsre.htm
+
+excerpt:
+  Segment Margin2
+20.1% - 20.5% ~20.5%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/5 ── 01M5GEGM005AN8EB0EGX38YBKJ ── HONEPS non-GAAP  FY2026  (stated 2026-10-22)
+target: 8.4 to 8.45 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000141/exhibit99-q32026earningsre.htm
+
+excerpt:
+  Adjusted Earnings Per Share2,3
+$8.05 - $8.35 $8.40 - $8.45
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/5 ── 01M5GEGM00V6Z0K860MR9MF6Q9 ── HONoperating income  FY2026  (stated 2026-10-22)
+target: 2.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000141/exhibit99-q32026earningsre.htm
+
+excerpt:
+  Operating Cash Flow ~$2.1B ~$2.1B
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states 'Operating Cash Flow ~$2.1B', not operating income. The metric is different.)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/5 ── 01M5GEGM00ASF0QNKFQ22HST94 ── HONfree cash flow  FY2026  (stated 2026-10-22)
+target: 2.1 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/773840/000077384026000141/exhibit99-q32026earningsre.htm
+
+excerpt:
+  Finally, operating cash flow and free cash flow are now expected to be ~$2.1 billion each.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)

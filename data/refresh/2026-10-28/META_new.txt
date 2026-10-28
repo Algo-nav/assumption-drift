@@ -1,0 +1,83 @@
+── 1/6 ── 01M5DW3X00G44NTJFC6YX8PZV7 ── METArevenue  Q4 FY2026  (stated 2026-10-21)
+target: 73.0 to 76.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+excerpt:
+  We expect fourth quarter 2026 total revenue to be in the range of $73-76 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/6 ── 01M5DW3X00PGXWQKXVKMZ6W9S7 ── METAtotal expenses  FY2026  (stated 2026-10-21)
+target: 175.0 to 179.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+excerpt:
+  We now expect full year 2026 total expenses to be in the range of $175-179 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/6 ── 01M5DW3X00FPVZ5ACA9NTDCXZN ── METAother income and expense  FY2026  (stated 2026-10-21)
+target: -19.0 to -18.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+excerpt:
+  At a segment level, we now expect Reality Labs losses to decline compared to 2025 to a range of $18-19 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt discusses Reality Labs losses (a segment operating metric), not other income and expense (a company-wide financial line item).)  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/6 ── 01M5DW3X00ST11D247VRVV25KX ── METAcapital expenditures  FY2026  (stated 2026-10-21)
+target: 135.0 to 145.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+excerpt:
+  We anticipate 2026 capital expenditures, including principal payments on finance leases, to be in the range of $135-145 billion, narrowed from our prior outlook of $130-145 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/6 ── 01M5DW3X00J11CHM7X0ED8P0Y7 ── METAtax rate  Q4 FY2026  (stated 2026-10-21)
+target: 15.0 to 17.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+excerpt:
+  Absent any changes to our tax landscape, we expect our fourth quarter 2026 tax rate to be between 15-17%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/6 ── 01M5DW3X00S6JNVB31JRHAJ4KJ ── METAother income and expense  FY2027  (stated 2026-10-21)
+target: no more than -15.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm
+
+excerpt:
+  Separately, we remain focused on improving Reality Labs profitability and expect losses to narrow next year to around $15 billion as we reallocate investment toward other priority areas, primarily AI.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt discusses Reality Labs losses (operating expense), not other income and expense; these are different line items on the financial statements.)  conflict: false
+approved: false  hand_verified: false  note: (none)

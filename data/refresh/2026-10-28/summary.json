@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-28",
+  "max_usd": 1.0,
+  "filings_total": 8,
+  "filings_by_form": {
+    "10-Q": 2,
+    "8-K": 6
+  },
+  "per_company": {
+    "AVGO": {
+      "filings": 1,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "CRM": {
+      "filings": 1,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "HON": {
+      "filings": 2,
+      "candidates": 19,
+      "new_rows": 5,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "JPM": {
+      "filings": 1,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "META": {
+      "filings": 2,
+      "candidates": 18,
+      "new_rows": 6,
+      "new_flags": 0,
+      "proposals": 1
+    },
+    "WMT": {
+      "filings": 1,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    }
+  },
+  "candidates_total": 37,
+  "stages": {
+    "03_structure": {
+      "requests": 23,
+      "usd": 0.083896
+    },
+    "03b_verify": {
+      "requests": 11,
+      "usd": 0.020732
+    },
+    "04_outcomes": {
+      "requests": 1,
+      "usd": 0.001818
+    }
+  },
+  "run_usd": 0.106446,
+  "new_rows": 11,
+  "new_flags": 0,
+  "proposals": 1,
+  "outcomes": {
+    "attached": 0,
+    "proposed": 1
+  },
+  "acknowledgements": {
+    "filled": 0,
+    "proposed": 0
+  },
+  "withdrawals": {
+    "filled": 0,
+    "proposed": 0
+  },
+  "pending_published": 21,
+  "spend_to_date_usd": 2.130484,
+  "failures": [],
+  "dumps": {
+    "HON": [
+      "HON_new.txt"
+    ],
+    "META": [
+      "META_new.txt",
+      "META_pending.txt"
+    ]
+  },
+  "ciks": {
+    "0001045810": "NVDA",
+    "0000027419": "TGT",
+    "0001108524": "CRM",
+    "0000320193": "AAPL",
+    "0000789019": "MSFT",
+    "0001018724": "AMZN",
+    "0001326801": "META",
+    "0001652044": "GOOGL",
+    "0000002488": "AMD",
+    "0001730168": "AVGO",
+    "0000909832": "COST",
+    "0000354950": "HD",
+    "0000019617": "JPM",
+    "0000804328": "QCOM",
+    "0000796343": "ADBE",
+    "0000723125": "MU",
+    "0000060667": "LOW",
+    "0000731766": "UNH",
+    "0000773840": "HON",
+    "0000104169": "WMT",
+    "0000018230": "CAT"
+  }
+}
