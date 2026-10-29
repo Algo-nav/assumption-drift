@@ -13,7 +13,7 @@ pretty_name: assumption-drift
 ---
 # assumption-drift
 
-Filings processed through 2026-10-15. 10 rows pending review.
+Filings processed through 2026-10-28. 10 rows pending review.
 
 Write-up: how it was built and what it found: https://github.com/Algo-nav/assumption-drift/blob/main/WRITEUP.md
 
@@ -52,9 +52,9 @@ Acknowledged means a later 8-K, 10-K or 10-Q states the gap in so many words, na
 guidance the result fell on: for example "below", "short of", "did not meet", "higher than expected",
 "exceeded" or "above the high end".
 
-As of 2026-10-24, the release holds **1,309 rows**: 223 met, 511 missed, 560 unresolved, 15 withdrawn.
-Of the misses, 401 were better than guided and 110 worse than guided; median days from the guidance to the
-filing that made it checkable was 93.0, and
+As of 2026-10-29, the release holds **1,316 rows**: 223 met, 512 missed, 566 unresolved, 15 withdrawn.
+Of the misses, 402 were better than guided and 110 worse than guided; median days from the guidance to the
+filing that made it checkable was 93, and
 99% of misses were never acknowledged in a later filing.
 
 By company:
@@ -65,9 +65,9 @@ By company:
 | Advanced Micro Devices, Inc. | 96 | 37 | 19 | 0 | 40 | 100% |
 | Amazon.com, Inc. | 30 | 10 | 18 | 0 | 2 | 100% |
 | Broadcom Inc. | 34 | 1 | 27 | 1 | 5 | 100% |
-| Honeywell International Inc. | 69 | 2 | 10 | 1 | 56 | 100% |
+| Honeywell International Inc. | 72 | 2 | 10 | 1 | 59 | 100% |
 | Lowe's Companies, Inc. | 110 | 0 | 4 | 0 | 106 | 100% |
-| Meta Platforms, Inc. | 80 | 37 | 27 | 0 | 16 | 100% |
+| Meta Platforms, Inc. | 84 | 37 | 28 | 0 | 19 | 100% |
 | Microsoft Corporation | 5 | 0 | 0 | 0 | 5 | n/a |
 | NVIDIA Corporation | 212 | 43 | 94 | 0 | 75 | 100% |
 | QUALCOMM Incorporated | 85 | 33 | 28 | 0 | 24 | 100% |
@@ -137,7 +137,7 @@ one the pipeline used.
 
 If you use this dataset, please cite it as:
 
-    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-24.
+    Navneet (2026). assumption-drift. https://huggingface.co/datasets/Nav772/assumption-drift. Accessed 2026-10-29.
 
 ## Licence
 

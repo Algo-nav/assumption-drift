@@ -13,7 +13,7 @@ Every numeric guidance statement in the SEC filings of 15 large US companies sin
 
 | Statements | Resolved | Met | Missed | Worse | Better | Never acknowledged | Acknowledged |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1,309 | 734 | 223 | 511 | 110 | 401 | 506 | 5 |
+| 1,316 | 735 | 223 | 512 | 110 | 402 | 507 | 5 |
 
 - Dataset: https://huggingface.co/datasets/Nav772/assumption-drift
 - GitHub: https://github.com/Algo-nav/assumption-drift
