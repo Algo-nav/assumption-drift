@@ -1,0 +1,18 @@
+── 1/1 ── 01KYR54800BNF6THM64M07EZHE ── AMZNoperating income  Q3 FY2026  (stated 2026-07-30)
+target: 22.5 to 26.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1018724/000101872426000024/amzn-20260630xex991.htm
+
+excerpt:
+  Operating income is expected to be between $22.5 billion and $26.5 billion, compared with $17.4 billion in third quarter 2025.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 28.1 on 2026-10-29
+  Operating income was $28.1 billion and operating margin was 13.9%—Amazon’s highest operating margin ever
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1018724/000101872426000038/amzn-20260930xex991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: true  note: (none)

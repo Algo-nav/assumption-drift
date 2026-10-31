@@ -1,0 +1,27 @@
+── 1/2 ── 01M62F9N00RPWXCKK6DF12FGGZ ── AMZNoperating income  Q4 FY2026  (stated 2026-10-29)
+target: 28.5 to 33.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1018724/000101872426000038/amzn-20260930xex991.htm
+
+excerpt:
+  Operating income is expected to be between $28.5 billion and $33.5 billion, compared with $25.0 billion in fourth quarter 2025.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/2 ── 01M62F9N001Z0GF5A7YKA2ZSBM ── AMZNcapital expenditures  FY2026  (stated 2026-10-29)
+target: 220.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1018724/000101872426000038/amzn-20260930xex991.htm
+
+excerpt:
+  We continue to expect 2026 cash capital expenditures to be approximately $220 billion.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)

@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-31",
+  "max_usd": 1.0,
+  "filings_total": 6,
+  "filings_by_form": {
+    "10-Q": 2,
+    "8-K": 4
+  },
+  "per_company": {
+    "AMZN": {
+      "filings": 2,
+      "candidates": 10,
+      "new_rows": 2,
+      "new_flags": 0,
+      "proposals": 1
+    },
+    "META": {
+      "filings": 1,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "MSFT": {
+      "filings": 3,
+      "candidates": 13,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 2
+    }
+  },
+  "candidates_total": 23,
+  "stages": {
+    "03_structure": {
+      "requests": 15,
+      "usd": 0.050823
+    },
+    "03b_verify": {
+      "requests": 2,
+      "usd": 0.003808
+    },
+    "04_outcomes": {
+      "requests": 3,
+      "usd": 0.008056
+    }
+  },
+  "run_usd": 0.062687,
+  "new_rows": 2,
+  "new_flags": 0,
+  "proposals": 3,
+  "outcomes": {
+    "attached": 0,
+    "proposed": 3
+  },
+  "acknowledgements": {
+    "filled": 0,
+    "proposed": 0
+  },
+  "withdrawals": {
+    "filled": 0,
+    "proposed": 0
+  },
+  "pending_published": 12,
+  "spend_to_date_usd": 2.193171,
+  "failures": [],
+  "dumps": {
+    "AMZN": [
+      "AMZN_new.txt",
+      "AMZN_pending.txt"
+    ],
+    "MSFT": [
+      "MSFT_pending.txt"
+    ]
+  },
+  "ciks": {
+    "0001045810": "NVDA",
+    "0000027419": "TGT",
+    "0001108524": "CRM",
+    "0000320193": "AAPL",
+    "0000789019": "MSFT",
+    "0001018724": "AMZN",
+    "0001326801": "META",
+    "0001652044": "GOOGL",
+    "0000002488": "AMD",
+    "0001730168": "AVGO",
+    "0000909832": "COST",
+    "0000354950": "HD",
+    "0000019617": "JPM",
+    "0000804328": "QCOM",
+    "0000796343": "ADBE",
+    "0000723125": "MU",
+    "0000060667": "LOW",
+    "0000731766": "UNH",
+    "0000773840": "HON",
+    "0000104169": "WMT",
+    "0000018230": "CAT"
+  }
+}
