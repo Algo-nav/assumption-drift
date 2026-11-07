@@ -1,0 +1,55 @@
+── 1/4 ── 01M6HXNZ00F9Z3MRJTC2K7MTSH ── QCOMrevenue  Q1 FY2027  (stated 2026-11-04)
+target: 10.4 to 11.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/804328/000080432826000127/qcom092726erex991.htm
+
+excerpt:
+  Revenues $10.4B - $11.2B
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/4 ── 01M6HXNZ00HMEDA50FQCX84QES ── QCOMtax rate  Q4 FY2026  (stated 2026-11-04)
+target: 12.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/804328/000080432826000127/qcom092726erex991.htm
+
+excerpt:
+  (2) Tax benefit in the “Other Items” column represents an adjustment to arrive at our fixed estimated Non-GAAP tax rate of 12.5% for the fourth quarter of fiscal 2026 and includes the benefit from foreign currency gains related to our Korean withholding tax receivable.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/4 ── 01M6HXNZ0002TDX9J0BSHC5EZQ ── QCOMtax rate  Q1 FY2026  (stated 2026-11-04)
+target: 13.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/804328/000080432826000127/qcom092726erex991.htm
+
+excerpt:
+  (2) Tax benefit in the “Other Items” column represents an adjustment to arrive at our fixed estimated Non-GAAP tax rates of 13.5% in the first quarter and 12.5% in the remaining quarters of fiscal 2026, resulting in a blended full-year rate of approximately 13%.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/4 ── 01M6HXNZ006TQW1DVF181R9FBV ── QCOMtax rate  FY2026  (stated 2026-11-04)
+target: 13.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/804328/000080432826000127/qcom092726erex991.htm
+
+excerpt:
+  (2) Tax benefit in the “Other Items” column represents an adjustment to arrive at our fixed estimated Non-GAAP tax rates of 13.5% in the first quarter and 12.5% in the remaining quarters of fiscal 2026, resulting in a blended full-year rate of approximately 13%.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)

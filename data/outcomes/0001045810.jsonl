@@ -196,11 +196,11 @@
 {"draft_id": "01DJ995X0028NGH94HG45W08PA", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KJ91GV00WBDJ94VK4A5S61W1", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KS1AX7003GJY1M0WM6EGX2ZX", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01M0XNVN00A4GBMFREX53T9RAB", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01M0XNVN00P6040FJKMMTGNGWP", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01M0XNVN00P81QHFNEK8QF6F6D", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01M0XNVN00MQ1HPFFN3Q3X6EVY", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01M0XNVN0045C0SACBR8X72BVN", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M0XNVN00A4GBMFREX53T9RAB", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M0XNVN00P6040FJKMMTGNGWP", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M0XNVN00P81QHFNEK8QF6F6D", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M0XNVN00MQ1HPFFN3Q3X6EVY", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M0XNVN0045C0SACBR8X72BVN", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M0XNVN001W6CT5D0QBVS1RC9", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01K3MD6100RBSA5Z35ASSDWC7J", "outcome": {"reported_value": 57.006, "reported_at": "2025-11-19", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000228/q3fy26pr.htm", "accession_number": "0001045810-25-000228", "filing_type": "8-K", "filed_at": "2025-11-19", "fetched_at": "2026-09-20T06:42:57Z", "content_sha256": "c955be60dc80d254ab488568ea36bc96a2bb4b5c26b729071e17ed1becaf062c", "excerpt": "Revenue $57,006 $46,743 $35,082 22 % 62 %"}}, "outcome_reason": null, "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01K3MD61008NX94C4HGJ0KQ2WB", "outcome": {"reported_value": 5.839, "reported_at": "2025-11-19", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000228/q3fy26pr.htm", "accession_number": "0001045810-25-000228", "filing_type": "8-K", "filed_at": "2025-11-19", "fetched_at": "2026-09-20T06:42:57Z", "content_sha256": "c955be60dc80d254ab488568ea36bc96a2bb4b5c26b729071e17ed1becaf062c", "excerpt": "Operating expenses $5,839 $5,413 $4,287 8 % 36 %"}}, "outcome_reason": null, "acknowledgement": null, "withdrawal": null}

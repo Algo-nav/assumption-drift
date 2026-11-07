@@ -1,0 +1,41 @@
+── 1/3 ── 01M6FB9800F7DZ5K7SC17Y11JD ── AMDrevenue  Q4 FY2026  (stated 2026-11-03)
+target: 16.49 to 17.51 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/q32026991.htm
+
+excerpt:
+  For the fourth quarter of 2026, AMD expects revenue to be approximately $17 billion, plus or minus 3%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/3 ── 01M6FB9800VRYSKZYG85J5VSNE ── AMDgross margin non-GAAP  Q4 FY2026  (stated 2026-11-03)
+target: 55.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/q32026991.htm
+
+excerpt:
+  Non-GAAP gross margin is expected to be approximately 55%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/3 ── 01M6FB9800YD6MFWKWADP6GY1Q ── AMDtax rate  FY2026  (stated 2026-11-03)
+target: 13.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/q32026991.htm
+
+excerpt:
+  For fiscal 2026, AMD uses a projected non-GAAP tax rate of 13%, which excludes the tax impact of pre-tax non-GAAP adjustments.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
