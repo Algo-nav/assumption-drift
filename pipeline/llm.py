@@ -38,6 +38,7 @@ import anthropic
 
 from pipeline.common import REPO_ROOT
 from pipeline import common
+from research_record import store
 
 BATCH_DIR = REPO_ROOT / "data" / "batches"  # read at call time, so tests can point it elsewhere
 
@@ -48,6 +49,12 @@ CHARS_PER_TOKEN_ESTIMATE = 3.0
 
 class BudgetExceeded(RuntimeError):
     """The projected worst-case cost is more than the budget has left."""
+
+
+#: Set by pipeline/job.py for the length of a job, None otherwise. An object with `check(worst_usd, step)` (raises
+#: BudgetExceeded before anything is sent), `add(usd)` (what was actually spent) and `stopped(reason)` (told when the
+#: lifetime budget below stops a stage). It is asked on top of the lifetime budget and of any --max-usd cap.
+GUARD: Any = None
 
 
 class NoCredentials(RuntimeError):
@@ -212,10 +219,8 @@ def count_input_tokens(
 ) -> list[int]:
     """Exact input tokens per request, from the API's count_tokens endpoint. Cached by request content."""
     cache_path = cache_path or BATCH_DIR / "token_cache.json"
-    try:
-        cache: dict[str, int] = json.loads(cache_path.read_text())
-    except (FileNotFoundError, json.JSONDecodeError):
-        cache = {}
+    cache: dict[str, int] = store.backend().token_cache_read(cache_path)
+    known = set(cache)
 
     def count(req: LlmRequest) -> int:
         key = req.fingerprint(llm.model)
@@ -229,8 +234,7 @@ def count_input_tokens(
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         counts = list(pool.map(count, requests))
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-    cache_path.write_text(json.dumps(cache))
+    store.backend().token_cache_write(cache_path, cache, new=set(cache) - known, model=llm.model)
     return counts
 
 
@@ -244,16 +248,11 @@ class Ledger:
         self.path = path or BATCH_DIR / "ledger.jsonl"
 
     def append(self, **entry: Any) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         entry["ts"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        with self.path.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry) + "\n")
+        store.backend().ledger_append(self.path, entry)
 
     def entries(self) -> list[dict[str, Any]]:
-        try:
-            return [json.loads(line) for line in self.path.read_text().splitlines() if line.strip()]
-        except FileNotFoundError:
-            return []
+        return store.backend().ledger_entries(self.path)
 
     def committed_usd(self) -> float:
         """Canary and synchronous calls, plus per batch its latest entry: worst case once submitted, actual once ended."""
@@ -270,10 +269,26 @@ class Ledger:
 def check_budget(projection: Projection, llm: LlmConfig, ledger: Ledger) -> None:
     remaining = llm.budget_usd - ledger.committed_usd()
     if projection.usd_worst > remaining:
-        raise BudgetExceeded(
-            f"worst-case ${projection.usd_worst:.2f} is more than the ${remaining:.2f} left of the "
-            f"${llm.budget_usd:.2f} budget. Nothing was submitted."
-        )
+        message = (f"worst-case ${projection.usd_worst:.2f} is more than the ${remaining:.2f} left of the "
+                   f"${llm.budget_usd:.2f} budget. Nothing was submitted.")
+        if GUARD is not None:
+            GUARD.stopped(f"llm.budget_usd in config.yaml: {message}")
+        raise BudgetExceeded(message)
+
+
+def _gate(cap: "RunCap | None", worst_usd: float, step: str) -> None:
+    """The --max-usd cap of this run, then the job's caps if a job is running. Either raises before anything is sent."""
+    if cap is not None:
+        cap.check(worst_usd, step)
+    if GUARD is not None:
+        GUARD.check(worst_usd, step)
+
+
+def _spent(cap: "RunCap | None", usd: float) -> None:
+    if cap is not None:
+        cap.add(usd)
+    if GUARD is not None:
+        GUARD.add(usd)
 
 
 class RunCap:
@@ -300,10 +315,8 @@ def append_spend(step: str, requests: int, usd: float, *, path: Path | None = No
     """One line in data/spend_ledger.jsonl (tracked): date, stage, requests, usd. Unlike data/batches/ledger.jsonl, which
     stays on the machine that ran, this one travels with the repo, so a runner's spend is on record."""
     path = path or common.SPEND_LEDGER_PATH
-    path.parent.mkdir(parents=True, exist_ok=True)
     entry = {"date": day or datetime.now(timezone.utc).date().isoformat(), "stage": step, "requests": requests, "usd": round(usd, 6)}
-    with path.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry) + "\n")
+    store.backend().spend_append(path, entry)
 
 
 # --- results ---------------------------------------------------------------
@@ -345,24 +358,28 @@ class RawArchive:
     def load(self) -> dict[str, Result]:
         """Latest result per custom_id; a later failure never replaces an earlier success."""
         results: dict[str, Result] = {}
-        try:
-            lines = self.path.read_text(encoding="utf-8").splitlines()
-        except FileNotFoundError:
-            return results
-        for line in lines:
-            if not line.strip():
-                continue
-            r = Result(**json.loads(line))
+        for row in store.backend().archive_read(self.path):
+            r = Result(**row)
             if r.custom_id in results and results[r.custom_id].ok and not r.ok:
                 continue
             results[r.custom_id] = r
         return results
 
-    def append(self, results: list[Result]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self.path.open("a", encoding="utf-8") as fh:
-            for r in results:
-                fh.write(json.dumps(r.__dict__, ensure_ascii=False) + "\n")
+    def append(self, results: list[Result], *, llm: "LlmConfig | None" = None) -> None:
+        """Archive the answers. With `llm`, each one's cost goes with it (a batch answer at the batch price, a canary or
+        synchronous one at full price): the files ignore it, the database records it on the call."""
+        costs = {r.custom_id: llm.usd(r.input_tokens, r.output_tokens, batch=r.batch_id not in ("sync", "canary")) for r in results} if llm else None
+        store.backend().archive_append(self.path, [dict(r.__dict__) for r in results], model=llm.model if llm else None, costs=costs)
+
+    def pending(self) -> dict[str, Any] | None:
+        """The batch submitted for this step that has not ended: {batch_id, requests, fingerprints}. None when there is none."""
+        return store.backend().state_read(self.state_path)
+
+    def set_pending(self, state: dict[str, Any], *, model: str | None = None) -> None:
+        store.backend().state_write(self.state_path, state, model=model)
+
+    def clear_pending(self) -> None:
+        store.backend().state_clear(self.state_path)
 
 
 def parse_json_text(text: str | None) -> Any:
@@ -410,8 +427,7 @@ def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive
         usd_expected=projection.usd_expected / llm.batch_discount, usd_worst=projection.usd_worst / llm.batch_discount,
     )
     check_budget(full_price, llm, ledger)
-    if cap is not None:
-        cap.check(full_price.usd_worst, step)
+    _gate(cap, full_price.usd_worst, step)
     spent = 0.0
     for req in todo:
         message = client.messages.create(**req.create_kwargs(llm.model))
@@ -421,12 +437,11 @@ def _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive
                 canary_check(res.text or "")
             except Exception as exc:  # noqa: BLE001 - recorded on the result, the next request still goes
                 res = Result(res.custom_id, "invalid", res.text, res.input_tokens, res.output_tokens, str(exc)[:200], "sync", res.fingerprint)
-        archive.append([res])
+        archive.append([res], llm=llm)
         usd = llm.usd(res.input_tokens, res.output_tokens, batch=False)
         ledger.append(kind="sync", step=step, batch_id="sync", usd=usd)
         spent += usd
-        if cap is not None:
-            cap.add(usd)
+        _spent(cap, usd)
         if not res.ok:
             outcome.notes.append(f"{res.custom_id} came back {res.status}")
     outcome.submitted = len(todo)
@@ -471,8 +486,8 @@ def run_batch(
 
     batch_id: str | None = None
     canary_usd = 0.0  # stays 0 when a pending batch is resumed: its canary was paid for by the run that submitted it
-    if archive.state_path.exists():
-        state = json.loads(archive.state_path.read_text())
+    state = archive.pending()
+    if state is not None:
         batch_id = state["batch_id"]
         fingerprints = state.get("fingerprints") or fingerprints  # the wording the batch was submitted with
         log(f"{step}: resuming pending batch {batch_id}; nothing new is submitted")
@@ -487,8 +502,7 @@ def run_batch(
             return _run_sync(client, llm, step, todo, projection, canary_check, ledger, archive, outcome, fingerprints, log, finish,
                              cap, spend_log)
         check_budget(projection, llm, ledger)
-        if cap is not None:
-            cap.check(projection.usd_worst, step)
+        _gate(cap, projection.usd_worst, step)
 
         canary, batch_reqs = todo[0], todo[1:]
         message = client.messages.create(**canary.create_kwargs(llm.model))
@@ -501,11 +515,10 @@ def run_batch(
                 check_error = exc
                 first = Result(first.custom_id, "invalid", first.text, first.input_tokens, first.output_tokens, str(exc)[:200], "canary", first.fingerprint)
         # Archive and cost it before anything can raise: it was paid for either way.
-        archive.append([first])
+        archive.append([first], llm=llm)
         canary_usd = llm.usd(first.input_tokens, first.output_tokens, batch=False)
         ledger.append(kind="canary", step=step, batch_id="canary", usd=canary_usd)
-        if cap is not None:
-            cap.add(canary_usd)
+        _spent(cap, canary_usd)
         if check_error is not None:
             raise check_error
         log(f"{step}: canary request ok ({first.input_tokens} in, {first.output_tokens} out)")
@@ -519,11 +532,10 @@ def run_batch(
             requests=[{"custom_id": r.custom_id, "params": r.params(llm.model)} for r in batch_reqs]
         )
         batch_id = batch.id
-        archive.state_path.parent.mkdir(parents=True, exist_ok=True)
-        archive.state_path.write_text(json.dumps({
+        archive.set_pending({
             "batch_id": batch_id, "requests": len(batch_reqs),
             "fingerprints": {r.custom_id: fingerprints[r.custom_id] for r in batch_reqs},
-        }))
+        }, model=llm.model)
         ledger.append(kind="submitted", step=step, batch_id=batch_id, usd=projection.usd_worst, requests=len(batch_reqs))
         outcome.submitted = len(batch_reqs)
         log(f"{step}: submitted batch {batch_id} with {len(batch_reqs):,} requests")
@@ -548,14 +560,13 @@ def run_batch(
         else:
             error = getattr(getattr(res, "error", None), "type", None)
             collected.append(Result(item.custom_id, res.type, None, 0, 0, error, batch_id, fingerprints.get(item.custom_id)))
-    archive.append(collected)
+    archive.append(collected, llm=llm)
     actual = llm.usd(sum(r.input_tokens for r in collected), sum(r.output_tokens for r in collected))
     ledger.append(kind="ended", step=step, batch_id=batch_id, usd=actual, succeeded=sum(r.ok for r in collected))
-    if cap is not None:
-        cap.add(actual)
+    _spent(cap, actual)
     if spend_log is not None:
         append_spend(step, len(collected) + (1 if canary_usd else 0), actual + canary_usd, path=spend_log)
-    archive.state_path.unlink(missing_ok=True)
+    archive.clear_pending()
     failed = [r for r in collected if not r.ok]
     log(f"{step}: batch ended, {len(collected) - len(failed):,} succeeded, {len(failed):,} did not; actual cost ${actual:.2f}")
     if failed:

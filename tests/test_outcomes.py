@@ -885,7 +885,7 @@ def test_submit_runs_the_withdrawal_stage_and_puts_the_withdrawal_on_the_row(wor
     assert rows["D4"]["withdrawal"] is None
     assert set(llm.RawArchive("04_withdrawals").load()) == {"w-D1", "w-D3"}  # D4 was never sent
     out = capsys.readouterr().out
-    assert "04_withdrawals: 2 requests" in out and "budget $20.00" in out  # the cost gate is printed before the stage
+    assert "04_withdrawals: 2 requests" in out and "budget $100.00" in out  # the cost gate is printed before the stage
     assert "EXMP: 3 drafts" in out and "2 withdrawn" in out
 
 

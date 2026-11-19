@@ -41,8 +41,6 @@ from __future__ import annotations
 import argparse
 import bisect
 import hashlib
-import json
-import os
 import re
 import sys
 from collections import Counter
@@ -61,6 +59,7 @@ from pipeline.common import (
     load_config,
     read_meta,
 )
+from research_record import store
 from research_record.text import TEXT_VERSION, html_to_text_and_gaps, sentence_spans
 
 _NUMBER = r"\d[\d,]*(?:\.\d+)?"
@@ -434,15 +433,11 @@ def build_company(
     stats["candidates"] = len(rows)
     stats["silent_8k_documents"] = len(silent)
 
-    out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{company.cik}.jsonl"
-    if accessions is not None and out.exists():
-        kept = [r for r in (json.loads(line) for line in out.read_text(encoding="utf-8").splitlines() if line.strip())
-                if r["accession"] not in accessions]
+    if accessions is not None and store.exists(out):
+        kept = [r for r in store.read_jsonl(out) if r["accession"] not in accessions]
         rows = sorted(kept + rows, key=lambda r: (r["filed_at"], r["accession"]))  # stable: a filing's rows keep their order
-    tmp = out.with_name(out.name + ".tmp")
-    tmp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
-    os.replace(tmp, out)
+    store.write_jsonl(out, rows, atomic=True)
     if silent:
         print(f"  8-K documents with no candidate: {', '.join(silent)}")
     return stats

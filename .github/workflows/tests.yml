@@ -1,0 +1,60 @@
+name: Tests
+
+# Two jobs. `files` is the whole suite with STORE=files, as it has always run; the Postgres tests in it are skipped
+# because there is no database. `postgres` runs the Postgres tests against a service container, where a missing
+# database is a failure, not a skip. Those tests work in a schema of their own (test_<timestamp>) and drop it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  files:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      STORE: files
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Test
+        run: pytest tests/ -q
+
+  postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: assumption_drift
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/assumption_drift
+      REQUIRE_POSTGRES: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev,postgres]"
+      - name: Postgres tests
+        run: pytest tests/ -m postgres -q

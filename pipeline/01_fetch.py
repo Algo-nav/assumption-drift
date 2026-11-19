@@ -59,6 +59,7 @@ import requests
 from pipeline import common
 from pipeline.common import CONFIG_PATH, RAW_DIR, REPO_ROOT, Company, companies, load_config, raw_paths, read_meta
 from pipeline.manifest import ManifestError, load_manifest
+from research_record import store
 from research_record.schema import ALLOWED_HOSTS
 from research_record.text import html_to_text
 
@@ -440,6 +441,7 @@ def cache_document(
         "fetched_at": got.fetched_at.isoformat(timespec="seconds"),
     }
     _write_atomic(meta_path, (json.dumps(meta, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8"))
+    store.backend().record_filing(meta)  # the filings table under STORE=postgres; nothing more under STORE=files
     return got
 
 
@@ -456,6 +458,7 @@ def rehash_cached_document(meta_path: Path, html_path: Path) -> bool:
         return False
     updated = {**meta, "raw_sha256": raw_sha256, "content_sha256": content_sha256}
     _write_atomic(meta_path, (json.dumps(updated, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8"))
+    store.backend().record_filing(updated)
     return True
 
 

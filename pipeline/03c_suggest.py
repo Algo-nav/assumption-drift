@@ -49,6 +49,7 @@ from pathlib import Path
 from typing import Any
 
 from pipeline.common import CONFIG_PATH, REVIEW_DIR, companies, load_config
+from research_record import store
 
 candidates = importlib.import_module("pipeline.02_candidates")
 structure = importlib.import_module("pipeline.03_structure")
@@ -216,7 +217,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for company in targets:
         path = REVIEW_DIR / f"{company.cik}.csv"
-        if not path.exists():
+        if not store.exists(path):
             continue
         rows = review.read_csv(path)
         updated, false_alarms, checks = suggest_company(rows, forward, number)

@@ -112,10 +112,8 @@ Writes  data/review/{cik}.csv
 from __future__ import annotations
 
 import argparse
-import csv
 import hashlib
 import json
-import os
 import sys
 import importlib
 import typing
@@ -127,7 +125,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from pipeline.common import CANDIDATES_DIR, CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, RAW_DIR, REVIEW_DIR, Company, companies, load_config, stable_ulid
-from research_record import rubric
+from research_record import rubric, store
 from research_record.schema import ResearchRecord
 from research_record.validate import unflatten_csv_row
 from research_record.text import html_to_text
@@ -378,25 +376,19 @@ def build_empty_block_row(block: dict[str, Any]) -> dict[str, str]:
 # --- files -----------------------------------------------------------------
 
 
+# Where the rows live is research_record.store's business (STORE=files, the default, or STORE=postgres); the path says which rows.
+
+
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return store.read_jsonl(path)
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
-    with path.open(newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+    return store.read_csv(path)
 
 
 def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    with tmp.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=COLUMNS, lineterminator="\n")
-        writer.writeheader()
-        writer.writerows(rows)
-    os.replace(tmp, path)
+    store.write_csv(path, rows, COLUMNS)
 
 
 def review_company(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
@@ -406,7 +398,7 @@ def review_company(company: Company, today: date) -> tuple[list[dict[str, str]],
     outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
     candidates = load_candidates(company.cik)
     path = REVIEW_DIR / f"{company.cik}.csv"
-    existing = read_csv(path) if path.exists() else []
+    existing = read_csv(path) if store.exists(path) else []
     known = {r["record_id"] for r in existing}
     stats: Counter = Counter(kept=len(existing))
     new_rows: list[dict[str, str]] = []
@@ -614,7 +606,7 @@ def refresh_pipeline_fields(company: Company, today: date, raw_dir: Path | None 
     cached document, never on a human's judgement."""
     raw_dir = raw_dir if raw_dir is not None else RAW_DIR  # a live lookup, so a monkeypatched RAW_DIR is honoured
     path = REVIEW_DIR / f"{company.cik}.csv"
-    rows = read_csv(path) if path.exists() else []
+    rows = read_csv(path) if store.exists(path) else []
     if not rows:
         return rows, Counter()
     drafts = {d["draft_id"]: d for d in _read_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl")}
@@ -746,7 +738,7 @@ def attach_row(row: dict[str, str], outcome_row: dict[str, Any] | None, today: d
 def attach_outcomes(company: Company, today: date) -> tuple[list[dict[str, str]], Counter]:
     """Apply 04's findings for the company to its review rows. The file is rewritten only if a row changed, in its own order."""
     path = REVIEW_DIR / f"{company.cik}.csv"
-    rows = read_csv(path) if path.exists() else []
+    rows = read_csv(path) if store.exists(path) else []
     outcomes = {r["draft_id"]: r for r in _read_jsonl(OUTCOMES_DIR / f"{company.cik}.jsonl")}
     stats: Counter = Counter(rows=len(rows))
     out = []

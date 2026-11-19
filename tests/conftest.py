@@ -102,3 +102,54 @@ def _manifest_in_tmp(tmp_path, monkeypatch):
     path = tmp_path / "manifest.json"
     path.write_text('{"processed_through": "2026-09-20", "companies": {}}\n', encoding="utf-8")
     monkeypatch.setattr(common, "MANIFEST_PATH", path)
+
+
+# --- Postgres -------------------------------------------------------------------------------------------------------
+#
+# The Postgres tests run against whatever DATABASE_URL names (the environment, or .env at the repo root), local or
+# remote, and always inside a schema of their own named test_<timestamp>, which is dropped afterwards. They never
+# create, write or drop anything in `public`. With no database they are skipped, unless REQUIRE_POSTGRES=1 (CI), which
+# makes a missing database a failure.
+
+_pg_counter = iter(range(1, 1_000_000))
+
+
+def _pg_backend():
+    import os
+    import time
+
+    from research_record import store
+
+    try:
+        url = store.database_url()
+        schema = f"test_{time.time_ns() // 1000}{next(_pg_counter):03d}"
+        db = store.PostgresBackend(url, schema)
+    except Exception as exc:  # noqa: BLE001 - no URL, no driver, or nothing listening: all the same to a test
+        if os.environ.get("REQUIRE_POSTGRES") == "1":
+            raise
+        pytest.skip(f"no Postgres to test against ({type(exc).__name__}); set DATABASE_URL")
+    assert db.schema != "public" and db.schema.startswith("test_")
+    db.apply_schema()
+    return db
+
+
+@pytest.fixture
+def pg():
+    """A PostgresBackend on a fresh schema test_<timestamp> with db/schema.sql applied. The schema is dropped afterwards."""
+    db = _pg_backend()
+    try:
+        yield db
+    finally:
+        db.drop_schema()
+        db.close()
+
+
+@pytest.fixture(scope="module")
+def pg_module():
+    """The same, shared by one test module (for the tests that load the real dataset once)."""
+    db = _pg_backend()
+    try:
+        yield db
+    finally:
+        db.drop_schema()
+        db.close()

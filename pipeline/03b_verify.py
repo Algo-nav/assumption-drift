@@ -56,6 +56,7 @@ from typing import Any
 
 from pipeline import common, llm
 from pipeline.common import CONFIG_PATH, REVIEW_DIR, Company, companies, load_config, read_id_list
+from research_record import store
 
 review = importlib.import_module("pipeline.05_review")
 
@@ -115,7 +116,7 @@ When your answer is false, also classify why, as exactly one of: wrong_metric (a
 
 def load_rows(company: Company, review_dir: Path | None = None) -> list[dict[str, str]]:
     path = (review_dir or REVIEW_DIR) / f"{company.cik}.csv"
-    return review.read_csv(path) if path.exists() else []
+    return review.read_csv(path) if store.exists(path) else []
 
 
 def is_verifiable(row: dict[str, str]) -> bool:

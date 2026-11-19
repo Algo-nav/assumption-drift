@@ -70,10 +70,31 @@ command for each dump.
 To publish: merge the reviewed branch into `main`, then run `python -m pipeline.06_publish` (a dry run; `--live` as before),
 review the diff to `data/release/`, `card/` and `space/`, and commit it.
 
+## Postgres
+
+Postgres is the store of record; the CSVs stay as the export and review format. `STORE=files` (the default) keeps every
+stage on the per-CIK files, `STORE=postgres` points the same stages at the database named by `DATABASE_URL` (the
+environment or `.env`; `STORE_SCHEMA` picks a schema, default `public`). `db/schema.sql` is the schema and `db/README.md`
+maps every CSV and JSONL column to its table and column.
+
+```
+pip install -e ".[pipeline,postgres]"
+.venv/bin/python scripts/load_published.py     # files -> database; reads everything back and compares it with the files
+.venv/bin/python scripts/export_release.py     # database -> release.jsonl; fails unless byte-identical to the published file
+.venv/bin/python -m pipeline.job run --cik 0000320193 --kind build --dry-run   # price a build from the archived fingerprints
+.venv/bin/python -m pipeline.job run --cik 0000320193 --kind build             # 01, 02, 03, 05, 03b, 04, 05 --attach-outcomes for one company, against the database
+```
+
+A job stops with status `parked` and a clear error when a cap would be passed: `JOB_CAP_USD` (default 1.50, this job),
+`DAILY_CAP_USD` (8.00, the jobs started today) or `WORKSPACE_CAP_USD` (70.00, the calendar month). Jobs run one at a time.
+`DATABASE_URL=... .venv/bin/pytest tests/ -m postgres` runs the Postgres tests, in a schema of their own that is dropped
+afterwards.
+
 ## Layout
 
 ```
-research_record/   schema and resolution rules
+research_record/   schema and resolution rules; store.py, the files-or-Postgres store
+db/                the Postgres schema and the column map
 pipeline/          EDGAR fetch, candidate extraction, review, publish
 data/              cached filings, review queues, released files
 card/              dataset card for Hugging Face

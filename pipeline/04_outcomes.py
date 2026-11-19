@@ -66,7 +66,6 @@ import bisect
 import importlib
 import dataclasses
 import functools
-import json
 import math
 import re
 import sys
@@ -80,7 +79,7 @@ from pydantic import ValidationError
 from pipeline import common, llm
 from pipeline.common import (CONFIG_PATH, DRAFTS_DIR, OUTCOMES_DIR, REVIEW_DIR, Company, companies, load_accession_scope, load_config,
                              period_named_by_end_date, read_id_list)
-from research_record import polarity, rubric
+from research_record import polarity, rubric, store
 from research_record.schema import Evidence, Outcome
 from research_record.text import html_to_text_and_gaps, sentence_spans
 
@@ -697,10 +696,7 @@ def _prints_both_bases(doc: DocText, matcher: re.Pattern[str]) -> bool:
 
 
 def load_drafts(company: Company) -> list[dict[str, Any]]:
-    path = DRAFTS_DIR / f"{company.cik}.jsonl"
-    if not path.exists():
-        return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return store.read_jsonl(DRAFTS_DIR / f"{company.cik}.jsonl")
 
 
 def prefer_prose(lines: list[Line], store: DocStore, period: tuple[int | None, int] | None, unit: str, lookback: int) -> list[Line]:
@@ -1114,14 +1110,13 @@ def derive_withdrawals(
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()] if path.exists() else []
+    return store.read_jsonl(path)
 
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
-    if not rows and not path.exists():  # a dry run must not leave empty files that look like output
+    if not rows and not store.exists(path):  # a dry run must not leave empty files that look like output
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    store.write_jsonl(path, rows)
 
 
 def _json_check(*keys: str):
@@ -1278,7 +1273,7 @@ def main(argv: list[str] | None = None) -> int:
         picked = {"outcome": {}, "ack": {}, "withdrawal": {}}
         for c in targets:
             path = REVIEW_DIR / f"{c.cik}.csv"
-            picks, known = select_from_review(c, review_step.read_csv(path) if path.exists() else [], as_of=as_of, ack_days=int(ocfg["ack_days"]))
+            picks, known = select_from_review(c, review_step.read_csv(path) if store.exists(path) else [], as_of=as_of, ack_days=int(ocfg["ack_days"]))
             known_outcomes.update(known)
             new = {d["draft_id"]: d for d in drafts[c.cik]}  # a draft in data/drafts/ is fresher than its stub
             for stage in picked:

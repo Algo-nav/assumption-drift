@@ -56,7 +56,7 @@ from pydantic import ValidationError
 from pipeline import figures, space
 from pipeline.common import CARD_DIR, CONFIG_PATH, FIGURES_DIR, RELEASE_DIR, REPO_ROOT, REVIEW_DIR, Company, companies, load_config
 from pipeline.manifest import ManifestError, load_manifest
-from research_record import polarity, rubric, stats
+from research_record import polarity, rubric, stats, store
 from research_record.schema import ResearchRecord
 from research_record.validate import unflatten_csv_row
 
@@ -77,7 +77,7 @@ def approved_rows(company: Company, review_dir: Path = REVIEW_DIR) -> list[dict[
     """A company's own review CSV, kept to the rows that may ever be published: approved, and not a
     flag row (`empty_block=true` is not a record at all)."""
     path = review_dir / f"{company.cik}.csv"
-    if not path.exists():
+    if not store.exists(path):
         return []
     return [r for r in review.read_csv(path) if r.get("approved") == "true" and r.get("empty_block") != "true"]
 
@@ -86,7 +86,7 @@ def pending_rows(company: Company, review_dir: Path = REVIEW_DIR) -> list[dict[s
     """A company's review rows nobody has decided on: not approved, no reviewer note, and not an outlook-block flag (a flag
     is not a record). A row with a note but no approval has been looked at, so it is not pending."""
     path = review_dir / f"{company.cik}.csv"
-    if not path.exists():
+    if not store.exists(path):
         return []
     return [r for r in review.read_csv(path)
             if r.get("approved") != "true" and not r.get("reviewer_note", "").strip() and r.get("empty_block") != "true"]

@@ -75,7 +75,6 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import json
 import re
 import sys
 from collections import Counter
@@ -100,6 +99,7 @@ from pipeline.common import (
     read_meta,
     stable_ulid,
 )
+from research_record import store
 from research_record.schema import Assumption, Evidence
 from research_record.text import html_to_text, sentence_spans
 
@@ -313,10 +313,7 @@ def system_prompt(metrics: list[str], *, block: bool) -> str:
 
 
 def load_candidates(company: Company, filing_types: set[str], directory: Path | None = None) -> list[dict[str, Any]]:
-    path = (directory or CANDIDATES_DIR) / f"{company.cik}.jsonl"
-    if not path.exists():
-        return []
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = store.read_jsonl((directory or CANDIDATES_DIR) / f"{company.cik}.jsonl")
     return [r for r in rows if r["filing_type"] in filing_types]
 
 
@@ -1506,10 +1503,9 @@ def find_empty_blocks(
 
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
-    if not rows and not path.exists():  # never leave an empty file that looks like output
+    if not rows and not store.exists(path):  # never leave an empty file that looks like output
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    store.write_jsonl(path, rows)
 
 
 def _filing_of(row: dict[str, Any]) -> str:
@@ -1520,10 +1516,9 @@ def _filing_of(row: dict[str, Any]) -> str:
 def write_scoped(path: Path, rows: list[dict[str, Any]], accessions: set[str] | None) -> None:
     """write_jsonl, or with `accessions` a merge: the rows already in the file that belong to other filings stay, and this
     run's rows (which cover only the listed filings) are added after them."""
-    if accessions is not None and path.exists():
+    if accessions is not None and store.exists(path):
         done = {a.replace("-", "") for a in accessions}
-        kept = [r for r in (json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
-                if _filing_of(r) not in done]
+        kept = [r for r in store.read_jsonl(path) if _filing_of(r) not in done]
         rows = kept + rows
     write_jsonl(path, rows)
 

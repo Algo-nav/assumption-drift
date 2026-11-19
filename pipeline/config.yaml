@@ -114,7 +114,7 @@ higher_is_better:
 
 llm:
   model: "claude-haiku-4-5"
-  budget_usd: 20   # one budget across 03_structure and 04_outcomes, not one each
+  budget_usd: 100   # one budget across 03_structure and 04_outcomes, not one each
   # Haiku 4.5 list prices in USD per million tokens, and the Message Batches discount.
   price_input_per_mtok: 1.00
   price_output_per_mtok: 5.00

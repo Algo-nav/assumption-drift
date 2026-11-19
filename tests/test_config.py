@@ -56,7 +56,7 @@ def test_only_filters_by_ticker(config) -> None:
 
 def test_llm_block_keeps_scopes_values_and_adds_prices(config) -> None:
     llm = config["llm"]
-    assert (llm["model"], llm["budget_usd"]) == ("claude-haiku-4-5", 20)
+    assert (llm["model"], llm["budget_usd"]) == ("claude-haiku-4-5", 100)
     # Added for the cost gate: Haiku 4.5 list prices per million tokens, and the Batches discount.
     assert (llm["price_input_per_mtok"], llm["price_output_per_mtok"], llm["batch_discount"]) == (1.00, 5.00, 0.5)
 
