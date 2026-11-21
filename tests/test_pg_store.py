@@ -86,6 +86,13 @@ def test_the_indexes_asked_for_are_there(pg) -> None:
         assert re.search(rf"ON {pg.schema}\.{table} USING btree \({re.escape(columns)}\b", defs), (table, columns)
 
 
+def test_row_level_security_is_on_for_every_table(pg) -> None:
+    rls = dict(pg._all("SELECT c.relname, c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+                       "WHERE n.nspname = %s AND c.relkind = 'r'", (pg.schema,)))
+    assert rls == {t: True for t in ["companies", "filings", "candidates", "statements", "llm_calls", "jobs", "flags", "stage_diagnostics"]}
+    assert pg._all("SELECT tablename, policyname FROM pg_policies WHERE schemaname = %s", (pg.schema,)) == []
+
+
 def test_every_review_csv_column_has_a_column_in_statements(pg) -> None:
     assert [c for c, _, _ in store.REVIEW_COLUMNS] == review.COLUMNS  # the same columns, in the CSV's order
     in_db = {c for (c,) in pg._all("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = 'statements'", (pg.schema,))}

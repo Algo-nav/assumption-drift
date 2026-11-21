@@ -253,3 +253,14 @@ CREATE TABLE IF NOT EXISTS stage_diagnostics (
     PRIMARY KEY (cik, source, seq)
 );
 CREATE INDEX IF NOT EXISTS stage_diagnostics_record_idx ON stage_diagnostics (record_id);
+
+-- Row level security, on every table and with no policies: a role that is not the table's owner (and has no
+-- BYPASSRLS) reads and writes no rows at all. The pipeline connects as the owner, which RLS does not apply to.
+ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE filings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE statements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE llm_calls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stage_diagnostics ENABLE ROW LEVEL SECURITY;

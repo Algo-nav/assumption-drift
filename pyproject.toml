@@ -11,12 +11,25 @@ requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "navneet", email = "navn07588@gmail.com" }]
-dependencies = ["pydantic>=2.7"]
+# Everything research_record and the pipeline import at run time. Minimums are the versions the suite last passed on.
+# anthropic is pinned, not a minimum: a newer SDK once changed what create() accepts (BACKLOG, the temperature entry).
+dependencies = [
+    "pydantic>=2.13.5",
+    "requests>=2.34.2",
+    "pyyaml>=6.0.3",
+    "anthropic==1.7.0",
+    "psycopg[binary]>=3.3.9",
+    "pyarrow>=25.0.1",
+    "matplotlib>=3.11.2",
+    "huggingface_hub>=2.0.0",
+]
 
 [project.optional-dependencies]
-pipeline = ["requests>=2.31", "pyyaml>=6", "anthropic==1.7.0", "pyarrow>=17", "matplotlib>=3.8", "huggingface_hub>=0.24"]
-postgres = ["psycopg[binary]>=3.2"]
-dev = ["pytest>=8", "requests>=2.31", "pyyaml>=6", "anthropic==1.7.0", "pyarrow>=17", "matplotlib>=3.8", "huggingface_hub>=0.24"]
+# httpx2 is the SDK's HTTP client; tests/test_llm.py builds a mock transport from it.
+dev = ["pytest>=9.1.1", "httpx2>=2.13.0"]
+# Kept so `.[pipeline]` and `.[postgres]` (the workflows, older notes) still resolve; both are in the dependencies now.
+pipeline = []
+postgres = []
 
 [project.scripts]
 rr = "research_record.cli:main"
