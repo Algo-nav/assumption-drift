@@ -806,6 +806,10 @@ class PostgresBackend:
             f"INSERT INTO companies ({', '.join(columns)}) VALUES ({', '.join(['%s'] * len(columns))}) "
             f"ON CONFLICT (cik) DO UPDATE SET {update}", (cik, *fields.values()))
 
+    def ticker_holder(self, ticker: str) -> str | None:
+        """The cik of the company that has this ticker, if one does (companies.ticker is unique)."""
+        return self._one("SELECT cik FROM companies WHERE ticker = %s", (ticker,))
+
     def create_job(self, cik: str, kind: str, log_path: str | None = None) -> int:
         return self._one("INSERT INTO jobs (cik, kind, log_path) VALUES (%s, %s, %s) RETURNING id", (cik, kind, log_path))
 
@@ -858,6 +862,108 @@ class PostgresBackend:
                 yield
             finally:
                 conn.execute("SELECT pg_advisory_unlock(%s)", (key,))
+
+    # -- company requests (pipeline/worker.py, pipeline/notify.py) --
+
+    REQUEST_COLUMNS = ("id", "cik", "ticker", "name", "email", "role", "status", "reason", "job_id", "created_at", "notified_at",
+                       "source", "resend_id")
+
+    def create_request(self, cik: str, email: str, **fields: Any) -> int:
+        """One company_requests row, as the site inserts it. For the tests and for a request entered by hand."""
+        unknown = set(fields) - set(self.REQUEST_COLUMNS)
+        if unknown:
+            raise StoreError(f"company_requests has no column(s) {', '.join(sorted(unknown))}")
+        columns = ["cik", "email", *fields]
+        return self._one(f"INSERT INTO company_requests ({', '.join(columns)}) VALUES ({', '.join(['%s'] * len(columns))}) RETURNING id",
+                         (cik, email, *fields.values()))
+
+    def request(self, request_id: int) -> dict[str, Any] | None:
+        row = self.conn.execute(f"SELECT {', '.join(self.REQUEST_COLUMNS)} FROM company_requests WHERE id = %s", (request_id,)).fetchone()
+        return dict(zip(self.REQUEST_COLUMNS, row)) if row else None
+
+    def requests(self, *, status: str | None = None, cik: str | None = None, unnotified: bool = False) -> list[dict[str, Any]]:
+        """Requests, oldest first, narrowed by status, by company, and to the ones nobody has been emailed about."""
+        where, params = ["true"], []
+        if status is not None:
+            where.append("status = %s")
+            params.append(status)
+        if cik is not None:
+            where.append("cik = %s")
+            params.append(cik)
+        if unnotified:
+            where.append("notified_at IS NULL")
+        rows = self._all(f"SELECT {', '.join(self.REQUEST_COLUMNS)} FROM company_requests WHERE {' AND '.join(where)} "
+                         "ORDER BY created_at, id", tuple(params))
+        return [dict(zip(self.REQUEST_COLUMNS, r)) for r in rows]
+
+    def update_request(self, request_id: int, **fields: Any) -> None:
+        unknown = set(fields) - set(self.REQUEST_COLUMNS)
+        if unknown:
+            raise StoreError(f"company_requests has no column(s) {', '.join(sorted(unknown))}")
+        if fields:
+            self.conn.execute(f"UPDATE company_requests SET {', '.join(f'{c} = %s' for c in fields)} WHERE id = %s",
+                              (*fields.values(), request_id))
+
+    def ciks_owed_an_email(self) -> list[str]:
+        """Built companies with a live or duplicate request nobody has been emailed about yet."""
+        return [r[0] for r in self._all(
+            "SELECT DISTINCT r.cik FROM company_requests r JOIN companies c ON c.cik = r.cik "
+            "WHERE r.notified_at IS NULL AND r.status IN ('live', 'duplicate') AND c.status = 'built' ORDER BY r.cik")]
+
+    def emailed_before(self, cik: str, email: str, request_id: int) -> bool:
+        """Another request from this address (case ignored) for this company has already been emailed."""
+        return bool(self._one(
+            "SELECT EXISTS (SELECT 1 FROM company_requests WHERE cik = %s AND lower(email) = lower(%s) AND id <> %s "
+            "AND notified_at IS NOT NULL)", (cik, email, request_id)))
+
+    def emails_sent_on(self, email: str, day: date) -> int:
+        """How many companies this address (case ignored) was emailed about on `day` (UTC)."""
+        return int(self._one(
+            "SELECT count(DISTINCT cik) FROM company_requests WHERE lower(email) = lower(%s) AND (notified_at AT TIME ZONE 'UTC')::date = %s",
+            (email, day)))
+
+    def spent_on_day(self, day: date) -> float:
+        """USD of every model call recorded on `day` (UTC), jobs or not, batches still pending counted at their worst case."""
+        return float(self._one(
+            "SELECT COALESCE(sum(usd), 0) FROM llm_calls WHERE (created_at AT TIME ZONE 'UTC')::date = %s", (day,)))
+
+    def mark_machine_tier(self, cik: str) -> int:
+        """review_tier = machine on the company's rows that have no tier yet: rows the pipeline produced and no person
+        has decided. A row a person decided is `hand` and stays so. How many rows it set."""
+        return self.conn.execute(
+            "UPDATE statements SET review_tier = 'machine' WHERE cik = %s AND queue_seq IS NOT NULL AND review_tier IS NULL "
+            "AND NOT COALESCE(empty_block, false)", (cik,)).rowcount
+
+    def email_counts(self, cik: str) -> dict[str, Any]:
+        """The numbers the "it is live" email states, from statements and filings. A statement is counted when it is in
+        the review queue, is not an outlook-block flag, and is either machine tier or approved by a person: the rows a
+        reader is shown. It has a resolution when its status (the published one, or for a machine row the rubric's
+        proposed one) is met, missed or withdrawn. The filings are the ones those statements quote, dated by the
+        filings table."""
+        row = self.conn.execute(
+            "SELECT count(*), count(DISTINCT s.assumption_accession), min(COALESCE(f.filed_at, s.assumption_filed_at)), "
+            "max(COALESCE(f.filed_at, s.assumption_filed_at)), "
+            "count(*) FILTER (WHERE COALESCE(s.published_status, s.aid_proposed_status) IN ('met', 'missed', 'withdrawn')), "
+            "count(*) FILTER (WHERE s.review_tier = 'machine') "
+            "FROM statements s LEFT JOIN filings f ON f.accession = s.assumption_accession "
+            "WHERE s.cik = %s AND s.queue_seq IS NOT NULL AND NOT COALESCE(s.empty_block, false) "
+            "AND (s.review_tier = 'machine' OR s.approved)", (cik,)).fetchone()
+        n, n_filings, first, last, resolved, machine = row
+        return {"n_statements": n, "n_filings": n_filings, "first_filing_date": first, "last_filing_date": last,
+                "n_resolved": resolved, "n_open": n - resolved, "n_machine": machine}
+
+    def worker_lock(self) -> Any | None:
+        """Try to take the worker's lock, without waiting: a connection that holds it, or None when another worker has
+        it. The lock is a session advisory lock on a fixed key (per schema), so it lasts exactly as long as the returned
+        connection: close the connection, or let the process die, and it is released."""
+        import psycopg
+
+        key = int.from_bytes(hashlib.sha256(f"assumption-drift worker {self.schema}".encode()).digest()[:8], "big", signed=True)
+        conn = psycopg.connect(self.url, autocommit=True)
+        if conn.execute("SELECT pg_try_advisory_lock(%s)", (key,)).fetchone()[0]:
+            return conn
+        conn.close()
+        return None
 
 
 # --- choosing one -----------------------------------------------------------------------------------------------------

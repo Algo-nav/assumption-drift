@@ -74,7 +74,7 @@ def test_the_schema_applies_clean_and_a_second_time_changes_nothing(pg) -> None:
     pg.apply_schema()
     assert shape() == first
     tables = {t for t, _, _ in first}
-    assert tables == {"companies", "filings", "candidates", "statements", "llm_calls", "jobs", "flags", "stage_diagnostics"}
+    assert tables == {"companies", "filings", "candidates", "statements", "llm_calls", "jobs", "flags", "stage_diagnostics", "company_requests"}
 
 
 def test_the_indexes_asked_for_are_there(pg) -> None:
@@ -89,7 +89,8 @@ def test_the_indexes_asked_for_are_there(pg) -> None:
 def test_row_level_security_is_on_for_every_table(pg) -> None:
     rls = dict(pg._all("SELECT c.relname, c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
                        "WHERE n.nspname = %s AND c.relkind = 'r'", (pg.schema,)))
-    assert rls == {t: True for t in ["companies", "filings", "candidates", "statements", "llm_calls", "jobs", "flags", "stage_diagnostics"]}
+    tables = ["companies", "filings", "candidates", "statements", "llm_calls", "jobs", "flags", "stage_diagnostics", "company_requests"]
+    assert len(tables) == 9 and rls == {t: True for t in tables}
     assert pg._all("SELECT tablename, policyname FROM pg_policies WHERE schemaname = %s", (pg.schema,)) == []
 
 

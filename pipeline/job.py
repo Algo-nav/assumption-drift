@@ -281,9 +281,15 @@ def _advance_watermark(db: Any, row: dict[str, Any], kind: str, plan: Plan, toda
 
 def run_job(cik: str, kind: str, *, db: Any | None = None, caps: dict[str, float] | None = None, sync: bool = False,
             wait_minutes: float = 60, retry_parked: bool = False, force: bool = False, stages: Callable[..., Plan] | None = None,
-            jobs_dir: Path | None = None, echo: bool = True) -> JobResult:
+            jobs_dir: Path | None = None, echo: bool = True, job_id: int | None = None,
+            should_stop: Callable[[], bool] | None = None) -> JobResult:
     """Run one job to the end and record it. `stages`, for tests, replaces the real stage list: it is called with the same
-    arguments as `plan_stages` plus `guard=` and `db=`, and returns a Plan."""
+    arguments as `plan_stages` plus `guard=` and `db=`, and returns a Plan.
+
+    `job_id` and `should_stop` are for pipeline.worker. `job_id` names a jobs row the caller has already created for this
+    company and kind (status running or waiting): the job runs as that row, and what the row has spent so far counts
+    against its cap. `should_stop` is asked before each stage; once it says yes the job is left `waiting` at that stage
+    boundary, exactly as a batch that has not ended leaves it, and the next run resumes it."""
     if kind not in ("build", "refresh"):
         raise JobError(f"--kind must be build or refresh, got {kind!r}")
     db = db or store.PostgresBackend()
@@ -303,6 +309,10 @@ def run_job(cik: str, kind: str, *, db: Any | None = None, caps: dict[str, float
         if kind == "refresh" and stages is None and row["last_filing_date"] is None:
             raise JobError(f"{row['ticker']} has no refresh watermark (last_filing_date): it has not been built. Run --kind build first.")
         waiting = next((j for j in db.jobs(cik) if j["status"] == "waiting" and j["kind"] == kind), None)
+        if job_id is not None:
+            waiting = next((j for j in db.jobs(cik) if j["id"] == job_id and j["kind"] == kind and j["status"] in ("running", "waiting")), None)
+            if waiting is None:
+                raise JobError(f"job {job_id} is not a running or waiting {kind} job of {row['ticker']}")
         job_id = waiting["id"] if waiting else db.create_job(cik, kind)
         folder = (jobs_dir or JOBS_DIR) / str(job_id)
         folder.mkdir(parents=True, exist_ok=True)
@@ -323,7 +333,7 @@ def run_job(cik: str, kind: str, *, db: Any | None = None, caps: dict[str, float
             out = _Tee(sys.stdout, log) if echo else log
             err = _Tee(sys.stderr, log) if echo else log
             print(f"== job {job_id}: {kind} {row['ticker']} ({cik}) {datetime.now(timezone.utc).isoformat(timespec='seconds')}"
-                  f"{' (resumed)' if waiting else ''}; caps " + ", ".join(f"{k}=${v:.2f}" for k, v in caps.items()), file=out)
+                  f"{' (resumed)' if waiting and waiting['status'] == 'waiting' else ''}; caps " + ", ".join(f"{k}=${v:.2f}" for k, v in caps.items()), file=out)
             llm.GUARD = guard
             try:
                 stop = guard.exhausted()
@@ -334,6 +344,10 @@ def run_job(cik: str, kind: str, *, db: Any | None = None, caps: dict[str, float
                     plan = (stages or plan_stages)(kind, row, folder, config_path, sync=sync, wait_minutes=wait_minutes,
                                                    **({"guard": guard, "db": db} if stages else {}))
                     for stage in plan.stages:
+                        if should_stop is not None and should_stop():
+                            status, error = "waiting", (f"stopped before {stage.name}: the worker was asked to shut down. "
+                                                        "Run the job again to resume; nothing is resubmitted.")
+                            break
                         reached = stage.name
                         db.update_job(job_id, stage=reached)
                         print(f"\n== {stage.name}", file=out)

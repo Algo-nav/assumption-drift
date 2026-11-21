@@ -40,7 +40,8 @@ def digest(db) -> dict[str, tuple[int, str]]:
     """(row count, hash of every row) per table: equal digests mean an identical database."""
     out = {}
     for table, order in [("companies", "cik"), ("filings", "accession"), ("candidates", "candidate_id"), ("statements", "record_id"),
-                         ("stage_diagnostics", "cik, source, seq"), ("llm_calls", "id"), ("jobs", "id"), ("flags", "id")]:
+                         ("stage_diagnostics", "cik, source, seq"), ("llm_calls", "id"), ("jobs", "id"), ("flags", "id"),
+                         ("company_requests", "id")]:
         rows = db._all(f"SELECT row_to_json(t)::text FROM {table} t ORDER BY {order}")
         out[table] = (len(rows), hashlib.sha256("\n".join(r[0] for r in rows).encode()).hexdigest())
     return out

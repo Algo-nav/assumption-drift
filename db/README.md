@@ -32,6 +32,11 @@ Rules the store keeps:
 | `jobs` | one build or refresh of one company | `id` |
 | `flags` | a reader's report about a published row | `id` |
 | `stage_diagnostics` | a by-product row of stage 03 or 04 (a reject, a skip, an empty outlook block) | `cik, source, seq` |
+| `company_requests` | a visitor's request for a company that is not built yet, and whether they have been emailed | `id` |
+
+`company_requests` has no file behind it: the site inserts the rows, `pipeline/worker.py` builds the companies and
+`pipeline/notify.py` sends the email. `db/WORKER.md` describes the worker. A database made before the table existed is
+brought up to date with `db/migrations/0002_company_requests.sql`.
 
 `stage_diagnostics` is not one of the seven objects the schema was asked for. It is there because four by-product files
 have no place in the seven and stage 05 reads one of them back.
@@ -121,7 +126,7 @@ Four `statements` columns have no CSV column. They are worked out, and this is h
 | Column | Where it comes from |
 |---|---|
 | `review_decision` | From the row: `v` approved and hand-verified, `y` approved, `n` not approved with a reviewer note. `s` (held) leaves no mark in the CSV: the loader sets it on a row that is in a published company's queue, is not an outlook-block flag, is not approved and has no note; a later write keeps it while the row stays undecided. An outlook-block flag has no decision. |
-| `review_tier` | `hand` on every row with a decision. Nothing in the files records a machine-tier decision, so nothing is `machine` yet. |
+| `review_tier` | `hand` on every row with a decision. Nothing in the files records a machine-tier decision. `machine` is set by the worker, on the queued rows of a company it built that no person has decided (`store.mark_machine_tier`); a later write of the queue keeps it. This is the only record of a company's tier: `companies` has no tier column. |
 | `published_status` | For an approved row, `rubric.resolve_record` with `reviewed=True`: the status the release carries. The same call `06_publish` makes; `export_release.py` fails if the two disagree. |
 | `change_direction` | **No source.** Nothing in any file says whether a statement initiated, raised, lowered, maintained or withdrew guidance. `NULL` on every row. |
 
