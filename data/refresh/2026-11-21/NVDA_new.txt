@@ -1,0 +1,83 @@
+── 1/6 ── 01M7KCVA00HP3RMG159QGHAC0R ── NVDArevenue  Q4 FY2027  (stated 2026-11-17)
+target: 126.1 to 133.9 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+excerpt:
+  Revenue is expected to be $130.0 billion, plus or minus 3%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/6 ── 01M7KCVA00KDGPPWTKJWXW7VD1 ── NVDAgross margin GAAP  Q4 FY2027  (stated 2026-11-17)
+target: 71.0 to 72.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP gross margins are expected to be between 71.0% and 72.0%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/6 ── 01M7KCVA00Z3X5F5T7FYXJHT44 ── NVDAgross margin non-GAAP  Q4 FY2027  (stated 2026-11-17)
+target: 71.0 to 72.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP gross margins are expected to be between 71.0% and 72.0%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/6 ── 01M7KCVA00NH0NPTF1VN4ASK73 ── NVDAoperating expenses GAAP  Q4 FY2027  (stated 2026-11-17)
+target: 11.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP operating expenses are expected to be approximately $11.0 billion and $10.7 billion, respectively.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/6 ── 01M7KCVA004Z620Y7WFJQKYKTD ── NVDAoperating expenses non-GAAP  Q4 FY2027  (stated 2026-11-17)
+target: 10.7 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP operating expenses are expected to be approximately $11.0 billion and $10.7 billion, respectively.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/6 ── 01M7KCVA0002N7XGQ8PZWMT9WJ ── NVDAtax rate  FY2027  (stated 2026-11-17)
+target: 16.0 to 18.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+excerpt:
+  For the full year fiscal 2027, NVIDIA expects GAAP and non-GAAP tax rates to be between 16.0% and 18.0%, excluding any discrete items and material changes to NVIDIA’s tax environment.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)

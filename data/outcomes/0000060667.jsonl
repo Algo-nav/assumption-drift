@@ -134,3 +134,11 @@
 {"draft_id": "01DJRQJ700W3GQ0A26FS3JWQ3X", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": {"withdrawn_at": "2020-05-20", "period_close": "2021-01-31", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/60667/000006066720000080/exhibit991_05012020.htm", "accession_number": "0000060667-20-000080", "filing_type": "8-K", "filed_at": "2020-05-20", "fetched_at": "2026-10-01T13:55:36Z", "content_sha256": "2744feb9ac2a0bce45e4621232cbae06a2053653646befe9e7344fdfa2e8b1fa", "excerpt": "The Company is withdrawing its financial guidance for fiscal year 2020."}}}
 {"draft_id": "01DJRQJ700TDRHT2PVGCY3H0TS", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01DJRQJ700RHT6VQN19ZH5W304", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ81009H0TFRV2BY0YRYQW", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ8100X6K368NPK1530D96", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ8100YHTCTEZZG4B4SJZP", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ8100BVEXZG0FG3CXP70N", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ8100Z49WS76C7AQS8HBZ", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ81009RFBVNRZWBPTCZM0", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ81005JFNE5KR9S462A2G", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7NZ8100KCFRKQF6X0DED5V4", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}

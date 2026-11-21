@@ -1,0 +1,124 @@
+── 1/9 ── 01M7NZ81009H0TFRV2BY0YRYQW ── LOWrevenue  FY2026  (stated 2026-11-18)
+target: 92.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Total sales of approximately $92.5 billion (previously $92.0 billion)
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/9 ── 01M7NZ8100X6K368NPK1530D96 ── LOWoperating margin GAAP  FY2026  (stated 2026-11-18)
+target: 11.1 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Operating income as a percentage of sales (operating margin) of approximately 11.1% (previously 11.2%)
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/9 ── 01M7NZ8100YHTCTEZZG4B4SJZP ── LOWoperating margin non-GAAP  FY2026  (stated 2026-11-18)
+target: 11.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Adjusted1 operating income as a percentage of sales (adjusted operating margin) of approximately 11.5%
+(previously 11.6%)
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/9 ── 01M7NZ8100BVEXZG0FG3CXP70N ── LOWtax rate  FY2026  (stated 2026-11-18)
+target: 24.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Effective income tax rate of approximately 24.5%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 5/9 ── 01M7NZ8100Z49WS76C7AQS8HBZ ── LOWEPS GAAP  FY2026  (stated 2026-11-18)
+target: 11.75 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Diluted earnings per share of approximately $11.75
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/9 ── 01M7NZ81009RFBVNRZWBPTCZM0 ── LOWEPS non-GAAP  FY2026  (stated 2026-11-18)
+target: 12.25 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Adjusted1 diluted earnings per share of approximately $12.25
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 7/9 ── 01M7NZ81005JFNE5KR9S462A2G ── LOWcapital expenditures  FY2026  (stated 2026-11-18)
+target: no more than 2.5 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  •Capital expenditures of up to $2.5 billion
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 8/9 ── 01M7NZ8100KCFRKQF6X0DED5V4 ── LOWcomparable sales  FY2026  (stated 2026-11-18)
+target: 0.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  Comparable sales expected to be up approximately +0.5% compared to prior year (previously flat)
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 9/9 ── 01M7NZ8100P08N1S89F1RY2Y3F ── LOW    (stated 2026-11-18)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/60667/000006066726000126/exhibit991-10302026.htm
+
+excerpt:
+  MOORESVILLE, N.C., November 18, 2026 – Lowe’s Companies, Inc. (NYSE: LOW) today reported net earnings of $1.7 billion and diluted earnings per share (EPS) of $2.98 for the quarter ended October 30, 2026, compared to diluted EPS of $2.88 in the third quarter of 2025. During the third quarter ended October 30, 2026, the company recognized $96 million in pre-tax expenses associated with acquisition-r
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)

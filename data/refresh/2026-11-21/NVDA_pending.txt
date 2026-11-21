@@ -1,0 +1,94 @@
+── 1/5 ── 01M0XNVN00A4GBMFREX53T9RAB ── NVDArevenue  Q3 FY2027  (stated 2026-08-26)
+target: 105.84 to 110.16 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm
+
+excerpt:
+  Revenue is expected to be $108.0 billion, plus or minus 2%.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 115.8 on 2026-11-17
+  Revenue $115.8 $96.2 $57.0 20 % 103 %
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: (none)
+
+── 2/5 ── 01M0XNVN00P6040FJKMMTGNGWP ── NVDAgross margin GAAP  Q3 FY2027  (stated 2026-08-26)
+target: 73.5 to 74.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP gross margins are expected to be 74.0%, plus or minus 50 basis points.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 74.8 on 2026-11-17
+  Gross margin 74.8 % 75.0 % 73.4 % (0.2) pts 1.4 pts
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: (none)
+
+── 3/5 ── 01M0XNVN00P81QHFNEK8QF6F6D ── NVDAgross margin non-GAAP  Q3 FY2027  (stated 2026-08-26)
+target: 73.5 to 74.5 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP gross margins are expected to be 74.0%, plus or minus 50 basis points.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 74.9 on 2026-11-17
+  Gross margin 74.9 % 75.0 % 73.5 % (0.1) pts 1.4 pts
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: (none)
+
+── 4/5 ── 01M0XNVN00MQ1HPFFN3Q3X6EVY ── NVDAoperating expenses GAAP  Q3 FY2027  (stated 2026-08-26)
+target: 9.2 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP operating expenses are expected to be approximately $9.2 billion and $9.0 billion, respectively.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 9.2 on 2026-11-17
+  Operating expenses $9.2 $8.4 $5.8 9 % 57 %
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: proposed change applied [380e485a63]: invalidation_condition
+
+── 5/5 ── 01M0XNVN0045C0SACBR8X72BVN ── NVDAoperating expenses non-GAAP  Q3 FY2027  (stated 2026-08-26)
+target: 9.0 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm
+
+excerpt:
+  GAAP and non-GAAP operating expenses are expected to be approximately $9.2 billion and $9.0 billion, respectively.
+
+outcome: none (no later 8-K release for that period found)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 8.8 on 2026-11-17
+  Operating expenses $8.8 $8.2 $5.8 7 % 52 %
+  EDGAR: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: true  note: proposed change applied [d98d027f60]: invalidation_condition

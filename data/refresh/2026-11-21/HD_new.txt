@@ -1,0 +1,96 @@
+── 1/7 ── 01M7KCVA00GQ0PPTS71XCYF9Q4 ── HDcomparable sales  FY2026  (stated 2026-11-17)
+target: 1.4 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  •Comparable sales growth of approximately 1.4%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 2/7 ── 01M7KCVA0076FXJA380FYVQWVS ── HDgross margin GAAP  FY2026  (stated 2026-11-17)
+target: 33.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  •Gross margin of approximately 33.0%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 3/7 ── 01M7KCVA007GEPWQZCNM8VPFHB ── HDoperating margin GAAP  FY2026  (stated 2026-11-17)
+target: 12.4 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  •Operating margin of approximately 12.4%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 4/7 ── 01M7KCVA00SE3KP5C6FFGH8HJF ── HDoperating margin non-GAAP  FY2026  (stated 2026-11-17)
+target: 12.8 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  •Adjusted(1) operating margin of approximately 12.8%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 5/7 ── 01M7KCVA00EXFVY8SF4EZ6Q3J6 ── HDtax rate  FY2026  (stated 2026-11-17)
+target: 24.6 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  •Effective tax rate of approximately 24.6%
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: yes  conflict: false
+approved: false  hand_verified: false  note: (none)
+
+── 6/7 ── 01M7KCVA00AWEJP58HNZ38PVSD ── HDoperating margin non-GAAP  FY2026  (stated 2026-11-17)
+target: -40.0 basis points
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  Our adjusted operating margin guidance for fiscal 2026 excludes an expected approximately 40 basis point impact from acquired intangible asset amortization.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+proposed: unresolved  verify: no (The excerpt states that amortization will have an impact of approximately 40 basis points on adjusted operating margin, but does not state that adjusted operating margin itself will be -40 basis point)  conflict: true
+approved: false  hand_verified: false  note: (none)
+
+── 7/7 ── 01M7KCVA00652VMX331MPNNFX6 ── HD    (stated 2026-11-17)
+OUTLOOK BLOCK WITH NO DRAFT, not a record: the model returned no items
+EDGAR: https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd_exhibit991x11012026.htm
+
+excerpt:
+  ATLANTA, Nov. 17, 2026 -- The Home Depot®, the world's largest home improvement retailer, today reported sales of $43.4 billion for the third quarter of fiscal 2026, an increase of $2.0 billion, or 4.9% from the third quarter of fiscal 2025. Comparable sales for the third quarter of fiscal 2026 increased 2.2%, and comparable sales in the U.S. increased 2.2%.
+Net earnings for the third quarter of f
+
+outcome: none (no reason recorded)
+
+proposed:   verify: (not checked)  conflict: false
+approved: false  hand_verified: false  note: (none)

@@ -1,0 +1,189 @@
+{
+  "date": "2026-11-21",
+  "max_usd": 1.0,
+  "filings_total": 32,
+  "filings_by_form": {
+    "10-K": 1,
+    "10-Q": 6,
+    "8-K": 25
+  },
+  "per_company": {
+    "AMD": {
+      "filings": 3,
+      "candidates": 11,
+      "new_rows": 3,
+      "new_flags": 0,
+      "proposals": 2
+    },
+    "AMZN": {
+      "filings": 2,
+      "candidates": 10,
+      "new_rows": 2,
+      "new_flags": 0,
+      "proposals": 1
+    },
+    "HD": {
+      "filings": 3,
+      "candidates": 62,
+      "new_rows": 6,
+      "new_flags": 1,
+      "proposals": 0
+    },
+    "JPM": {
+      "filings": 2,
+      "candidates": 9,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "LOW": {
+      "filings": 2,
+      "candidates": 6,
+      "new_rows": 8,
+      "new_flags": 1,
+      "proposals": 0
+    },
+    "META": {
+      "filings": 3,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "MSFT": {
+      "filings": 5,
+      "candidates": 13,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 2
+    },
+    "MU": {
+      "filings": 1,
+      "candidates": 0,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "NVDA": {
+      "filings": 2,
+      "candidates": 7,
+      "new_rows": 6,
+      "new_flags": 0,
+      "proposals": 5
+    },
+    "QCOM": {
+      "filings": 3,
+      "candidates": 55,
+      "new_rows": 4,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "TGT": {
+      "filings": 2,
+      "candidates": 7,
+      "new_rows": 4,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "UNH": {
+      "filings": 2,
+      "candidates": 1,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    },
+    "WMT": {
+      "filings": 2,
+      "candidates": 1,
+      "new_rows": 0,
+      "new_flags": 0,
+      "proposals": 0
+    }
+  },
+  "candidates_total": 182,
+  "stages": {
+    "03_structure": {
+      "requests": 59,
+      "usd": 0.214487
+    },
+    "03b_verify": {
+      "requests": 33,
+      "usd": 0.063984
+    },
+    "04_outcomes": {
+      "requests": 15,
+      "usd": 0.026772
+    }
+  },
+  "run_usd": 0.305243,
+  "new_rows": 33,
+  "new_flags": 2,
+  "proposals": 10,
+  "outcomes": {
+    "attached": 0,
+    "proposed": 10
+  },
+  "acknowledgements": {
+    "filled": 0,
+    "proposed": 0
+  },
+  "withdrawals": {
+    "filled": 0,
+    "proposed": 0
+  },
+  "pending_published": 43,
+  "spend_to_date_usd": 2.435727,
+  "failures": [],
+  "dumps": {
+    "AMD": [
+      "AMD_new.txt",
+      "AMD_pending.txt"
+    ],
+    "AMZN": [
+      "AMZN_new.txt",
+      "AMZN_pending.txt"
+    ],
+    "HD": [
+      "HD_new.txt"
+    ],
+    "LOW": [
+      "LOW_new.txt"
+    ],
+    "NVDA": [
+      "NVDA_new.txt",
+      "NVDA_pending.txt"
+    ],
+    "QCOM": [
+      "QCOM_new.txt"
+    ],
+    "TGT": [
+      "TGT_new.txt"
+    ],
+    "MSFT": [
+      "MSFT_pending.txt"
+    ]
+  },
+  "ciks": {
+    "0001045810": "NVDA",
+    "0000027419": "TGT",
+    "0001108524": "CRM",
+    "0000320193": "AAPL",
+    "0000789019": "MSFT",
+    "0001018724": "AMZN",
+    "0001326801": "META",
+    "0001652044": "GOOGL",
+    "0000002488": "AMD",
+    "0001730168": "AVGO",
+    "0000909832": "COST",
+    "0000354950": "HD",
+    "0000019617": "JPM",
+    "0000804328": "QCOM",
+    "0000796343": "ADBE",
+    "0000723125": "MU",
+    "0000060667": "LOW",
+    "0000731766": "UNH",
+    "0000773840": "HON",
+    "0000104169": "WMT",
+    "0000018230": "CAT"
+  }
+}
