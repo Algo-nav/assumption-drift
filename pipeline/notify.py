@@ -1,4 +1,4 @@
-"""The "it is live" email for a company request, sent through the Resend HTTPS API.
+"""The "it is live" email for a company request, and the "nothing to show" one, sent through the Resend HTTPS API.
 
     RESEND_API_KEY    the Resend key. Unset: nothing is sent, the email is written to the log instead
     NOTIFY_FROM       the sender (default "SCND Order <pilot@scndorder.com>")
@@ -10,6 +10,9 @@ The body is plain text and has one shape. Every value in it is read from a datab
 from `companies`, the counts and filing dates from `statements` and `filings` (research_record.store.email_counts), the
 day of the request from `company_requests.created_at`. Nothing a visitor typed is put in an email, because the address
 on a request is not verified: whoever receives it may not be the person who asked.
+
+A company that built with no statement to show gets a second, shorter shape (`build_empty_email`): it says so, and has
+no link, because there is no company page to link to.
 
 The sentence saying the rows had no human review is itself a claim about rows. It is in the email when the company has
 machine-tier rows (statements.review_tier = 'machine') and left out when every counted row was approved by a person.
@@ -100,6 +103,18 @@ def build_email(company: dict[str, Any], counts: dict[str, Any], request: dict[s
         paragraphs.append(MACHINE_TIER_NOTE)
     paragraphs.append(f"You asked for this company on {asked}. Reply to this email if something looks wrong.")
     return f"{ticker} is live on assumption-drift", "\n\n".join(paragraphs) + "\n"
+
+
+def build_empty_email(company: dict[str, Any], request: dict[str, Any]) -> tuple[str, str]:
+    """(subject, body) for a company that is built and has no statement to show. No link: there is no company page."""
+    ticker, name = company["ticker"], company["name"]
+    asked = request["created_at"].astimezone(timezone.utc).date().isoformat()
+    paragraphs = [
+        f"{name} ({ticker}) is built. The pipeline found no forward-looking statements with a number in its filings, "
+        "so there is no company page yet.",
+        f"You asked for this company on {asked}. Reply to this email if you think that is wrong.",
+    ]
+    return f"{ticker} is built, with nothing to show", "\n\n".join(paragraphs) + "\n"
 
 
 def send(to: str, subject: str, body: str, *, settings: Settings, idempotency_key: str | None = None,

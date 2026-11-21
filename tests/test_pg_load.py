@@ -48,19 +48,27 @@ def digest(db) -> dict[str, tuple[int, str]]:
 
 
 @pytest.fixture(scope="module")
-def loaded(pg_module):
+def loaded_once(pg_module):
     """The published companies, loaded once. Skips if this checkout has no review queues at all."""
     if not PUBLISHED.exists() or not any(common.REVIEW_DIR.glob("*.csv")):
         pytest.skip("no data/review/ and data/release/ in this checkout")
     patch = pytest.MonkeyPatch()
     patch.setenv("DATABASE_URL", pg_module.url)
     patch.setenv("STORE_SCHEMA", pg_module.schema)
-    patch.delenv("STORE", raising=False)
     try:
         assert load_published.main([]) == 0  # 0 also means: everything read back is byte-identical to its file
-        yield pg_module
     finally:
         patch.undo()
+    return pg_module
+
+
+@pytest.fixture
+def loaded(loaded_once, monkeypatch):
+    """That database, with the scripts pointed at its schema for this test. The environment is set per test: the suite
+    clears STORE_SCHEMA before every test (tests/conftest.py), so nothing set once for the module would last."""
+    monkeypatch.setenv("DATABASE_URL", loaded_once.url)
+    monkeypatch.setenv("STORE_SCHEMA", loaded_once.schema)
+    return loaded_once
 
 
 def test_the_fifteen_companies_and_every_statement_are_in(loaded) -> None:

@@ -904,11 +904,13 @@ class PostgresBackend:
             self.conn.execute(f"UPDATE company_requests SET {', '.join(f'{c} = %s' for c in fields)} WHERE id = %s",
                               (*fields.values(), request_id))
 
-    def ciks_owed_an_email(self) -> list[str]:
-        """Built companies with a live or duplicate request nobody has been emailed about yet."""
+    def ciks_owed_an_email(self, parked_reason: str | None = None) -> list[str]:
+        """Built companies with a live or duplicate request nobody has been emailed about yet. With `parked_reason`,
+        also the ones with such a request parked for that reason (a build with nothing to show is still emailed)."""
         return [r[0] for r in self._all(
             "SELECT DISTINCT r.cik FROM company_requests r JOIN companies c ON c.cik = r.cik "
-            "WHERE r.notified_at IS NULL AND r.status IN ('live', 'duplicate') AND c.status = 'built' ORDER BY r.cik")]
+            "WHERE r.notified_at IS NULL AND c.status = 'built' "
+            "AND (r.status IN ('live', 'duplicate') OR (r.status = 'parked' AND r.reason = %s)) ORDER BY r.cik", (parked_reason,))]
 
     def emailed_before(self, cik: str, email: str, request_id: int) -> bool:
         """Another request from this address (case ignored) for this company has already been emailed."""

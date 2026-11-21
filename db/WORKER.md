@@ -1,7 +1,7 @@
 # The worker
 
 `pipeline/worker.py` builds the companies visitors asked for (`company_requests`), one at a time, and
-`pipeline/notify.py` emails each of them a link when the company is live. It is a worker service: it listens on no
+`pipeline/notify.py` emails each of them a link when the company is live (or says so when the build found nothing to show). It is a worker service: it listens on no
 port and has no health endpoint.
 
     worker: python -m pipeline.worker        (Procfile)
@@ -66,18 +66,30 @@ Every change to a request is one line:
 | `queued` | `daily spending limit reached, resumes tomorrow` | A build would pass `DAILY_CAP_USD`. No job was created. It reopens by itself. |
 | `queued` | `monthly spending limit reached` | The same for `WORKSPACE_CAP_USD`. |
 | `duplicate` | `already requested` | Another request is building or queued for the same company. It is emailed when that one is live. |
-| `parked` | `needs manual setup` | The company has no `companies` row and the SEC submissions API does not state everything a build needs (see below). |
+| `parked` | `needs manual setup` | The company has no `companies` row and the SEC's submissions and company facts APIs do not settle everything a build needs (see below). |
 | `parked` | `build failed, we are looking at it` | The company's last two jobs failed, or a job passed `JOB_CAP_USD`. Never retried from here. |
-| `parked` | `built, but no forward-looking statements were found` | The build succeeded and there is nothing to show. No email is sent. |
+| `parked` | `built, but no forward-looking statements were found` | The build succeeded and there is nothing to show. The request is still emailed, once: "{ticker} is built, with nothing to show", with no link. |
 
 ## Setting a company up by hand
 
-A build needs a `companies` row. For a CIK that has none the worker reads
-`data.sec.gov/submissions/CIK##########.json` and takes the name, the ticker and the fiscal year end month. It does not
-guess the rest: a company whose fiscal year does not end in December is parked, because whether its "FY2026" names the
-year it ends in or the year it starts in is not in the SEC's answer.
+A build needs a `companies` row. For a CIK that has none the worker reads two SEC endpoints:
 
-To see what the worker would do for a CIK, writing nothing:
+- `data.sec.gov/submissions/CIK##########.json` for the name, the ticker and `fiscalYearEnd`;
+- `data.sec.gov/api/xbrl/companyfacts/CIK##########.json` for the us-gaap facts the company's 10-Ks report
+  (`Revenues`, then `RevenueFromContractWithCustomerExcludingAssessedTax`, then `Assets`: the first that two or more
+  10-Ks with a period end of 2015-01-01 or later report; if none does, the first that two or more 10-Ks of any date
+  report). Each 10-K gives one fact, the one with the latest end date. Its end date gives the month the fiscal
+  year ends in; whether the SEC's `fy` for the filing equals the year of that end date says if "FY2026" names the year
+  the fiscal year ends in (`end`) or the year it starts in (`start`). The month is taken by majority over the 10-Ks.
+  The name is taken by majority over the 10-Ks whose period ends on 2015-01-01 or later: 10-Ks before that tag `fy`
+  as the end year minus one for January filers whatever the company calls the year, so they are not evidence. A
+  December year is `end` without a vote.
+
+It is parked rather than guessed when there are fewer than two 10-K facts, when fewer than two of them end on
+2015-01-01 or later (unless the year ends in December), when the vote is an even split, or when the month from the facts
+is not the month `fiscalYearEnd` gives. tests/test_derive_fiscal_year.py records where the result differs from config.yaml.
+
+To see what the worker would do for a CIK and the facts behind it, writing nothing:
 
     python -m pipeline.worker --derive 0000000123
 

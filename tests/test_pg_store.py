@@ -111,12 +111,11 @@ def test_the_column_map_names_every_column_of_every_file() -> None:
 
 
 def test_the_public_schema_is_never_dropped(pg) -> None:
-    public = store.PostgresBackend(pg.url, "public")
-    try:
-        with pytest.raises(store.StoreError, match="public"):
-            public.drop_schema()
-    finally:
-        public.close()
+    public = object.__new__(store.PostgresBackend)  # not opened: the suite never connects to public (tests/conftest.py)
+    public.schema, public.conn = "public", pg.conn
+    with pytest.raises(store.StoreError, match="refusing to drop the public schema"):
+        public.drop_schema()
+    assert pg._one("SELECT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'public')")
 
 
 def test_a_path_with_no_table_is_refused_not_written_to_disk(db, tmp_path) -> None:

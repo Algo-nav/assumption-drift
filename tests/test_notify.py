@@ -52,6 +52,16 @@ def test_there_is_no_email_to_build_for_a_company_with_no_statement() -> None:
         notify.build_email(COMPANY, empty, REQUEST, "https://pilot.scndorder.com")
 
 
+def test_a_company_with_nothing_to_show_has_an_email_of_its_own() -> None:
+    subject, body = notify.build_empty_email(COMPANY, REQUEST)
+    assert subject == "EXMP is built, with nothing to show"
+    assert body == ("Example Corporation (EXMP) is built. The pipeline found no forward-looking statements with a number in its filings, "
+                    "so there is no company page yet.\n\n"
+                    "You asked for this company on 2026-11-20. Reply to this email if you think that is wrong.\n")
+    assert "typed by the visitor" not in subject + body and "http" not in body  # no link: there is no page
+    assert chr(0x2014) not in subject + body and "<" not in body
+
+
 def test_settings_come_from_the_environment_and_no_key_means_a_dry_run() -> None:
     bare = notify.Settings.from_env({})
     assert (bare.sender, bare.base_url, bare.dry_run, bare.api_key) == ("SCND Order <pilot@scndorder.com>", "https://pilot.scndorder.com", True, None)

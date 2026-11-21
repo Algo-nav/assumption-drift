@@ -2,7 +2,8 @@
 
     python -m pipeline.worker                 run until told to stop (SIGTERM or Ctrl-C)
     python -m pipeline.worker --once          one pass over the queue, then exit
-    python -m pipeline.worker --derive CIK    print what would be set up for a CIK from the SEC submissions API; writes nothing
+    python -m pipeline.worker --derive CIK    print what would be set up for a CIK from the SEC's two APIs, and the 10-K facts
+                                              the fiscal year fields came from; writes nothing
 
 It reads `company_requests` (db/schema.sql) and always runs against Postgres (DATABASE_URL, STORE_SCHEMA), as a job does.
 db/WORKER.md lists every environment variable it reads.
@@ -22,18 +23,21 @@ Each pass, in this order:
        the company is parked                 -> parked; a parked company is never retried from here
        a build is still waiting on a batch   -> left open for a later pass
        a cap has no room for a build         -> queued, no job is created
-       the company has no `companies` row    -> set up from the SEC submissions API, or parked ("needs manual setup")
+       the company has no `companies` row    -> set up from the SEC's submissions and company facts APIs, or parked
+                                                ("needs manual setup")
        otherwise                             -> a jobs row, the request is building, and pipeline.job.run_job runs in
                                                 this process
-  4. Every built company that still owes someone an email is emailed (pipeline/notify.py).
+  4. Every built company that still owes someone an email is emailed (pipeline/notify.py). A company that built with
+     nothing to show owes one too: its requests are parked, and each is told so once.
 
 Caps. JOB_CAP_USD, DAILY_CAP_USD and WORKSPACE_CAP_USD are the ones pipeline.job reads. Before a build starts, the worker
 adds JOB_CAP_USD (the most one build may spend) to what llm_calls.usd says was spent today and this month (UTC); if either
 sum is over its cap the request is queued. Inside the build, pipeline.job's own guard still checks every send.
 
 Setting a company up. pipeline.job builds from a `companies` row, not from a CIK. For a CIK with no row the worker reads
-data.sec.gov/submissions/CIK##########.json and takes the name, the ticker and the fiscal year end month from it. What it
-cannot take from there it does not invent: see `derive_company`.
+data.sec.gov/submissions/CIK##########.json for the name, the ticker and the fiscal year end, and
+data.sec.gov/api/xbrl/companyfacts/CIK##########.json for how the company's 10-Ks name and end their fiscal years
+(`derive_fiscal_year`). Where the two disagree, or the facts do not settle it, it does not invent: see `derive_company`.
 
 Failure. pipeline.job's rule: a company whose last two jobs failed is parked. After a first failure the request goes back
 to open and is tried once more on a later pass; after the second the request is parked.
@@ -74,11 +78,25 @@ MONTHLY_REASON = "monthly spending limit reached"
 FAILED_REASON = "build failed, we are looking at it"
 SETUP_REASON = "needs manual setup"
 DUPLICATE_REASON = "already requested"
-#: Not in the brief. A company can build cleanly and have nothing to show; there is then no email to write.
+#: A company can build cleanly and have nothing to show. Its requests are parked with this reason and still emailed
+#: (notify.build_empty_email): the person is told there is no page, not left waiting.
 EMPTY_REASON = "built, but no forward-looking statements were found"
 
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
+FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 SUBMISSIONS_HOST = "data.sec.gov"
+#: The two things on data.sec.gov the worker may ask for.
+SEC_PATHS = ("/submissions/", "/api/xbrl/companyfacts/")
+#: us-gaap concepts whose 10-K facts date a fiscal year, in the order they are tried.
+FACT_CONCEPTS = ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "Assets")
+#: Fewer 10-Ks than this settle nothing.
+MIN_FACTS = 2
+#: Only 10-Ks whose period ends on or after this day vote on fiscal_year_named_for. 10-Ks before it tag `fy` as the
+#: end year minus one for January filers whatever the company calls the year (Walmart, NVIDIA, Salesforce and Target
+#: alike, through the years ended January 2014), so they are not evidence of how the company names its years.
+#: The concept is chosen by the same 10-Ks: the first of FACT_CONCEPTS that MIN_FACTS or more of them report, so a
+#: concept a company stopped using before the cutoff does not stand in the way of one it uses now.
+NAMING_CUTOFF = date(2015, 1, 1)
 DEFAULT_POLL_SECONDS = 30.0
 DEFAULT_WAIT_MINUTES = 10.0
 #: How many times one process tries to email one request before leaving it for a person (or the next deploy).
@@ -105,20 +123,136 @@ class Derived:
     fiscal_year_named_for: str
 
 
-def derive_company(payload: dict[str, Any], wanted_ticker: str | None = None) -> Derived:
-    """The `companies` fields a build needs, from a submissions API answer. Raises NeedsSetup rather than guess.
+@dataclass(frozen=True)
+class FiscalFact:
+    """What one 10-K says about its own fiscal year: the SEC's `fy` for the filing, and the day that year ended."""
+    concept: str
+    accn: str
+    filed: str
+    fy: int
+    end: date
+
+    @property
+    def anchor(self) -> date:
+        """The end date a week earlier, the rule pipeline.common already uses (fiscal_label_for_end): a 52/53 week year
+        ends a few days either side of a month end, so Feb. 1 is placed in January and Jan. 2 in December of the year before."""
+        return self.end - timedelta(days=7)
+
+    @property
+    def named_for(self) -> str:
+        return "end" if self.fy == self.anchor.year else "start"
+
+    @property
+    def end_month(self) -> int:
+        return self.anchor.month
+
+
+@dataclass(frozen=True)
+class FiscalYear:
+    named_for: str
+    end_month: int
+    concept: str
+    facts: tuple[FiscalFact, ...]
+
+
+def annual_facts(facts: dict[str, Any]) -> tuple[str | None, list[FiscalFact]]:
+    """(concept, one FiscalFact per 10-K) from a company facts answer, oldest filing first.
+
+    The concepts are tried in FACT_CONCEPTS order and the first one that MIN_FACTS or more 10-Ks ending on or after
+    NAMING_CUTOFF report is used. Failing that, the first that MIN_FACTS or more 10-Ks of any date report (enough for
+    the month, and for a December year, which needs no vote); failing that, the first with any (the caller then
+    refuses). Only entries with form 10-K and fp FY are read.
+
+    Every fact in a 10-K carries that filing's `fy`, including the prior years it repeats for comparison. Comparing each
+    of those with its own end date would count two "wrong" years for every right one, so a 10-K gets one fact: the
+    one with the latest end date, which is the year the filing reports."""
+    gaap = ((facts.get("facts") or {}).get("us-gaap") or {}) if isinstance(facts, dict) else {}
+    fallback: tuple[str | None, list[FiscalFact]] = (None, [])
+    older: tuple[str | None, list[FiscalFact]] = (None, [])
+    for concept in FACT_CONCEPTS:
+        latest: dict[str, FiscalFact] = {}
+        units = (gaap.get(concept) or {}).get("units") or {}
+        for entries in units.values():
+            for entry in entries or []:
+                if not isinstance(entry, dict) or entry.get("form") != "10-K" or entry.get("fp") != "FY":
+                    continue
+                fy, accn = entry.get("fy"), entry.get("accn")
+                try:
+                    ended = date.fromisoformat(entry.get("end") or "")
+                except (TypeError, ValueError):
+                    continue
+                if not isinstance(fy, int) or isinstance(fy, bool) or not isinstance(accn, str):
+                    continue
+                if accn not in latest or ended > latest[accn].end:
+                    latest[accn] = FiscalFact(concept, accn, str(entry.get("filed") or ""), fy, ended)
+        found = sorted(latest.values(), key=lambda f: (f.end, f.filed, f.accn))
+        if sum(f.end >= NAMING_CUTOFF for f in found) >= MIN_FACTS:
+            return concept, found
+        if len(found) >= MIN_FACTS and not older[1]:
+            older = (concept, found)
+        if found and not fallback[1]:
+            fallback = (concept, found)
+    return older if older[1] else fallback
+
+
+def _majority(values: list[Any]) -> Any | None:
+    """The value more than half of `values` share, or None."""
+    for value in set(values):
+        if values.count(value) * 2 > len(values):
+            return value
+    return None
+
+
+def derive_fiscal_year(facts: dict[str, Any]) -> FiscalYear:
+    """fiscal_year_end_month and fiscal_year_named_for from a company facts answer. Raises NeedsSetup rather than guess.
+
+    Each 10-K (see `annual_facts`) says two things: the month its year ended in, and whether the SEC's `fy` for it is
+    the calendar year it ended in ("end") or not ("start": the year it started in). The month is taken by majority over
+    the 10-Ks; the name by majority over the 10-Ks whose period ends on or after NAMING_CUTOFF (see there for why the
+    older ones do not count). Refused: fewer than MIN_FACTS 10-Ks, fewer than MIN_FACTS of them from the cutoff on, or
+    no majority (an even split).
+
+    When the year ends in December the two names mean the same thing (pipeline.common.period_end), so it is "end"
+    whatever `fy` says, and no vote is held."""
+    concept, found = annual_facts(facts)
+    if len(found) < MIN_FACTS:
+        tried = ", ".join(FACT_CONCEPTS)
+        raise NeedsSetup(f"the SEC company facts API has {len(found)} 10-K fiscal year fact(s) for this CIK (tried {tried}); "
+                         f"{MIN_FACTS} are needed to say how its fiscal years are named")
+    month = _majority([f.end_month for f in found])
+    if month is None:
+        raise NeedsSetup(f"the {len(found)} 10-K facts ({concept}) do not agree on the month the fiscal year ends in: "
+                         + ", ".join(f"{f.end.isoformat()}" for f in found))
+    if month == 12:
+        named_for = "end"
+    else:
+        voting = [f for f in found if f.end >= NAMING_CUTOFF]
+        if len(voting) < MIN_FACTS:
+            raise NeedsSetup(f"{len(voting)} of the {len(found)} 10-K facts ({concept}) end on or after {NAMING_CUTOFF.isoformat()}; "
+                             f"{MIN_FACTS} are needed to say whether FY labels name the year the fiscal year ends in or the year it starts in")
+        named_for = _majority([f.named_for for f in voting])
+        if named_for is None:
+            raise NeedsSetup(f"the {len(voting)} 10-K facts ({concept}) from {NAMING_CUTOFF.isoformat()} on split evenly on whether FY labels "
+                             "name the year the fiscal year ends in or the year it starts in: "
+                             + ", ".join(f"fy {f.fy} ended {f.end.isoformat()}" for f in voting))
+    return FiscalYear(named_for=named_for, end_month=month, concept=concept or "", facts=tuple(found))
+
+
+def derive_company(payload: dict[str, Any], facts: dict[str, Any], wanted_ticker: str | None = None) -> Derived:
+    """The `companies` fields a build needs, from a submissions API answer and a company facts API answer. Raises
+    NeedsSetup rather than guess.
 
     name                      `name`, as the SEC has it.
     ticker                    from `tickers`. The one the request named if the SEC lists it, else the only one listed.
                               None listed, or several and the request named none of them: not chosen here.
-    fiscal_year_end_month     from `fiscalYearEnd` (MMDD). A 52/53 week year ends a few days either side of a month end,
-                              so the date is placed by the month a week earlier, the rule pipeline.common already uses
-                              (fiscal_label_for_end): 0131 and 0203 are both January.
-    fiscal_year_named_for     not in the SEC's answer. When the year ends in December the two values mean the same
-                              thing (pipeline.common.period_end), so it is "end". For any other month it decides how
-                              every period is labelled and only the company's own filings say which it is: not chosen here.
+    fiscal_year_end_month     from the 10-K facts' end dates (`derive_fiscal_year`), checked against the submissions
+                              answer's `fiscalYearEnd` (MMDD). Both dates are placed by the month a week earlier, the
+                              rule pipeline.common already uses (fiscal_label_for_end): 0131 and 0203 are both January.
+                              The two sources disagreeing is not settled here.
+    fiscal_year_named_for     from the 10-K facts (`derive_fiscal_year`): whether the SEC's `fy` for a 10-K is the year
+                              its fiscal year ended in.
 
-    tax_rate_parens_negative is not in the SEC's answer either and is not set here: the new row takes the column's
+    tax_rate_parens_negative is in neither answer and is not set here: the new row takes the column's
     default (false), which is the pipeline's general rule for a parenthesised rate, not a finding about this filer.
     """
     name = payload.get("name")
@@ -136,6 +270,16 @@ def derive_company(payload: dict[str, Any], wanted_ticker: str | None = None) ->
         raise NeedsSetup(f"the SEC lists {len(listed)} tickers ({', '.join(listed)}) and the request names none of them")
     if not _TICKER.match(ticker):
         raise NeedsSetup(f"ticker {ticker!r} does not fit companies.ticker")
+    month = submissions_month(payload)
+    fiscal = derive_fiscal_year(facts)
+    if fiscal.end_month != month:
+        raise NeedsSetup(f"the 10-K facts ({fiscal.concept}) say the fiscal year ends in month {fiscal.end_month}, the SEC submissions "
+                         f"API says month {month} (fiscalYearEnd {payload.get('fiscalYearEnd')})")
+    return Derived(name=name.strip(), ticker=ticker, fiscal_year_end_month=month, fiscal_year_named_for=fiscal.named_for)
+
+
+def submissions_month(payload: dict[str, Any]) -> int:
+    """The month the fiscal year ends in, from a submissions answer's `fiscalYearEnd` (MMDD), placed a week earlier."""
     fye = payload.get("fiscalYearEnd")
     m = re.fullmatch(r"(\d{2})(\d{2})", fye) if isinstance(fye, str) else None
     try:
@@ -144,42 +288,47 @@ def derive_company(payload: dict[str, Any], wanted_ticker: str | None = None) ->
         end = None
     if end is None:
         raise NeedsSetup(f"the SEC submissions API gives no usable fiscalYearEnd for this CIK ({fye!r})")
-    month = (end - timedelta(days=7)).month
-    if month != 12:
-        raise NeedsSetup(f"the fiscal year ends in month {month} (fiscalYearEnd {fye}); whether FY labels name the year it ends in "
-                         "or the year it starts in (fiscal_year_named_for) is not in the SEC submissions API")
-    return Derived(name=name.strip(), ticker=ticker, fiscal_year_end_month=month, fiscal_year_named_for="end")
+    return (end - timedelta(days=7)).month
 
 
 def submissions_client(config: dict[str, Any] | None = None) -> Any:
     """pipeline.01_fetch's EDGAR client (the declared User-Agent, the rate limit, retries), allowed to ask
-    data.sec.gov and nothing else. The stages' own client stays limited to the hosts evidence may come from."""
+    data.sec.gov for submissions and company facts and nothing else. The stages' own client stays limited to the
+    hosts evidence may come from."""
     fetch = importlib.import_module("pipeline.01_fetch")
 
     class SubmissionsClient(fetch.EdgarClient):
         @staticmethod
         def _check(url: str) -> str:
-            if not url.startswith(f"https://{SUBMISSIONS_HOST}/submissions/"):
-                raise fetch.EdgarError(f"refusing {url}: only the submissions API on {SUBMISSIONS_HOST} is allowed here")
+            if not url.startswith(tuple(f"https://{SUBMISSIONS_HOST}{path}" for path in SEC_PATHS)):
+                raise fetch.EdgarError(f"refusing {url}: only the submissions and company facts APIs on {SUBMISSIONS_HOST} are allowed here")
             return SUBMISSIONS_HOST
 
     edgar = (config or common.load_config())["edgar"]
     return SubmissionsClient(edgar["user_agent"], edgar["max_rps"])
 
 
-def fetch_submissions(cik: str, client: Any) -> dict[str, Any]:
-    fetched = client.get(SUBMISSIONS_URL.format(cik=cik))
+def _fetch_json(url: str, client: Any, api: str, missing: str, cik: str) -> dict[str, Any]:
+    fetched = client.get(url)
     if fetched.status == 404:
-        raise NeedsSetup("the SEC has no company with this CIK")
+        raise NeedsSetup(missing)
     if fetched.status != 200:
-        raise importlib.import_module("pipeline.01_fetch").EdgarError(f"HTTP {fetched.status} from the submissions API for {cik}")
+        raise importlib.import_module("pipeline.01_fetch").EdgarError(f"HTTP {fetched.status} from the {api} API for {cik}")
     try:
         payload = json.loads(fetched.content)
     except ValueError as exc:
-        raise NeedsSetup("the SEC submissions API did not answer with JSON") from exc
+        raise NeedsSetup(f"the SEC {api} API did not answer with JSON") from exc
     if not isinstance(payload, dict):
-        raise NeedsSetup("the SEC submissions API did not answer with an object")
+        raise NeedsSetup(f"the SEC {api} API did not answer with an object")
     return payload
+
+
+def fetch_submissions(cik: str, client: Any) -> dict[str, Any]:
+    return _fetch_json(SUBMISSIONS_URL.format(cik=cik), client, "submissions", "the SEC has no company with this CIK", cik)
+
+
+def fetch_facts(cik: str, client: Any) -> dict[str, Any]:
+    return _fetch_json(FACTS_URL.format(cik=cik), client, "company facts", "the SEC has no XBRL company facts for this CIK", cik)
 
 
 # --- the worker ---------------------------------------------------------------------------------------------------------
@@ -189,7 +338,7 @@ class Worker:
     """`build`, `derive` and `post` are the three things that reach outside the database; tests replace them.
 
     build(cik, job_id, should_stop)   run the build as jobs row `job_id`; the default is pipeline.job.run_job
-    derive(cik, wanted_ticker)        -> Derived, or raises NeedsSetup; the default asks the SEC submissions API
+    derive(cik, wanted_ticker)        -> Derived, or raises NeedsSetup; the default asks the SEC's two APIs
     post(url, ...)                    requests.post, for pipeline.notify
     """
 
@@ -221,7 +370,7 @@ class Worker:
     def _derive_from_sec(self, cik: str, wanted_ticker: str | None) -> Derived:
         if self._edgar is None:
             self._edgar = submissions_client()
-        return derive_company(fetch_submissions(cik, self._edgar), wanted_ticker)
+        return derive_company(fetch_submissions(cik, self._edgar), fetch_facts(cik, self._edgar), wanted_ticker)
 
     # -- the log --
 
@@ -274,7 +423,7 @@ class Worker:
             if request and request["status"] == "open":
                 self._guarded(self._handle_open, request)
         if not self.stopping:
-            for cik in self.db.ciks_owed_an_email():
+            for cik in self.db.ciks_owed_an_email(parked_reason=EMPTY_REASON):
                 self.notify_cik(cik)
 
     def _guarded(self, step: Callable[[dict[str, Any]], None], request: dict[str, Any]) -> None:
@@ -352,13 +501,13 @@ class Worker:
                         request["id"], cik, exc, EDGAR_BACKOFF_SECONDS / 60)
             return False
         except fetch.EdgarError as exc:
-            log.warning("request=%s cik=%s the SEC submissions API could not be read (%s); the request stays open", request["id"], cik, exc)
+            log.warning("request=%s cik=%s the SEC could not be read (%s); the request stays open", request["id"], cik, exc)
             return False
         self.db.upsert_company(cik, ticker=derived.ticker, name=derived.name, status="requested",
                                fiscal_year_end_month=derived.fiscal_year_end_month, fiscal_year_named_for=derived.fiscal_year_named_for)
-        log.info("request=%s cik=%s set up from the SEC submissions API: %s (%s), fiscal year ends in month %s; "
+        log.info("request=%s cik=%s set up from the SEC: %s (%s), fiscal year ends in month %s and is named for its %s; "
                  "tax_rate_parens_negative left at its default (false)", request["id"], cik, derived.name, derived.ticker,
-                 derived.fiscal_year_end_month)
+                 derived.fiscal_year_end_month, derived.fiscal_year_named_for)
         return True
 
     def _carry_on(self, request: dict[str, Any]) -> None:
@@ -399,16 +548,15 @@ class Worker:
     # -- the email --
 
     def notify_cik(self, cik: str) -> None:
-        """Email every request for this built company that has not been emailed, whatever its status."""
+        """Email every request for this built company that has not been emailed, whatever its status. A company that
+        built with nothing to show: its requests are parked (EMPTY_REASON) and emailed that there is no page."""
         pending = self.db.requests(cik=cik, unnotified=True)
         if not pending:
             return
         company, counts = self.db.company(cik), self.db.email_counts(cik)
         if not counts["n_statements"]:
-            for request in pending:
-                if request["status"] != "parked":
-                    self._set(request, "parked", EMPTY_REASON, note="no email is sent")
-            return
+            pending = [request if request["status"] == "parked" else self._set(request, "parked", EMPTY_REASON, note="nothing to show")
+                       for request in pending]
         for request in pending:
             self._notify_one(request, company, counts)
 
@@ -431,7 +579,10 @@ class Worker:
                 self._line(request, request["status"], f"email held: {to} has had {self.settings.max_per_address_per_day} today "
                                                        "(NOTIFY_MAX_PER_ADDRESS_PER_DAY); it goes out on a later day")
             return
-        subject, body = notify.build_email(company, counts, request, self.settings.base_url)
+        if counts["n_statements"]:
+            subject, body = notify.build_email(company, counts, request, self.settings.base_url)
+        else:
+            subject, body = notify.build_empty_email(company, request)
         if self.settings.dry_run:
             self.db.update_request(rid, notified_at=now)
             self._line(request, request["status"], f"email NOT sent ({self.settings.why_dry}): written here instead, notified_at set\n"
@@ -494,7 +645,8 @@ def _number(name: str, default: float) -> float:
 
 
 def show_derivation(ciks: list[str]) -> int:
-    """Print what the worker would set up for each CIK, and how that compares with config.yaml where the company is there."""
+    """Print what the worker would set up for each CIK, the 10-K facts the two fiscal year fields came from, and how
+    that compares with config.yaml where the company is there."""
     fetch = importlib.import_module("pipeline.01_fetch")
     config = common.load_config()
     by_hand = {c.cik: c for c in common.companies(config)}
@@ -505,7 +657,19 @@ def show_derivation(ciks: list[str]) -> int:
         try:
             payload = fetch_submissions(cik, client)
             print(f"{cik}: SEC says name={payload.get('name')!r} tickers={payload.get('tickers')!r} fiscalYearEnd={payload.get('fiscalYearEnd')!r}")
-            derived = derive_company(payload, hand.ticker if hand else None)
+            facts = fetch_facts(cik, client)
+            concept, found = annual_facts(facts)
+            print(f"  10-K facts (us-gaap {concept}, form 10-K, fp FY, one per 10-K: the latest end date in it): {len(found)}")
+            for f in found:
+                counted = "" if f.end >= NAMING_CUTOFF else f" (before {NAMING_CUTOFF.isoformat()}: not counted for the name)"
+                print(f"    fy={f.fy} end={f.end.isoformat()} filed={f.filed} accn={f.accn} -> month {f.end_month}, named for {f.named_for}{counted}")
+            try:
+                fiscal = derive_fiscal_year(facts)
+                votes = ", ".join(f"{sum(f.named_for == v for f in found if f.end >= NAMING_CUTOFF)} {v}" for v in ("end", "start"))
+                print(f"  derived: fiscal_year_end_month={fiscal.end_month} fiscal_year_named_for={fiscal.named_for} ({votes})")
+            except NeedsSetup as exc:
+                print(f"  derived: nothing ({exc})")
+            derived = derive_company(payload, facts, hand.ticker if hand else None)
             print(f"  would set up: name={derived.name!r} ticker={derived.ticker} fiscal_year_end_month={derived.fiscal_year_end_month} "
                   f"fiscal_year_named_for={derived.fiscal_year_named_for} (tax_rate_parens_negative: column default, false)")
         except NeedsSetup as exc:
@@ -522,7 +686,7 @@ def show_derivation(ciks: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pipeline.worker", description="Build the companies visitors asked for, one at a time.")
     parser.add_argument("--once", action="store_true", help="one pass over the queue, then exit")
-    parser.add_argument("--derive", nargs="+", metavar="CIK", help="print what would be set up for these CIKs from the SEC; writes nothing")
+    parser.add_argument("--derive", nargs="+", metavar="CIK", help="print what would be set up for these CIKs from the SEC, and the 10-K facts behind it; writes nothing")
     args = parser.parse_args(argv)
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     if args.derive:

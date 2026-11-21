@@ -17,6 +17,8 @@ import pytest
 import pilot_rows
 from pipeline import common, job, worker
 
+pytestmark = pytest.mark.postgres
+
 CIK, OTHER, THIRD = "0000000123", "0000000456", "0000000789"
 CAPS = {"JOB_CAP_USD": 1.50, "DAILY_CAP_USD": 8.00, "WORKSPACE_CAP_USD": 70.00}
 T0 = datetime(2026, 11, 20, 9, 0, tzinfo=timezone.utc)
@@ -275,41 +277,54 @@ def test_a_company_row_written_by_hand_is_built_as_it_is(db, tmp_path) -> None:
     assert (company["status"], company["fiscal_year_end_month"], company["fiscal_year_named_for"], company["tax_rate_parens_negative"]) == ("built", 1, "start", True)
 
 
-def test_a_build_with_nothing_to_show_sends_no_email(db, tmp_path) -> None:
+EMPTY_BODY = """Company 123 (T123) is built. The pipeline found no forward-looking statements with a number in its filings, so there is no company page yet.
+
+You asked for this company on 2026-11-20. Reply to this email if you think that is wrong.
+"""
+
+
+def test_a_build_with_nothing_to_show_is_parked_and_emailed_that_there_is_no_page(db, tmp_path) -> None:
     rid = ask(db, CIK)
-    w, _, post = make(db, tmp_path, build=Builds(db, tmp_path, rows=False))
+    also = ask(db, CIK, email="second@example.com", minutes=1)
+    w, build, post = make(db, tmp_path, build=Builds(db, tmp_path, rows=False))
     w.tick()
+    for request in (rid, also):
+        assert status(db, request) == ("parked", "built, but no forward-looking statements were found")
+        assert db.request(request)["notified_at"] is not None and db.request(request)["resend_id"]
+    assert db.company(CIK)["status"] == "built" and build.calls == [CIK]
+    assert [c["json"]["to"] for c in post.calls] == [["reader@example.com"], ["second@example.com"]]
+    for call in post.calls:
+        assert call["json"]["subject"] == "T123 is built, with nothing to show" and call["json"]["text"] == EMPTY_BODY
+        assert "http" not in call["json"]["text"]  # there is no page to link to
+    w.tick()
+    w.tick()
+    assert len(post.calls) == 2 and build.calls == [CIK]  # once each, and the company is not built again
+
+
+def test_a_nothing_to_show_email_that_did_not_go_out_is_sent_on_a_later_pass(db, tmp_path) -> None:
+    class DownAtFirst(pilot_rows.FakePost):
+        def __call__(self, url, **kwargs):
+            self.status = 500 if len(self.calls) < 2 else 200
+            return super().__call__(url, **kwargs)
+
+    rid = ask(db, CIK)
+    w, _, post = make(db, tmp_path, build=Builds(db, tmp_path, rows=False), post=DownAtFirst())
+    w.tick()  # tried when the build settles, and again at the end of the pass: both fail
     assert status(db, rid) == ("parked", "built, but no forward-looking statements were found")
-    assert db.company(CIK)["status"] == "built" and post.calls == [] and db.request(rid)["notified_at"] is None
+    assert len(post.calls) == 2 and db.request(rid)["notified_at"] is None
+    w.tick()  # a parked request is still owed its email
+    assert len(post.calls) == 3 and db.request(rid)["notified_at"] is not None and db.request(rid)["resend_id"] == "resend-3"
+    assert status(db, rid) == ("parked", "built, but no forward-looking statements were found")
+    w.tick()
+    assert len(post.calls) == 3
 
 
-# --- what the SEC's answer is turned into ---------------------------------------------------------------------------------
-
-
-def test_only_what_the_submissions_api_states_is_taken_from_it() -> None:
-    sec = {"name": "Example Corporation", "tickers": ["EXMP"], "fiscalYearEnd": "1231"}
-    assert worker.derive_company(sec) == worker.Derived("Example Corporation", "EXMP", 12, "end")
-    assert worker.derive_company({**sec, "fiscalYearEnd": "0102"}).fiscal_year_end_month == 12  # a 52/53 week year: December
-    assert worker.derive_company({**sec, "tickers": ["EXMP", "EXMPB"]}, "exmpb").ticker == "EXMPB"
-    for change, why in [({"fiscalYearEnd": "0131"}, "fiscal_year_named_for"), ({"fiscalYearEnd": "0203"}, "month 1"),
-                        ({"fiscalYearEnd": "0930"}, "month 9"), ({"fiscalYearEnd": None}, "fiscalYearEnd"), ({"fiscalYearEnd": "1340"}, "fiscalYearEnd"),
-                        ({"tickers": []}, "no ticker"), ({"tickers": ["EXMP", "EXMPB"]}, "names none of them"), ({"name": ""}, "no name")]:
-        with pytest.raises(worker.NeedsSetup, match=why):
-            worker.derive_company({**sec, **change})
-    with pytest.raises(worker.NeedsSetup, match="names none"):
-        worker.derive_company({**sec, "tickers": ["EXMP", "EXMPB"]}, "OTHR")
-
-
-def test_the_sec_lookup_is_confined_to_the_submissions_api() -> None:
-    import importlib
-
-    fetch = importlib.import_module("pipeline.01_fetch")
-    client = worker.submissions_client()
-    assert client.user_agent == common.EXPECTED_USER_AGENT
-    assert client._check("https://data.sec.gov/submissions/CIK0000000123.json") == "data.sec.gov"
-    for url in ["https://data.sec.gov/api/xbrl/frames", "http://data.sec.gov/submissions/CIK0000000123.json", "https://example.com/submissions/x"]:
-        with pytest.raises(fetch.EdgarError):
-            client._check(url)
+def test_a_request_parked_for_another_reason_is_not_picked_up_for_the_nothing_to_show_email(db, tmp_path) -> None:
+    db.upsert_company(CIK, ticker="EXMP", name="Example Corporation", status="built", fiscal_year_end_month=12)
+    rid = ask(db, CIK, status="parked", reason="build failed, we are looking at it")
+    assert db.ciks_owed_an_email(parked_reason=worker.EMPTY_REASON) == [] and db.ciks_owed_an_email() == []
+    db.update_request(rid, reason=worker.EMPTY_REASON)
+    assert db.ciks_owed_an_email(parked_reason=worker.EMPTY_REASON) == [CIK] and db.ciks_owed_an_email() == []
 
 
 # --- the address is not verified ------------------------------------------------------------------------------------------
