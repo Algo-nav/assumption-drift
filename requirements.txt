@@ -1,0 +1,9 @@
+# Mirrors [project.dependencies] in pyproject.toml so Railway (Railpack) installs them. Change both files together.
+pydantic>=2.13.5
+requests>=2.34.2
+pyyaml>=6.0.3
+anthropic==1.7.0
+psycopg[binary]>=3.3.9
+pyarrow>=25.0.1
+matplotlib>=3.11.2
+huggingface_hub>=2.0.0
