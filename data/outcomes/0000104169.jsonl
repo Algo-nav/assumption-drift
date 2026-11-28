@@ -51,5 +51,6 @@
 {"draft_id": "01KHSK4H008PG7WTB7G9Y67X90", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01KS3X9Y00DA2VC2F53XDTATSA", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M0E7FB00MVPFWRQMQ3N0Y0RC", "outcome": null, "outcome_reason": "no later 8-K release for that period found", "acknowledgement": null, "withdrawal": null}
-{"draft_id": "01M0E7FB004F5KT56YVDP1PYRQ", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M0E7FB004F5KT56YVDP1PYRQ", "outcome": {"reported_value": 0.65, "reported_at": "2026-11-19", "evidence": {"source_url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000168/earningsreleasefy27q3.htm", "accession_number": "0000104169-26-000168", "filing_type": "8-K", "filed_at": "2026-11-19", "fetched_at": "2026-11-28T15:19:55Z", "content_sha256": "548da7f6fea174fb776e93dfa726a5d0cdcd9cf654c87cbd2fc273d2e9f8a6a4", "excerpt": "GAAP EPS of $0.62; Adjusted EPS1 of $0.65"}}, "outcome_reason": null, "acknowledgement": null, "withdrawal": null}
 {"draft_id": "01M0E7FB00DC2BRZH2VM2802X0", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}
+{"draft_id": "01M7RHMR004HVZBQ7K9YK11436", "outcome": null, "outcome_reason": "period not closed", "acknowledgement": null, "withdrawal": null}

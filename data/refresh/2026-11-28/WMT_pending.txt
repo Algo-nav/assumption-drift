@@ -1,0 +1,18 @@
+── 1/1 ── 01M0E7FB004F5KT56YVDP1PYRQ ── WMTEPS non-GAAP  Q3 FY2027  (stated 2026-08-20)
+target: 0.62 to 0.64 USD per share
+EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416926000145/earningsreleasefy27q2.htm
+
+excerpt:
+  Adjusted EPS1 is expected to be $0.62 to $0.64 for Q3 and $2.80 to $2.87 for FY27.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 0.65 on 2026-11-19
+  GAAP EPS of $0.62; Adjusted EPS1 of $0.65
+  EDGAR: https://www.sec.gov/Archives/edgar/data/104169/000010416926000168/earningsreleasefy27q3.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: Q3 FY2027 adjusted EPS 0.62 to 0.64, Aug 2026, period open

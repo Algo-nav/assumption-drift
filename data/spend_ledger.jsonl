@@ -12,3 +12,6 @@
 {"date": "2026-10-28", "stage": "03_structure", "requests": 23, "usd": 0.083896}
 {"date": "2026-10-28", "stage": "03b_verify", "requests": 11, "usd": 0.020732}
 {"date": "2026-10-28", "stage": "04_outcomes", "requests": 1, "usd": 0.001818}
+{"date": "2026-11-28", "stage": "03_structure", "requests": 64, "usd": 0.230841}
+{"date": "2026-11-28", "stage": "03b_verify", "requests": 34, "usd": 0.063949}
+{"date": "2026-11-28", "stage": "04_outcomes", "requests": 16, "usd": 0.028325}

@@ -1,0 +1,37 @@
+── 1/2 ── 01KZ513V0038D21QKTZQ9W1G8P ── AMDgross margin non-GAAP  Q3 FY2026  (stated 2026-08-04)
+target: 56.0 percent
+EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000121/q22026991.htm
+
+excerpt:
+  Non-GAAP gross margin is expected to be approximately 56%.
+
+outcome: none (period not closed)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 56.0 on 2026-11-03
+  On a non-GAAP(*) basis, gross margin was 56%, operating income was $3.9 billion, net income was $3.5 billion and diluted earnings per share was $2.09.
+  EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/q32026991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: proposed change applied [7f295b8f19]: invalidation_condition
+
+── 2/2 ── 01KZ513V00BG1VAZ8B07J0X6FX ── AMDrevenue  Q3 FY2026  (stated 2026-08-04)
+target: 12.7 to 13.3 USD billions
+EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000121/q22026991.htm
+
+excerpt:
+  For the third quarter of 2026, AMD expects revenue to be approximately $13 billion, plus or minus $300 million.
+
+outcome: none (outcome search not run)
+
+acknowledgement: none
+
+PROPOSED OUTCOME (not yet reviewed)
+  reported 13.377 on 2026-11-03
+  Revenue ($M) $13,377 $9,246 Up 45% $11,536 Up 16%
+  EDGAR: https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/q32026991.htm
+
+proposed: unresolved  verify: yes  conflict: false
+approved: true  hand_verified: false  note: confirmed: printed ± expanded 12.7 to 13.3, Q3 FY2026 in sentence; outcome pending 04
